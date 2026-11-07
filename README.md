@@ -24,12 +24,14 @@ Share verification OTP codes and magic login links with teammates, family member
 
 ---
 
-## 🚀 Interactive Setup Wizard (`/setup.html`)
+## 🚀 Open Source Documentation & Interactive Demo
 
-For an interactive, browser-based walkthrough with **live command copy**, an **automatic AES-256 `CONTENT_KEY` generator**, and an **OAuth redirect URI calculator**, open the setup wizard:
+The public setup guide, architecture documentation, and in-browser interactive demo are hosted on **GitHub Pages** (completely isolated from any private cloud deployments):
 
-* **Live Deployment Guide**: [`https://your-worker.workers.dev/setup.html`](https://mailgrant.arushdeepguptacse.workers.dev/setup.html)
-* **Local Guide**: [`http://localhost:8787/setup.html`](http://localhost:8787/setup.html)
+* **Interactive Setup Wizard**: [https://arush-hub02.github.io/Mailgrant/setup.html](https://arush-hub02.github.io/Mailgrant/setup.html)
+* **Architecture & Privacy Docs**: [https://arush-hub02.github.io/Mailgrant/docs.html](https://arush-hub02.github.io/Mailgrant/docs.html)
+* **Interactive Demo Playground**: [https://arush-hub02.github.io/Mailgrant/app.html?demo=1](https://arush-hub02.github.io/Mailgrant/app.html?demo=1)
+* **Recipient Demo View**: [https://arush-hub02.github.io/Mailgrant/access.html?demo=1](https://arush-hub02.github.io/Mailgrant/access.html?demo=1)
 
 ---
 

@@ -7,7 +7,7 @@ for(const dir of ['src','public','scripts','tests']){
     if(result.status!==0){console.error(result.stderr);process.exit(1);}
   }
 }
-for(const html of ['index.html','app.html','access.html','docs.html','privacy.html','setup.html']){
+for(const html of ['index.html','app.html','access.html','docs.html','privacy.html']){
   const text=await readFile(new URL(`../public/${html}`,import.meta.url),'utf8');
   for(const match of text.matchAll(/(?:src|href)="\/(?!\/)([^"?#]+)"/g)){
     if(match[1].startsWith('auth/'))continue;

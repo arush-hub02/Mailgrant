@@ -1,6 +1,6 @@
-@import url('/tokens.css');
+@import url('./tokens.css');
 
-/* Setup Guide Modern Styling */
+/* GitHub Pages Setup Guide Styling */
 .setup-body {
   margin: 0;
   padding: 0;
@@ -186,7 +186,7 @@
   line-height: 1.6;
 }
 
-/* Interactive Helper Tools (Content Key Generator & URL Formatter) */
+/* Interactive Helper Tools */
 .tool-box {
   background: var(--bg-subtle);
   border: 1px solid var(--line-strong);
@@ -296,7 +296,7 @@
   color: #34d399;
 }
 
-/* Mockup Screenshot Windows (Stylized SVG / CSS diagrams) */
+/* Mockup Screenshot Windows */
 .mockup-window {
   background: var(--bg);
   border: 1px solid var(--line);
@@ -383,6 +383,12 @@
   color: var(--amber-ink);
 }
 
+.callout.danger {
+  background: var(--red-light);
+  border: 1px solid var(--red-border);
+  color: var(--red-ink);
+}
+
 .callout.success {
   background: var(--green-light);
   border: 1px solid var(--green-border);
@@ -437,4 +443,3 @@
     flex-direction: column;
   }
 }
-

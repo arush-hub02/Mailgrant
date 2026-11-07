@@ -11,7 +11,6 @@ function initKeyGenerator() {
   function generateKey() {
     const array = new Uint8Array(32);
     window.crypto.getRandomValues(array);
-    // Base64 encode
     let binary = '';
     const bytes = new Uint8Array(array);
     const len = bytes.byteLength;
@@ -42,7 +41,6 @@ function initKeyGenerator() {
     });
   }
 
-  // Generate one initial key
   generateKey();
 }
 
@@ -58,10 +56,9 @@ function initUriHelper() {
   function update() {
     let raw = (domainInput.value || '').trim();
     if (!raw) {
-      raw = 'mailgrant.your-subdomain.workers.dev';
+      raw = 'your-project.your-subdomain.workers.dev';
     }
 
-    // Strip http:// or https:// if user pasted with scheme
     raw = raw.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
 
     const origin = `https://${raw}`;
@@ -95,7 +92,6 @@ function initTerminalCopy() {
       const targetEl = targetId ? document.querySelector(`#${targetId}`) : btn.closest('.terminal-block')?.querySelector('.terminal-body');
       if (!targetEl) return;
 
-      // Extract text content, stripping comments if requested or clean lines
       const text = targetEl.innerText || targetEl.textContent || '';
       try {
         await navigator.clipboard.writeText(text.trim());
@@ -119,13 +115,13 @@ function initHealthChecker() {
 
   if (!input || !checkBtn || !resultBox) return;
 
-  // Set default to current location if hosted
-  if (window.location.origin && window.location.origin !== 'null') {
-    input.value = window.location.origin;
-  }
-
   checkBtn.addEventListener('click', async () => {
     let origin = (input.value || '').trim();
+    if (!origin) {
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '<span style="color:var(--amber);">Please enter your deployed worker URL above.</span>';
+      return;
+    }
     if (!origin.startsWith('http')) {
       origin = `https://${origin}`;
     }
@@ -195,4 +191,3 @@ document.addEventListener('DOMContentLoaded', () => {
   initHealthChecker();
   initProgressNav();
 });
-

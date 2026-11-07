@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Step-by-step setup and self-hosting guide for Mailgrant. Configure Cloudflare Workers, Cloudflare D1 SQLite, and Google Cloud OAuth in ~5 minutes.">
   <title>Mailgrant · Step-by-Step Self-Hosting & Deployment Guide</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/tokens.css">
-  <link rel="stylesheet" href="/app.css">
-  <link rel="stylesheet" href="/setup.css">
-  <script type="module" src="/theme.js"></script>
-  <script type="module" src="/setup.js"></script>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./tokens.css">
+  <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./setup.css">
+  <script type="module" src="./theme.js"></script>
+  <script type="module" src="./setup.js"></script>
 </head>
 <body class="setup-body">
   <!-- Header -->
   <header class="setup-header">
     <div class="setup-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding-bottom:0;">
-      <a class="brand" href="/" aria-label="Mailgrant Home">
+      <a class="brand" href="./index.html" aria-label="Mailgrant Home">
         <span class="brand-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -29,10 +29,10 @@
       </a>
 
       <nav class="setup-nav-links" aria-label="Setup Navigation">
-        <a class="setup-nav-link" href="/">Home</a>
-        <a class="setup-nav-link active" href="/setup.html">Setup Guide</a>
-        <a class="setup-nav-link" href="/docs.html">Architecture Docs</a>
-        <a class="setup-nav-link" href="/app.html?demo=1">Interactive Demo</a>
+        <a class="setup-nav-link" href="./index.html">Overview</a>
+        <a class="setup-nav-link active" href="./setup.html">Setup Guide</a>
+        <a class="setup-nav-link" href="./docs.html">Architecture Docs</a>
+        <a class="setup-nav-link" href="./app.html?demo=1">Interactive Demo</a>
       </nav>
 
       <div style="display:flex; align-items:center; gap:12px;">
@@ -42,7 +42,7 @@
             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
           </svg>
         </button>
-        <a class="btn btn-primary btn-sm" href="/app.html">Launch App →</a>
+        <a class="btn btn-primary btn-sm" href="./app.html?demo=1">Try Demo ↗</a>
       </div>
     </div>
   </header>
@@ -56,8 +56,16 @@
       </div>
       <h1>Deploy Your Own Mailgrant Proxy</h1>
       <p>
-        Deploy a private zero-trust email proxy in ~5 minutes on Cloudflare Workers and Cloudflare D1 (100% Free Tier eligible). Follow this step-by-step walkthrough with interactive command generators.
+        Deploy your own private zero-trust email proxy in ~5 minutes on Cloudflare Workers and Cloudflare D1 (100% Free Tier eligible). Follow this step-by-step walkthrough with interactive command generators.
       </p>
+
+      <div class="callout danger" style="max-width:720px; margin:0 auto 28px; text-align:left;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <div>
+          <strong>Important Security Notice:</strong>
+          Never configure your Google OAuth credentials or personal email against someone else's deployed worker URL. You must deploy your own Worker in your own Cloudflare account so you have exclusive control over your database and AES-256 encryption keys.
+        </div>
+      </div>
 
       <!-- Quick Requirements Banner -->
       <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
@@ -226,10 +234,10 @@
         <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
           Type your Cloudflare Worker domain or custom domain below to compute your exact Google Redirect URI:
         </p>
-        <input id="domain-helper-input" class="key-input" style="font-family:var(--font-mono); font-size:13px; margin-bottom:12px;" type="text" placeholder="e.g. mailgrant.your-account.workers.dev" value="mailgrant.arushdeepguptacse.workers.dev">
+        <input id="domain-helper-input" class="key-input" style="font-family:var(--font-mono); font-size:13px; margin-bottom:12px;" type="text" placeholder="e.g. mailgrant.your-account.workers.dev" value="your-project.your-subdomain.workers.dev">
         <div style="background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px 14px; font-family:var(--font-mono); font-size:12px;">
-          <div><span style="color:var(--muted);">Authorized Origin:</span> <strong id="formatted-origin" style="color:var(--blue);">https://mailgrant.arushdeepguptacse.workers.dev</strong></div>
-          <div style="margin-top:4px;"><span style="color:var(--muted);">Authorized Redirect URI:</span> <strong id="formatted-callback" style="color:var(--green);">https://mailgrant.arushdeepguptacse.workers.dev/auth/google/callback</strong></div>
+          <div><span style="color:var(--muted);">Authorized Origin:</span> <strong id="formatted-origin" style="color:var(--blue);">https://your-project.your-subdomain.workers.dev</strong></div>
+          <div style="margin-top:4px;"><span style="color:var(--muted);">Authorized Redirect URI:</span> <strong id="formatted-callback" style="color:var(--green);">https://your-project.your-subdomain.workers.dev/auth/google/callback</strong></div>
         </div>
       </div>
 
@@ -445,4 +453,3 @@
   </main>
 </body>
 </html>
-
