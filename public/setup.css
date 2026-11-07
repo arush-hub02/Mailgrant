@@ -1,0 +1,440 @@
+@import url('/tokens.css');
+
+/* Setup Guide Modern Styling */
+.setup-body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.setup-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* Header */
+.setup-header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.setup-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.setup-nav-link {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+
+.setup-nav-link:hover,
+.setup-nav-link.active {
+  color: var(--ink);
+}
+
+/* Hero */
+.setup-hero {
+  padding: 48px 0 36px;
+  text-align: center;
+}
+
+.setup-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.setup-hero h1 {
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 850;
+  letter-spacing: -1px;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+.setup-hero p {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 680px;
+  margin: 0 auto 32px;
+}
+
+/* Progress Tracker Bar */
+.setup-progress-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 12px 18px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 40px;
+  overflow-x: auto;
+}
+
+.progress-step-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast);
+}
+
+.progress-step-btn:hover {
+  color: var(--ink);
+  background: var(--bg-subtle);
+}
+
+.progress-step-btn.active {
+  color: var(--blue);
+  background: var(--blue-light);
+}
+
+.progress-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.progress-step-btn.active .progress-step-num {
+  background: var(--blue);
+  color: #ffffff;
+}
+
+/* Step Card */
+.step-section {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.step-badge {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+
+.step-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.step-desc {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Interactive Helper Tools (Content Key Generator & URL Formatter) */
+.tool-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin: 20px 0;
+}
+
+.tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tool-title {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Terminal & Code Blocks */
+.terminal-block {
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 16px 0;
+  box-shadow: var(--shadow-md);
+}
+
+.terminal-header {
+  background: #0f172a;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dot.r { background: #ef4444; }
+.terminal-dot.y { background: #f59e0b; }
+.terminal-dot.g { background: #10b981; }
+
+.terminal-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.terminal-copy-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--duration-fast);
+}
+
+.terminal-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.terminal-body {
+  padding: 14px 18px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.terminal-body .comment {
+  color: #64748b;
+}
+
+.terminal-body .cmd {
+  color: #38bdf8;
+}
+
+.terminal-body .flag {
+  color: #a78bfa;
+}
+
+.terminal-body .str {
+  color: #34d399;
+}
+
+/* Mockup Screenshot Windows (Stylized SVG / CSS diagrams) */
+.mockup-window {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 20px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.mockup-window-header {
+  background: var(--bg-card);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.mockup-window-content {
+  padding: 20px;
+}
+
+.mockup-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.mockup-item-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.mockup-item-body strong {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.mockup-item-body span {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Callouts */
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.callout.info {
+  background: var(--blue-light);
+  border: 1px solid var(--blue-border);
+  color: var(--blue-ink);
+}
+
+.callout.warning {
+  background: var(--amber-light);
+  border: 1px solid var(--amber-border);
+  color: var(--amber-ink);
+}
+
+.callout.success {
+  background: var(--green-light);
+  border: 1px solid var(--green-border);
+  color: var(--green-ink);
+}
+
+.callout svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Live Checker Box */
+.checker-box {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
+  border: 1px solid var(--blue-border);
+  border-radius: var(--radius-xl);
+  padding: 30px;
+  margin-top: 40px;
+}
+
+.checker-input-row {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.checker-input {
+  flex-grow: 1;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .setup-container {
+    padding: 0 16px 60px;
+  }
+  .setup-nav-links {
+    display: none;
+  }
+  .step-section {
+    padding: 24px 18px;
+  }
+  .checker-input-row {
+    flex-direction: column;
+  }
+}
+
