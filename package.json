@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "jose": "^6.1.0",
-    "postal-mime": "^2.5.0"
+    "postal-mime": "^2.5.0",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }

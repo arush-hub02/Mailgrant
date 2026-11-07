@@ -1,4 +1,7 @@
 import { getTheme, toggleTheme } from './theme.js';
+import { Vault3D } from './vault3d.js';
+
+let vault = null;
 
 // Status check on boot
 async function initStatus() {
@@ -25,7 +28,122 @@ async function initStatus() {
   }
 }
 
-// Interactive Preview Simulator Logic
+// Initialize Three.js 3D Interactive Vault
+function initVault3D() {
+  const container = document.querySelector('#vault-3d-canvas');
+  if (!container) return;
+
+  try {
+    vault = new Vault3D(container);
+
+    // 3D Scenario Buttons inside the 3D Card
+    const scenarioBtns = document.querySelectorAll('[data-3d-scenario]');
+    scenarioBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        scenarioBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const sc = btn.dataset['3dScenario'] || btn.getAttribute('data-3d-scenario');
+        if (vault) {
+          vault.autoCycle = false; // pause auto cycle on manual interaction
+          vault.playScenario(sc);
+        }
+        syncPipelineSelection(sc);
+      });
+    });
+
+    // Next Sim button
+    const simBtn = document.querySelector('#vault-sim-btn');
+    if (simBtn) {
+      simBtn.addEventListener('click', () => {
+        if (vault) {
+          vault.autoCycle = false;
+          vault.triggerSimulation();
+          // Update button states
+          const currentSc = vault.activeScenario;
+          scenarioBtns.forEach(b => {
+            const sc = b.dataset['3dScenario'] || b.getAttribute('data-3d-scenario');
+            b.classList.toggle('active', sc === currentSc);
+          });
+          syncPipelineSelection(currentSc);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('3D canvas fallback:', err);
+  }
+}
+
+// Synchronize Pipeline Walkthrough with 3D model
+function syncPipelineSelection(key) {
+  const pills = document.querySelectorAll('.pipeline-pill');
+  const fromEl = document.querySelector('#pipe-from');
+  const ruleEl = document.querySelector('#pipe-rule');
+  const outEl = document.querySelector('#pipe-out');
+
+  pills.forEach(p => {
+    p.classList.toggle('active', p.dataset.pipelineKey === key);
+  });
+
+  const pipelineData = {
+    claude: {
+      from: '<strong>From: signin@mail.anthropic.com</strong><small>Subject: Your Claude verification code</small><span class="badge blue">2FA Email Inbound</span>',
+      rule: '<strong>Rule: *@mail.anthropic.com</strong><small>Whitelist Match: Codes-only extraction</small><span class="badge green">✓ Body Stripped</span>',
+      out: '<strong>Delivered to Brother:</strong><span class="badge code" style="font-size:16px; margin:4px 0;">849 201</span><small>Recipient sees only OTP code</small>',
+      isBlocked: false
+    },
+    notion: {
+      from: '<strong>From: team@m.notion.so</strong><small>Subject: Login to Notion</small><span class="badge blue">Magic Link Inbound</span>',
+      rule: '<strong>Rule: team@m.notion.so</strong><small>Whitelist Match: Links-only extraction</small><span class="badge green">✓ Host Verified (notion.so)</span>',
+      out: '<strong>Delivered to Team:</strong><a class="btn btn-secondary btn-sm" style="margin:4px 0;" href="#">Open Notion Login ↗</a><small>Single-use link ready</small>',
+      isBlocked: false
+    },
+    github: {
+      from: '<strong>From: noreply@github.com</strong><small>Subject: Security alert for repo</small><span class="badge blue">Alert Inbound</span>',
+      rule: '<strong>Rule: noreply@github.com</strong><small>Whitelist Match: Plain-text reading</small><span class="badge green">✓ Sanitized Plaintext</span>',
+      out: '<strong>Delivered to Dev:</strong><span class="badge">Plaintext Advisory</span><small>Zero HTML or tracking pixels</small>',
+      isBlocked: false
+    },
+    chase: {
+      from: '<strong>From: service@chase.com</strong><small>Subject: Your personal account statement</small><span class="badge red">Personal Banking Email</span>',
+      rule: '<strong>Zero Rule Match</strong><small>Sender is NOT in whitelist</small><span class="badge red">✕ 403 Forbidden at Edge</span>',
+      out: '<strong>100% BLOCKED & PRIVATE</strong><span class="badge red" style="margin:4px 0;">Shield Deflected</span><small>Never stored, never exposed</small>',
+      isBlocked: true
+    }
+  };
+
+  const data = pipelineData[key];
+  if (data && fromEl && ruleEl && outEl) {
+    fromEl.innerHTML = data.from;
+    ruleEl.innerHTML = data.rule;
+    outEl.innerHTML = data.out;
+  }
+}
+
+// Interactive Pipeline Walkthrough (Live Flow Step-by-Step)
+function initPipeline() {
+  const pills = document.querySelectorAll('.pipeline-pill');
+  if (!pills.length) return;
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const key = pill.dataset.pipelineKey;
+      syncPipelineSelection(key);
+
+      // Also trigger 3D model scenario
+      if (vault) {
+        vault.autoCycle = false;
+        vault.playScenario(key);
+        // update 3d scenario buttons
+        document.querySelectorAll('[data-3d-scenario]').forEach(b => {
+          const sc = b.dataset['3dScenario'] || b.getAttribute('data-3d-scenario');
+          b.classList.toggle('active', sc === key);
+        });
+      }
+    });
+  });
+}
+
+// Interactive Perspective Simulator Logic (Owner vs Recipient Perspective)
 function initSimulator() {
   const tabs = document.querySelectorAll('[data-preview-role]');
   const previewContent = document.querySelector('#simulator-content');
@@ -47,7 +165,7 @@ function initSimulator() {
             </div>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <span class="sim-badge code">482 917</span>
+            <span class="sim-badge code">849 201</span>
             <span class="sim-badge" style="background:var(--green-light); color:var(--green); font-size:11px;">Active Rule</span>
           </div>
         </div>
@@ -138,7 +256,8 @@ function initSimulator() {
       copyBtn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(copyCode.textContent.trim());
-          copyBtn.querySelector('span').textContent = 'Copied!';
+          const span = copyBtn.querySelector('span');
+          if (span) span.textContent = 'Copied!';
           setTimeout(() => {
             if (copyBtn && copyBtn.querySelector('span')) {
               copyBtn.querySelector('span').textContent = 'Copy';
@@ -164,8 +283,22 @@ function initQuickKey() {
     const key = (input?.value || '').trim();
     if (!key) return;
 
-    // Navigate to /access.html with key query or hash
     window.location.href = `/access.html?key=${encodeURIComponent(key)}`;
+  });
+}
+
+// Interactive FAQ Accordion
+function initFAQ() {
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach(item => {
+    const btn = item.querySelector('.faq-question');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        items.forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    }
   });
 }
 
@@ -173,10 +306,13 @@ function initQuickKey() {
 function initAnchors() {
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth' });
+      const href = a.getAttribute('href');
+      if (href && href.startsWith('#') && href.length > 1) {
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     });
   });
@@ -185,7 +321,10 @@ function initAnchors() {
 // Boot up
 document.addEventListener('DOMContentLoaded', () => {
   initStatus();
+  initVault3D();
+  initPipeline();
   initSimulator();
   initQuickKey();
+  initFAQ();
   initAnchors();
 });
