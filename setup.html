@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Step-by-step setup and self-hosting guide for Mailgrant. Configure Cloudflare Workers, Cloudflare D1 SQLite, and Google Cloud OAuth in ~5 minutes.">
+  <title>Mailgrant · Step-by-Step Self-Hosting & Deployment Guide</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./tokens.css">
+  <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./setup.css">
+  <script type="module" src="./theme.js"></script>
+  <script type="module" src="./setup.js"></script>
+</head>
+<body class="setup-body">
+  <!-- Header -->
+  <header class="setup-header">
+    <div class="setup-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding-bottom:0;">
+      <a class="brand" href="./index.html" aria-label="Mailgrant Home">
+        <span class="brand-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M8 11h8"/>
+            <path d="M12 7v8"/>
+          </svg>
+        </span>
+        <span>mailgrant</span>
+        <span class="tag-beta">OPEN SOURCE</span>
+      </a>
+
+      <nav class="setup-nav-links" aria-label="Setup Navigation">
+        <a class="setup-nav-link" href="./index.html">Overview</a>
+        <a class="setup-nav-link active" href="./setup.html">Setup Guide</a>
+        <a class="setup-nav-link" href="./docs.html">Architecture Docs</a>
+        <a class="setup-nav-link" href="./app.html?demo=1">Interactive Demo</a>
+      </nav>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-secondary btn-sm" data-theme-toggle aria-label="Toggle theme" title="Toggle light or dark mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="./app.html?demo=1">Try Demo ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="setup-container">
+    <!-- Hero -->
+    <section class="setup-hero">
+      <div class="setup-hero-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Self-Hosting & Deployment Guide</span>
+      </div>
+      <h1>Deploy Your Own Mailgrant Proxy</h1>
+      <p>
+        Deploy your own private zero-trust email proxy in ~5 minutes on Cloudflare Workers and Cloudflare D1 (100% Free Tier eligible). Follow this step-by-step walkthrough with interactive command generators.
+      </p>
+
+      <div class="callout danger" style="max-width:720px; margin:0 auto 28px; text-align:left;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <div>
+          <strong>Important Security Notice:</strong>
+          Never configure your Google OAuth credentials or personal email against someone else's deployed worker URL. You must deploy your own Worker in your own Cloudflare account so you have exclusive control over your database and AES-256 encryption keys.
+        </div>
+      </div>
+
+      <!-- Quick Requirements Banner -->
+      <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
+        <span class="badge blue">Node.js 20+ LTS</span>
+        <span class="badge green">Free Cloudflare Account</span>
+        <span class="badge purple">Free Google Cloud Account</span>
+        <span class="badge">Zero Domain Required (uses workers.dev)</span>
+      </div>
+    </section>
+
+    <!-- Progress Tracker Nav -->
+    <nav class="setup-progress-nav" aria-label="Setup Steps">
+      <button class="progress-step-btn active" data-step-target="step-1" type="button">
+        <span class="progress-step-num">1</span>
+        <span>Clone & Install</span>
+      </button>
+      <button class="progress-step-btn" data-step-target="step-2" type="button">
+        <span class="progress-step-num">2</span>
+        <span>Cloudflare & D1</span>
+      </button>
+      <button class="progress-step-btn" data-step-target="step-3" type="button">
+        <span class="progress-step-num">3</span>
+        <span>Google OAuth App</span>
+      </button>
+      <button class="progress-step-btn" data-step-target="step-4" type="button">
+        <span class="progress-step-num">4</span>
+        <span>Worker Secrets</span>
+      </button>
+      <button class="progress-step-btn" data-step-target="step-5" type="button">
+        <span class="progress-step-num">5</span>
+        <span>Deploy & Verify</span>
+      </button>
+      <button class="progress-step-btn" data-step-target="step-6" type="button">
+        <span class="progress-step-num">6</span>
+        <span>GitHub Auto-Deploy</span>
+      </button>
+    </nav>
+
+    <!-- STEP 1: Clone & Install -->
+    <section id="step-1" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 01</span>
+        <div>
+          <h2 class="step-title">Clone the Repository & Install Dependencies</h2>
+          <p class="step-desc">
+            Clone Mailgrant from GitHub and install project dependencies using npm.
+          </p>
+        </div>
+      </div>
+
+      <div class="terminal-block">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot r"></span>
+            <span class="terminal-dot y"></span>
+            <span class="terminal-dot g"></span>
+          </div>
+          <span class="terminal-label">bash / powershell</span>
+          <button class="terminal-copy-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <pre class="terminal-body"><code><span class="comment"># 1. Clone the Mailgrant repository</span>
+<span class="cmd">git clone</span> <span class="str">https://github.com/arush-hub02/Mailgrant.git</span>
+<span class="cmd">cd</span> Mailgrant
+
+<span class="comment"># 2. Install dependencies</span>
+<span class="cmd">npm install</span>
+
+<span class="comment"># 3. Run security regression tests (32 automated tests)</span>
+<span class="cmd">npm test</span></code></pre>
+      </div>
+
+      <div class="callout info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <div>
+          <strong>Automated Test Suite:</strong> Running <code>npm test</code> exercises the embedded SQLite engine, cross-workspace security boundaries, AES-256-GCM encryption, and token extraction regex before you touch any cloud resources.
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Cloudflare & D1 Database Setup -->
+    <section id="step-2" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 02</span>
+        <div>
+          <h2 class="step-title">Connect Cloudflare & Provision D1 Database</h2>
+          <p class="step-desc">
+            Sign into your Cloudflare account from Wrangler, provision a free serverless D1 SQLite database, and apply migrations.
+          </p>
+        </div>
+      </div>
+
+      <div class="terminal-block">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot r"></span>
+            <span class="terminal-dot y"></span>
+            <span class="terminal-dot g"></span>
+          </div>
+          <span class="terminal-label">wrangler cli</span>
+          <button class="terminal-copy-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <pre class="terminal-body"><code><span class="comment"># 1. Log into your Cloudflare account (opens browser)</span>
+<span class="cmd">npx wrangler login</span>
+
+<span class="comment"># 2. Create the D1 SQLite database</span>
+<span class="cmd">npx wrangler d1 create</span> <span class="str">mailgrant</span>
+
+<span class="comment"># Notice: It outputs your database_id, e.g. "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# Ensure your database_id in wrangler.jsonc matches this ID!</span>
+
+<span class="comment"># 3. Apply the database migrations to remote D1</span>
+<span class="cmd">npx wrangler d1 migrations apply</span> <span class="str">mailgrant</span> <span class="flag">--remote</span></code></pre>
+      </div>
+
+      <div class="mockup-window">
+        <div class="mockup-window-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>What this creates in Cloudflare D1</span>
+        </div>
+        <div class="mockup-window-content">
+          <div class="mockup-item">
+            <span class="mockup-item-num">1</span>
+            <div class="mockup-item-body">
+              <strong>16 Database Tables:</strong>
+              <span>Tables for isolated workspaces, mailbox bindings, whitelisting rules, access keys, encrypted message projections, and audit ledgers.</span>
+            </div>
+          </div>
+          <div class="mockup-item">
+            <span class="mockup-item-num">2</span>
+            <div class="mockup-item-body">
+              <strong>Zero Full Email Bodies:</strong>
+              <span>D1 only stores extracted 6-digit OTP codes or single-use links, encrypted at rest with your private <code>CONTENT_KEY</code>.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Google Cloud OAuth App -->
+    <section id="step-3" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 03</span>
+        <div>
+          <h2 class="step-title">Create Google Cloud OAuth Credentials</h2>
+          <p class="step-desc">
+            Configure Google OAuth 2.0 so you can connect your Gmail account via official read-only Google APIs.
+          </p>
+        </div>
+      </div>
+
+      <!-- Interactive Helper: Redirect URI Formatter -->
+      <div class="tool-box">
+        <div class="tool-header">
+          <div class="tool-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--blue);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <span>Google OAuth Redirect URI Calculator</span>
+          </div>
+          <button id="copy-uri-btn" class="btn btn-secondary btn-sm" type="button">Copy URI</button>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
+          Type your Cloudflare Worker domain or custom domain below to compute your exact Google Redirect URI:
+        </p>
+        <input id="domain-helper-input" class="key-input" style="font-family:var(--font-mono); font-size:13px; margin-bottom:12px;" type="text" placeholder="e.g. mailgrant.your-account.workers.dev" value="your-project.your-subdomain.workers.dev">
+        <div style="background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px 14px; font-family:var(--font-mono); font-size:12px;">
+          <div><span style="color:var(--muted);">Authorized Origin:</span> <strong id="formatted-origin" style="color:var(--blue);">https://your-project.your-subdomain.workers.dev</strong></div>
+          <div style="margin-top:4px;"><span style="color:var(--muted);">Authorized Redirect URI:</span> <strong id="formatted-callback" style="color:var(--green);">https://your-project.your-subdomain.workers.dev/auth/google/callback</strong></div>
+        </div>
+      </div>
+
+      <div class="mockup-window">
+        <div class="mockup-window-header">
+          <span>Google Cloud Console Step-by-Step Instructions</span>
+        </div>
+        <div class="mockup-window-content">
+          <div class="mockup-item">
+            <span class="mockup-item-num">1</span>
+            <div class="mockup-item-body">
+              <strong>Open Google Cloud Console:</strong>
+              <span>Visit <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> and create a new project named <code>Mailgrant Proxy</code>.</span>
+            </div>
+          </div>
+
+          <div class="mockup-item">
+            <span class="mockup-item-num">2</span>
+            <div class="mockup-item-body">
+              <strong>Enable Gmail API:</strong>
+              <span>In the search bar, search for <strong>Gmail API</strong> and click <strong>Enable</strong>.</span>
+            </div>
+          </div>
+
+          <div class="mockup-item">
+            <span class="mockup-item-num">3</span>
+            <div class="mockup-item-body">
+              <strong>Configure OAuth Consent Screen:</strong>
+              <span>
+                Go to <strong>APIs & Services &rarr; OAuth consent screen</strong>.<br>
+                - Select <strong>External</strong> user type.<br>
+                - App name: <code>Mailgrant</code>.<br>
+                - Scopes: Add <code>openid</code>, <code>email</code>, <code>profile</code>, and <code>https://www.googleapis.com/auth/gmail.readonly</code>.<br>
+                - Test Users: Add your personal Gmail address (e.g. <code>you@gmail.com</code>).
+              </span>
+            </div>
+          </div>
+
+          <div class="mockup-item">
+            <span class="mockup-item-num">4</span>
+            <div class="mockup-item-body">
+              <strong>Create OAuth 2.0 Client ID:</strong>
+              <span>
+                Go to <strong>Credentials &rarr; Create Credentials &rarr; OAuth client ID</strong>.<br>
+                - Application type: <strong>Web application</strong>.<br>
+                - Name: <code>Mailgrant Web Client</code>.<br>
+                - Authorized JavaScript origins: paste your Worker origin (from helper above).<br>
+                - Authorized redirect URIs: paste your Redirect URI (from helper above).<br>
+                - Click <strong>Create</strong> and copy your <strong>Client ID</strong> and <strong>Client Secret</strong>.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: Configure Worker Secrets -->
+    <section id="step-4" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 04</span>
+        <div>
+          <h2 class="step-title">Configure Cloudflare Worker Secrets</h2>
+          <p class="step-desc">
+            Store your Google credentials and cryptographic encryption key safely as encrypted secrets in Cloudflare Workers.
+          </p>
+        </div>
+      </div>
+
+      <!-- Interactive Helper: Content Key Generator -->
+      <div class="tool-box">
+        <div class="tool-header">
+          <div class="tool-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--green);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Cryptographic CONTENT_KEY Generator (AES-256)</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="gen-key-btn" class="btn btn-secondary btn-sm" type="button">🎲 Re-generate</button>
+            <button id="copy-key-btn" class="btn btn-primary btn-sm" type="button">Copy Key</button>
+          </div>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin:0 0 10px;">
+          Generated locally in your browser using <code>crypto.getRandomValues(32)</code>. Never stored or sent over the network:
+        </p>
+        <input id="gen-key-input" class="key-input" style="font-family:var(--font-mono); font-size:13px;" type="text" readonly>
+      </div>
+
+      <div class="terminal-block">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot r"></span>
+            <span class="terminal-dot y"></span>
+            <span class="terminal-dot g"></span>
+          </div>
+          <span class="terminal-label">configure secrets</span>
+          <button class="terminal-copy-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <pre class="terminal-body"><code><span class="comment"># Run each command in terminal and paste value when prompted:</span>
+
+<span class="comment"># 1. Put Google Client ID</span>
+<span class="cmd">npx wrangler secret put</span> <span class="flag">GOOGLE_CLIENT_ID</span>
+
+<span class="comment"># 2. Put Google Client Secret</span>
+<span class="cmd">npx wrangler secret put</span> <span class="flag">GOOGLE_CLIENT_SECRET</span>
+
+<span class="comment"># 3. Put your generated AES-256 Content Key</span>
+<span class="cmd">npx wrangler secret put</span> <span class="flag">CONTENT_KEY</span>
+
+<span class="comment"># 4. Put your exact Worker HTTPS origin (no trailing slash)</span>
+<span class="cmd">npx wrangler secret put</span> <span class="flag">APP_ORIGIN</span></code></pre>
+      </div>
+    </section>
+
+    <!-- STEP 5: Deploy & Verify -->
+    <section id="step-5" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 05</span>
+        <div>
+          <h2 class="step-title">Deploy to Cloudflare & Test Health</h2>
+          <p class="step-desc">
+            Deploy your code, assets, and cron cleanup triggers to Cloudflare's global edge network.
+          </p>
+        </div>
+      </div>
+
+      <div class="terminal-block">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot r"></span>
+            <span class="terminal-dot y"></span>
+            <span class="terminal-dot g"></span>
+          </div>
+          <span class="terminal-label">deploy command</span>
+          <button class="terminal-copy-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <pre class="terminal-body"><code><span class="comment"># Deploy the Worker and all public static assets to Cloudflare</span>
+<span class="cmd">npx wrangler deploy</span></code></pre>
+      </div>
+
+      <!-- Live Health Checker -->
+      <div class="checker-box">
+        <h3 style="margin:0 0 8px; font-size:18px;">Live Configuration & Health Checker</h3>
+        <p style="margin:0 0 14px; font-size:14px; color:var(--muted);">
+          Enter your deployed Worker origin below to verify that secrets and endpoints are active:
+        </p>
+        <div class="checker-input-row">
+          <input id="health-origin-input" class="checker-input" type="text" placeholder="https://your-worker.workers.dev">
+          <button id="health-check-btn" class="btn btn-primary" type="button">Verify Health</button>
+        </div>
+        <div id="health-check-result" style="display:none; margin-top:14px;"></div>
+      </div>
+    </section>
+
+    <!-- STEP 6: GitHub Actions CI/CD -->
+    <section id="step-6" class="step-section">
+      <div class="step-header">
+        <span class="step-badge">STEP 06</span>
+        <div>
+          <h2 class="step-title">Automate Deployments with GitHub Actions</h2>
+          <p class="step-desc">
+            Set up automatic deployments so every <code>git push origin master</code> tests and redeploys to Cloudflare with zero manual commands.
+          </p>
+        </div>
+      </div>
+
+      <div class="mockup-window">
+        <div class="mockup-window-header">
+          <span>GitHub Repository Secrets Configuration</span>
+        </div>
+        <div class="mockup-window-content">
+          <div class="mockup-item">
+            <span class="mockup-item-num">1</span>
+            <div class="mockup-item-body">
+              <strong>Open GitHub Repo Settings:</strong>
+              <span>Go to your GitHub repository &rarr; <strong>Settings &rarr; Secrets and variables &rarr; Actions</strong> &rarr; Click <strong>New repository secret</strong>.</span>
+            </div>
+          </div>
+
+          <div class="mockup-item">
+            <span class="mockup-item-num">2</span>
+            <div class="mockup-item-body">
+              <strong>Add Secret 1: <code>CLOUDFLARE_API_TOKEN</code>:</strong>
+              <span>
+                Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener">Cloudflare API Tokens</a> &rarr; <strong>Create Token</strong> &rarr; Use the <strong>Edit Cloudflare Workers</strong> template &rarr; Copy token value and paste into GitHub Secret.
+              </span>
+            </div>
+          </div>
+
+          <div class="mockup-item">
+            <span class="mockup-item-num">3</span>
+            <div class="mockup-item-body">
+              <strong>Add Secret 2: <code>CLOUDFLARE_ACCOUNT_ID</code>:</strong>
+              <span>
+                Find your 32-character Account ID on the Cloudflare Dashboard overview (right sidebar) or run <code>npx wrangler whoami</code> in your terminal.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <div>
+          <strong>That's it!</strong> Once configured, every push to <code>master</code> will automatically run your 32 security regression tests, compile the showcase, and deploy directly to Cloudflare!
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
