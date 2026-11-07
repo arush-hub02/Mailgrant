@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy & Data Protection · Mailgrant</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/access.css">
+  <script type="module" src="/theme.js"></script>
+</head>
+<body>
+  <div class="access-wrap" style="max-width:840px;">
+    <header class="access-header">
+      <a class="brand" href="/" aria-label="Mailgrant Home">
+        <span class="brand-mark" style="display:grid; place-items:center; background:var(--blue); color:#fff; width:34px; height:34px; border-radius:10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        <span>mailgrant</span>
+      </a>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn small" data-theme-toggle aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+          <span style="font-size:12px;">Theme</span>
+        </button>
+        <a class="btn small primary" href="/dashboard">Workspace →</a>
+      </div>
+    </header>
+
+    <main>
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h1 style="font-size:24px; margin:0 0 4px;">Privacy and Data Controls</h1>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Zero-trust architectural boundaries and data retention policies</p>
+          </div>
+          <span class="badge green">AES-GCM Protected</span>
+        </div>
+
+        <div class="panel-body" style="line-height:1.7; font-size:14px; color:var(--ink-secondary);">
+          <p>Mailgrant lets mailbox owners authorize Google access and share selected email content with people they choose. The deployment operator is responsible for the application and provides the support contact shown on the Google consent screen.</p>
+          
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">Google Data & OAuth Permissions</h2>
+          <p>Basic sign-in uses your verified Google identity. Connecting each Gmail is a separate read-only authorization. Google grants mailbox-wide read permission; Mailgrant searches approved senders and enforces its sender, subject, time and recipient checks before retaining content. The backend can process Gmail data and is not end-to-end encrypted.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">What Is Stored</h2>
+          <p>Account identifiers, workspace settings, sender rules, permissions, sharing-key hashes, protected session records and activity metadata are stored. Gmail refresh tokens and retained email content are encrypted using the deployment's protected encryption key (AES-GCM). Codes-only rules retain extracted codes; full-reading rules retain plain text. Attachments and active HTML are not served.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">Sharing & Retention</h2>
+          <p>Owners choose sharing permissions, expiry and limits. Anyone holding a bearer access key can use its permissions. Keys can be revoked. Retained messages expire according to each rule, with a default of 15 minutes, and activity history is retained for 30 days. Expired content cannot be read while awaiting scheduled deletion. Provider backups have their own retention.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">Owner & Recipient Controls</h2>
+          <p>Disconnect a Gmail to remove its stored credential. Revoke the Google grant through Google Account connections to stop provider access. Delete retained messages or the workspace in Settings. Delete a workspace to remove its rules, keys, memberships, credentials and retained mail. Basic sign-in account metadata may remain until removed by the deployment operator; contact the support address shown in the Google consent screen for account-level deletion.</p>
+          <p>Recipients may forget one saved key or all saved access on their device. Revocation cannot erase copies already made or end sessions in other services.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">Service Providers</h2>
+          <p>Google provides identity and Gmail APIs. Cloudflare hosts the live application and database. Mail data is used to provide the owner's requested sharing features. This application does not include advertising, third-party tracking scripts, or sale of mail data.</p>
+
+          <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line);">
+            <a class="btn primary small" href="/docs#security">Read the visual privacy model →</a>
+          </div>
+        </div>
+      </article>
+    </main>
+
+    <footer class="access-footer">
+      <div>Mailgrant · Privacy by Design · Built on Cloudflare D1 and Google OAuth</div>
+      <div style="margin-top:6px;">
+        <a href="/">Home</a> · <a href="/dashboard">Owner Workspace</a> · <a href="/access">Recipient Portal</a> · <a href="/docs">Visual Guide</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

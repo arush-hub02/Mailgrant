@@ -61,7 +61,7 @@ async function auth(req,env,path) {
   }
   if(path==='/auth/callback') {
     const url=new URL(req.url),state=url.searchParams.get('state'),code=url.searchParams.get('code');
-    const retry=(reason,wid)=>new Response(null,{status:302,headers:{Location:`/app.html?auth_error=${reason}${wid?`&workspace=${encodeURIComponent(wid)}&view=settings`:''}`,'Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth','',req,0,'/auth')}});
+    const retry=(reason,wid)=>new Response(null,{status:302,headers:{Location:wid?`/profile?auth_error=${reason}&workspace=${encodeURIComponent(wid)}`:`/signin?auth_error=${reason}`,'Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth','',req,0,'/auth')}});
     if(!state || state!==getCookie(req,'mg_oauth')) return retry('state');
     const saved=await first(env,'DELETE FROM oauth_states WHERE state_hash=? AND expires_at>? RETURNING verifier,nonce,workspace_id,user_id',await hash(state),now());
     if(!saved) return retry('expired');
@@ -84,7 +84,7 @@ async function auth(req,env,path) {
     if(!u) {u={id:id()};await stmt(env,'INSERT INTO users(id,google_sub,email,name,created_at) VALUES(?,?,?,?,?)',u.id,claims.sub,email,cleanText(claims.name)||email,now()).run();}
     else await stmt(env,'UPDATE users SET email=?,name=? WHERE id=?',email,cleanText(claims.name)||email,u.id).run();
     const token=randomToken();await stmt(env,'INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)',await hash(token),u.id,now()+DAY).run();
-    const headers=new Headers({Location:'/app.html','Cache-Control':'no-store'});headers.append('Set-Cookie',cookie('mg_session',token,req,86400));headers.append('Set-Cookie',cookie('mg_oauth','',req,0,'/auth'));
+    const headers=new Headers({Location:'/dashboard','Cache-Control':'no-store'});headers.append('Set-Cookie',cookie('mg_session',token,req,86400));headers.append('Set-Cookie',cookie('mg_oauth','',req,0,'/auth'));
     return new Response(null,{status:302,headers});
   }
   fail(404,'Not found.');
@@ -95,12 +95,59 @@ async function api(req,env,path) {
   if(!configured(env)) fail(503,'Live mode needs Google sign-in, D1, an encryption key, and the application origin. See the deployment guide.');
   if(!['GET','HEAD'].includes(req.method) && req.headers.get('origin')!==env.APP_ORIGIN) fail(403,'Request origin not allowed.');
   if(path.startsWith('/api/shared/'))return sharedApi(req,env,path,{body,limited});
+  if(path.startsWith('/api/avatar/') && req.method==='GET') {
+    const targetUid=cleanText(path.slice(12).split('?')[0],40);
+    if(env.AVATARS) {
+      try {
+        const obj=await env.AVATARS.get(`avatars/${targetUid}/avatar`);
+        if(obj) {
+          const headers=new Headers();
+          obj.writeHttpMetadata(headers);
+          headers.set('etag',obj.httpEtag);
+          headers.set('cache-control','public, max-age=86400');
+          return new Response(obj.body,{headers});
+        }
+      } catch {}
+    }
+    return new Response('Not found',{status:404});
+  }
   const u=await user(req,env);await limited(env,`user:${u.id}`,180);
   if(path==='/api/logout' && req.method==='POST') {
     await stmt(env,'DELETE FROM sessions WHERE token_hash=?',await hash(getCookie(req,'mg_session'))).run();
     return new Response('{}',{headers:{'Content-Type':'application/json','Set-Cookie':cookie('mg_session','',req,0),'Cache-Control':'no-store'}});
   }
-  if(path==='/api/me' && req.method==='GET') return json({user:u,workspaces:await all(env,'SELECT w.id,w.name,w.owner_id,m.joined_at,CASE WHEN w.owner_id=? THEN b.email ELSE NULL END mailbox_email,CASE WHEN w.owner_id=m.user_id AND g.workspace_id IS NOT NULL THEN 1 ELSE 0 END gmail_connected FROM workspaces w JOIN members m ON m.workspace_id=w.id LEFT JOIN mailboxes b ON b.workspace_id=w.id LEFT JOIN gmail_connections g ON g.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at',u.id,u.id)});
+  if(path==='/api/avatar' && (req.method==='PUT' || req.method==='POST')) {
+    if(!env.AVATARS) fail(503,'Cloudflare R2 avatar storage is not configured.');
+    const contentType=req.headers.get('content-type')||'image/jpeg';
+    if(!contentType.startsWith('image/')) fail(400,'Only image files are accepted.');
+    const length=Number(req.headers.get('content-length')||0);
+    if(length>2*1024*1024) fail(400,'Image file must be under 2MB.');
+    const key=`avatars/${u.id}/avatar`;
+    await env.AVATARS.put(key,req.body,{httpMetadata:{contentType}});
+    return json({ok:true,avatar:`/api/avatar/${u.id}?v=${now()}`});
+  }
+  if(path==='/api/avatar' && req.method==='DELETE') {
+    if(env.AVATARS) {
+      try { await env.AVATARS.delete(`avatars/${u.id}/avatar`); } catch {}
+    }
+    return json({ok:true});
+  }
+  if(path==='/api/profile' && req.method==='PATCH') {
+    const b=await body(req), name=cleanText(b.name,60);
+    if(name.length<2) fail(400,'Enter a name of at least two characters.');
+    await stmt(env,'UPDATE users SET name=? WHERE id=?',name,u.id).run();
+    return json({ok:true,name});
+  }
+  if(path==='/api/me' && req.method==='GET') {
+    let avatar=null;
+    if(env.AVATARS) {
+      try {
+        const head=await env.AVATARS.head(`avatars/${u.id}/avatar`);
+        if(head) avatar=`/api/avatar/${u.id}?v=${head.uploaded.getTime()}`;
+      } catch {}
+    }
+    return json({user:{...u,avatar},workspaces:await all(env,'SELECT w.id,w.name,w.owner_id,m.joined_at,CASE WHEN w.owner_id=? THEN b.email ELSE NULL END mailbox_email,CASE WHEN w.owner_id=m.user_id AND g.workspace_id IS NOT NULL THEN 1 ELSE 0 END gmail_connected FROM workspaces w JOIN members m ON m.workspace_id=w.id LEFT JOIN mailboxes b ON b.workspace_id=w.id LEFT JOIN gmail_connections g ON g.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at',u.id,u.id)});
+  }
   if(path==='/api/workspaces' && req.method==='POST') {
     const b=await body(req),name=cleanText(b.name,60);if(name.length<2) fail(400,'Enter a workspace name of at least two characters.');
     const count=await first(env,'SELECT count(*) n FROM workspaces WHERE owner_id=?',u.id);if(count.n>=5) fail(409,'You can own up to five workspaces.');
@@ -170,7 +217,21 @@ async function api(req,env,path) {
   if(route.startsWith('rules/') && ['PATCH','DELETE'].includes(req.method)) {
     const rid=route.slice(6),rule=await first(env,'SELECT * FROM rules WHERE id=? AND workspace_id=?',rid,wid);if(!rule) fail(404,'Rule not found.');
     if(req.method==='DELETE') await env.DB.batch([stmt(env,'DELETE FROM rules WHERE id=? AND workspace_id=?',rid,wid),event(env,wid,u,'rule.deleted',rule.name)]);
-    else {const b=await body(req);if(typeof b.enabled!=='boolean')fail(400,'An enabled value is required.');await env.DB.batch([stmt(env,'UPDATE rules SET enabled=? WHERE id=? AND workspace_id=?',b.enabled?1:0,rid,wid),event(env,wid,u,b.enabled?'rule.resumed':'rule.paused',rule.name)]);}
+    else {
+      const b=await body(req);
+      if(typeof b.enabled==='boolean') {
+        await env.DB.batch([stmt(env,'UPDATE rules SET enabled=? WHERE id=? AND workspace_id=?',b.enabled?1:0,rid,wid),event(env,wid,u,b.enabled?'rule.resumed':'rule.paused',rule.name)]);
+      } else {
+        const name=b.name!==undefined?cleanText(b.name,60):rule.name;
+        const sender=b.sender!==undefined?cleanText(b.sender,254).toLowerCase():rule.sender;
+        const subject=b.subject_contains!==undefined?cleanText(b.subject_contains,120):rule.subject_contains;
+        const mode=b.mode!==undefined?b.mode:rule.mode;
+        const linkHost=b.link_host!==undefined?cleanText(b.link_host,253).toLowerCase():rule.link_host;
+        const retention=b.retention_minutes!==undefined?Number(b.retention_minutes):rule.retention_minutes;
+        if(name.length<2 || !validRuleSender(sender) || !['codes','links','read'].includes(mode) || !Number.isInteger(retention) || retention<5 || retention>1440 || (linkHost && !validHost(linkHost)) || (mode==='links'&&!linkHost)) fail(400,'Check the rule name, sender pattern, link hostname, and retention (5–1440 minutes).');
+        await env.DB.batch([stmt(env,'UPDATE rules SET name=?,sender=?,subject_contains=?,mode=?,link_host=?,retention_minutes=? WHERE id=? AND workspace_id=?',name,sender,subject,mode,linkHost,retention,rid,wid),event(env,wid,u,'rule.updated',name)]);
+      }
+    }
     return json({ok:true});
   }
   if(route==='invitations' && req.method==='POST') {
@@ -216,8 +277,88 @@ export default {
     try {
       const path=new URL(req.url).pathname;let response;
       if(path.startsWith('/api/')) response=await api(req,env,path);
-      else if(path.startsWith('/auth/')) {if(!configured(env))fail(503,'Live sign-in is not configured. Open /app.html?demo=1 for the sample workspace.');if(req.method!=='GET')fail(405,'Method not allowed.');response=await auth(req,env,path);}
-      else response=await env.ASSETS.fetch(req);
+      else if(path.startsWith('/auth/')) {if(!configured(env))fail(503,'Live sign-in is not configured. Open /dashboard?demo=1 for the sample workspace.');if(req.method!=='GET')fail(405,'Method not allowed.');response=await auth(req,env,path);}
+      else {
+        // Redirect all .html URLs permanently to clean URLs
+        if (path.endsWith('.html')) {
+          const clean = path.replace(/\.html$/, '');
+          const htmlMapped = {
+            '/index': '/',
+            '/app': '/dashboard',
+            '/overview': '/dashboard',
+            '/keys': '/people',
+            '/settings': '/profile',
+            '/signin': '/signin',
+            '/login': '/signin'
+          }[clean] || clean;
+          const target = new URL(htmlMapped, req.url);
+          target.search = new URL(req.url).search;
+          target.hash = new URL(req.url).hash;
+          return Response.redirect(target, 301);
+        }
+
+        // Legacy clean route redirects
+        const legacyRedirects = {
+          '/overview': '/dashboard',
+          '/keys': '/people',
+          '/settings': '/profile',
+          '/login': '/signin',
+          '/app': '/dashboard'
+        };
+        if (legacyRedirects[path]) {
+          const target = new URL(legacyRedirects[path], req.url);
+          target.search = new URL(req.url).search;
+          target.hash = new URL(req.url).hash;
+          return Response.redirect(target, 301);
+        }
+
+        // Logged-in root redirect: if logged in, redirect / to /dashboard; otherwise explicitly serve welcome landing page
+        if (path === '/') {
+          const sessionToken = getCookie(req, 'mg_session');
+          if (sessionToken && configured(env)) {
+            try {
+              const u = await first(env, 'SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?', await hash(sessionToken), now());
+              if (u) {
+                return Response.redirect(new URL('/dashboard', req.url), 302);
+              }
+            } catch {}
+          }
+          response = await env.ASSETS.fetch(new Request(new URL('/index.html', req.url), req));
+        } else if (path === '/signin') {
+          response = await env.ASSETS.fetch(new Request(new URL('/signin.html', req.url), req));
+        } else {
+          const appRoutes=['/dashboard','/profile','/inbox','/mailboxes','/rules','/people','/activity'];
+          if(appRoutes.includes(path)) {
+            const url = new URL(req.url);
+            const sessionToken = getCookie(req, 'mg_session');
+            if (!sessionToken && !url.searchParams.has('demo')) {
+              return Response.redirect(new URL('/signin', req.url), 302);
+            }
+            response = await env.ASSETS.fetch(new Request(new URL('/app.html', req.url), req));
+          } else if (path === '/access') {
+            response = await env.ASSETS.fetch(new Request(new URL('/access.html', req.url), req));
+          } else if (path === '/docs') {
+            response = await env.ASSETS.fetch(new Request(new URL('/docs.html', req.url), req));
+          } else if (path === '/privacy') {
+            response = await env.ASSETS.fetch(new Request(new URL('/privacy.html', req.url), req));
+          } else {
+            response = await env.ASSETS.fetch(req);
+            if(response.status === 404 && ((req.headers.get('accept')||'').includes('text/html') || !path.includes('.'))) {
+              try {
+                const notFoundRes = await env.ASSETS.fetch(new Request(new URL('/404.html', req.url), req));
+                if(notFoundRes && notFoundRes.ok) {
+                  const h = new Headers(notFoundRes.headers);
+                  h.set('content-type', 'text/html; charset=utf-8');
+                  response = new Response(notFoundRes.body, {
+                    status: 404,
+                    headers: h
+                  });
+                }
+              } catch {}
+            }
+          }
+        }
+      }
       return securityHeaders(response);
     } catch(error) {return securityHeaders(json({error:error.status?error.message:'The request could not be completed. Please try again.'},error.status||500));}
   },

@@ -13,8 +13,16 @@ const live="k.revoked_at IS NULL AND (k.expires_at IS NULL OR k.expires_at>?) AN
 function event(env,wid,actor,action,target){return query(env,'INSERT INTO events(id,workspace_id,actor_id,action,target,created_at) VALUES(?,?,?,?,?,?)',id(),wid,actor,action,cleanText(target,120),now());}
 
 export async function listAccessKeys(env,wid){
+  const purgeCutoff = now() - 5 * 86400000;
+  await query(env, 'DELETE FROM access_keys WHERE workspace_id=? AND expires_at IS NOT NULL AND expires_at < ?', wid, purgeCutoff).run().catch(() => {});
   const keys=await rows(env,'SELECT id,name,prefix,expires_at,max_views,views,revoked_at,last_used_at,created_at FROM access_keys WHERE workspace_id=? ORDER BY created_at DESC LIMIT 100',wid);
-  const scopes=await rows(env,'SELECT s.key_id,s.rule_id,s.mode,r.name FROM access_key_scopes s JOIN access_keys k ON k.id=s.key_id JOIN rules r ON r.id=s.rule_id AND r.workspace_id=k.workspace_id WHERE k.workspace_id=?',wid);
+  let scopes=[];
+  try {
+    scopes=await rows(env,'SELECT s.key_id,s.rule_id,s.mode,s.subdomain,r.name,r.sender FROM access_key_scopes s JOIN access_keys k ON k.id=s.key_id JOIN rules r ON r.id=s.rule_id AND r.workspace_id=k.workspace_id WHERE k.workspace_id=?',wid);
+  } catch {
+    scopes=await rows(env,'SELECT s.key_id,s.rule_id,s.mode,r.name,r.sender FROM access_key_scopes s JOIN access_keys k ON k.id=s.key_id JOIN rules r ON r.id=s.rule_id AND r.workspace_id=k.workspace_id WHERE k.workspace_id=?',wid);
+    scopes=scopes.map(s=>({...s,subdomain:'*'}));
+  }
   return keys.map(k=>({...k,scopes:scopes.filter(s=>s.key_id===k.id)}));
 }
 export async function createAccessKey(env,wid,owner,data){
@@ -25,8 +33,8 @@ export async function createAccessKey(env,wid,owner,data){
   for(const scope of data.scopes){if(!scope||typeof scope.rule_id!=='string'||seen.has(scope.rule_id)||scope.mode==='blocked')reject(400,'Invalid or duplicate company permission.');seen.add(scope.rule_id);const rule=await row(env,'SELECT mode FROM rules WHERE id=? AND workspace_id=?',scope.rule_id,wid);if(!rule||!availableModes(rule.mode).includes(scope.mode))reject(400,'A key cannot grant more access than its company rule retains.');}
   const count=await row(env,'SELECT count(*) n FROM access_keys WHERE workspace_id=?',wid);if(count.n>=100)reject(409,'This workspace has reached its 100-key limit.');
   const key=`mgk_${randomToken()}`,kid=id(),created=now();
-  await env.DB.batch([query(env,'INSERT INTO access_keys(id,workspace_id,name,token_hash,prefix,expires_at,max_views,created_at) VALUES(?,?,?,?,?,?,?,?)',kid,wid,name,await hash(key),key.slice(0,12),expiry,max,created),...data.scopes.map(s=>query(env,'INSERT INTO access_key_scopes(key_id,rule_id,mode) VALUES(?,?,?)',kid,s.rule_id,s.mode)),event(env,wid,owner.id,'access_key.created',name)]);
-  return {id:kid,key,url:`${env.APP_ORIGIN}/access.html`,expires_at:expiry,max_views:max};
+  await env.DB.batch([query(env,'INSERT INTO access_keys(id,workspace_id,name,token_hash,prefix,expires_at,max_views,created_at) VALUES(?,?,?,?,?,?,?,?)',kid,wid,name,await hash(key),key.slice(0,12),expiry,max,created),...data.scopes.map(s=>query(env,'INSERT INTO access_key_scopes(key_id,rule_id,mode,subdomain) VALUES(?,?,?,?)',kid,s.rule_id,s.mode,cleanText(s.subdomain,40)||'*')),event(env,wid,owner.id,'access_key.created',name)]);
+  return {id:kid,key,url:`${env.APP_ORIGIN}/access${data.accent ? '?accent=' + encodeURIComponent(data.accent) : ''}`,expires_at:expiry,max_views:max};
 }
 export async function revokeAccessKey(env,wid,owner,kid){
   const key=await row(env,'SELECT id,name FROM access_keys WHERE id=? AND workspace_id=?',kid,wid);if(!key)reject(404,'Access key not found.');

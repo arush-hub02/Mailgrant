@@ -25,16 +25,40 @@ export function validEmail(value) { return typeof value === 'string' && value.le
 export function validRuleSender(value) {
   if (typeof value !== 'string' || value.length < 3 || value.length > 254) return false;
   if (validEmail(value)) return true;
-  return /^(@|[a-z0-9.!#$%&'*+/=?^_`{|}~-]*\*[a-z0-9.!#$%&'*+/=?^_`{|}~-]*@)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(value.trim());
+  return /^(@|[a-z0-9.!#$%&'*+/=?^_`{|}~-]*\*[a-z0-9.!#$%&'*+/=?^_`{|}~-]*@)(?:\*\.)?[a-z0-9*](?:[a-z0-9*.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(value.trim());
 }
 export function matchesSender(pattern, sender) {
   if (!pattern || !sender) return false;
   pattern = pattern.toLowerCase().trim();
   sender = sender.toLowerCase().trim();
   if (pattern === sender) return true;
-  if (pattern.startsWith('@')) return sender.endsWith(pattern);
-  if (pattern.startsWith('*@')) return sender.endsWith(pattern.slice(1));
+  if (pattern.startsWith('@') && !pattern.slice(1).includes('*')) return sender.endsWith(pattern);
+  if (pattern.startsWith('*@') && !pattern.slice(2).includes('*')) return sender.endsWith(pattern.slice(1));
   if (pattern.includes('*')) {
+    const atIdx = pattern.indexOf('@');
+    if (atIdx >= 0) {
+      const localPattern = pattern.slice(0, atIdx);
+      const domainPattern = pattern.slice(atIdx + 1);
+      const sAtIdx = sender.indexOf('@');
+      if (sAtIdx >= 0) {
+        const sLocal = sender.slice(0, sAtIdx);
+        const sDomain = sender.slice(sAtIdx + 1);
+        let domainMatches = false;
+        if (domainPattern.startsWith('*.')) {
+          const rootDomain = domainPattern.slice(2);
+          domainMatches = (sDomain === rootDomain || sDomain.endsWith('.' + rootDomain));
+        } else if (domainPattern.includes('*')) {
+          const dRx = new RegExp('^' + domainPattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+          domainMatches = dRx.test(sDomain);
+        } else {
+          domainMatches = (sDomain === domainPattern);
+        }
+        if (!domainMatches) return false;
+        if (!localPattern || localPattern === '*') return true;
+        const lRx = new RegExp('^' + localPattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+        return lRx.test(sLocal);
+      }
+    }
     const rx = '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$';
     return new RegExp(rx).test(sender);
   }

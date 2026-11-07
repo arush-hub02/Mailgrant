@@ -1,253 +1,931 @@
 import {DemoAPI} from './demo.js';
-import {getTheme} from './theme.js';
+import {getTheme, getThemeSetting, setThemeSetting} from './theme.js';
+import {icon, iconPaths} from './components/icons.js';
+import {openModal, closeModal} from './components/modal.js';
+import {initDropdownSystem, initDropdowns} from './components/dropdown.js';
+import {
+  renderSidebar,
+  isSidebarCollapsed,
+  toggleSidebarCollapse,
+  toggleMobileSidebar,
+  attachSidebarShortcuts
+} from './components/sidebar.js';
+import {
+  esc,
+  modes,
+  ago,
+  remain,
+  initials,
+  badge,
+  vendor,
+  btn,
+  empty,
+  heading,
+  field,
+  formFooter
+} from './pages/common.js';
+import {dashboardPage} from './pages/dashboard.js';
+import {notFoundPage} from './pages/notFound.js';
+import {inboxPage, messageList} from './pages/inbox.js';
+import {mailboxesPage, openMailboxModal} from './pages/mailboxes.js';
+import {rulesPage, ruleCard, openRuleModal, RULE_PRESETS} from './pages/rules.js';
+import {peoplePage, openInviteModal, openGrantModal, openKeyModal, showKeyModal} from './pages/people.js';
+import {activityPage} from './pages/activity.js';
+import {profilePage, themeSelectionArea} from './pages/profile.js';
+
 const $=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const paths={
-  grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
-  inbox:'M22 12h-6l-2 3h-4l-2-3H2 M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
-  shield:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
-  people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8a3 3 0 0 1 0 6 M22 21v-2a4 4 0 0 0-3-3.87',
-  activity:'M22 12h-4l-3 9L9 3l-3 9H2',
-  settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v2 M12 20v2 M2 12h2 M20 12h2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41',
-  arrow:'M5 12h14 M12 5l7 7-7 7',
-  plus:'M12 5v14 M5 12h14',
-  check:'M20 6L9 17l-5-5',
-  lock:'M3 11h18v11H3z M7 11V7a5 5 0 0 1 10 0v4',
-  key:'M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4',
-  search:'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M21 21l-4.35-4.35',
-  copy:'M9 9h13v13H9z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1',
-  close:'M18 6L6 18 M6 6l12 12',
-  chevron:'M9 18l6-6-6-6',
-  logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9',
-  book:'M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
-  refresh:'M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
-  clock:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2',
-  contrast:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 2v20 M12 6h5 M12 10h6 M12 14h5 M12 18h4',
-  menu:'M3 12h18 M3 6h18 M3 18h18',
-  mail:'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6',
-  play:'M5 3l14 9-14 9V3z',
-  pause:'M6 4h4v16H6z M14 4h4v16h-4z',
-  trash:'M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'
-};
-const icon=(name)=>`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.shield}"/></svg>`;
-const labels={overview:'Overview',mailboxes:'Connected Gmail accounts',inbox:'Shared inbox',rules:'Access rules',people:'People & permissions',keys:'Access keys',activity:'Activity log',settings:'Workspace settings'};
-const modes={codes:'Codes only',links:'Sign-in links',read:'Read messages',blocked:'Blocked'};
-const ago=t=>{const m=Math.max(0,Math.floor((Date.now()-t)/60000));return m===0?'Just now':m<60?`${m} min ago`:`${Math.floor(m/60)} hr ago`;};
-const remain=t=>`${Math.max(0,Math.ceil((t-Date.now())/60000))} min left`;
-const initials=s=>String(s).split(/[ @]/).filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase();
-const badge=(text,color='')=>`<span class="badge ${color}">${esc(text)}</span>`;
-const vendor=(name,i=0)=>`<span class="vendor v${i%4}">${esc(name[0])}</span>`;
+const paths=iconPaths;
+const labels={dashboard:'Dashboard',mailboxes:'Connected Gmail accounts',inbox:'Shared inbox',rules:'Access rules',people:'People & Access',activity:'Activity log',profile:'Profile & Settings',signin:'Sign In'};
+
+function detectPageFromUrl(){
+  const pathname=location.pathname.toLowerCase().replace(/\/$/,'');
+  const slug=pathname.split('/').pop()?.replace('.html','')||'';
+  if(slug==='signin'||slug==='login')return 'signin';
+  if(!slug||slug==='dashboard'||slug==='app')return 'dashboard';
+  if(slug==='access'){location.replace('/access'+location.search+location.hash);return 'dashboard';}
+  if(slug==='overview')return 'dashboard';
+  if(slug==='keys')return 'people';
+  if(slug==='settings')return 'profile';
+  if(slug==='404'||slug==='notfound')return '404';
+  if(labels[slug])return slug;
+  const viewParam=new URLSearchParams(location.search).get('view');
+  if(viewParam==='dashboard'||viewParam==='overview')return 'dashboard';
+  if(viewParam==='keys')return 'people';
+  if(viewParam==='settings')return 'profile';
+  if(viewParam==='signin'||viewParam==='login')return 'signin';
+  if(viewParam==='404'||viewParam==='notfound')return '404';
+  if(viewParam&&labels[viewParam])return viewParam;
+  if(new URLSearchParams(location.search).has('gmail'))return 'profile';
+  if(viewParam)return '404';
+  return 'dashboard';
+}
+
+function getPageRouteUrl(targetPage){
+  const params=new URLSearchParams(location.search);
+  const searchStr=params.toString()?`?${params.toString()}`:'';
+  if(location.protocol==='file:'||(location.hostname.endsWith('github.io')&&location.pathname.endsWith('.html'))){
+    return `${targetPage}.html${searchStr}`;
+  }
+  return `/${targetPage}${searchStr}`;
+}
+
+// Tab-specific lazy loading cache
+const tabLoaded = {};
+function resetLazyCache() {
+  for (const k in tabLoaded) delete tabLoaded[k];
+}
+
+async function lazyLoadForTab(targetPage) {
+  if (!state || !wid) return;
+
+  switch (targetPage) {
+    case 'inbox': {
+      // Lazy load / sync email dispatches only when opening or viewing the inbox tab
+      if (!demo && state.gmail_connected) {
+        try {
+          await request(scoped('gmail/sync'), 'POST', {});
+          state = await request(scoped('state'));
+          render();
+        } catch {}
+      }
+      break;
+    }
+    case 'people': {
+      // Lazy load access keys when viewing people & access
+      if (state.owner && (!state.keys || !tabLoaded['keys'])) {
+        try {
+          const res = await request(scoped('keys'));
+          state.keys = res.keys || [];
+          tabLoaded['keys'] = true;
+          render();
+        } catch {}
+      }
+      break;
+    }
+    case 'activity': {
+      // Lazy refresh audit events when opening activity log tab
+      if (state.owner && !tabLoaded['activity']) {
+        try {
+          const fresh = await request(scoped('state'));
+          state.events = fresh.events;
+          tabLoaded['activity'] = true;
+          render();
+        } catch {}
+      }
+      break;
+    }
+  }
+}
+
+async function navigate(newPage,replace=false){
+  page=newPage;
+  query='';
+  toggleMobileSidebar(false);
+  try{window.scrollTo({top:0,left:0,behavior:'instant'});}catch{}
+  const targetUrl=getPageRouteUrl(newPage);
+  if(replace){history.replaceState({page:newPage},'',targetUrl);}
+  else{history.pushState({page:newPage},'',targetUrl);}
+  document.title=`${labels[page]||'Workspace'} · Mailgrant`;
+  render();
+  await lazyLoadForTab(newPage);
+}
+
+window.addEventListener('popstate',async()=>{
+  const detected=detectPageFromUrl();
+  if(detected!==page){
+    page=detected;
+    toggleMobileSidebar(false);
+    try{window.scrollTo({top:0,left:0,behavior:'instant'});}catch{}
+    document.title=`${labels[page]||'Workspace'} · Mailgrant`;
+    render();
+    await lazyLoadForTab(page);
+  }
+});
+
 let demo=new URLSearchParams(location.search).get('demo')==='1'||location.hostname.endsWith('github.io'),api=demo?new DemoAPI():null;
-let me,state,wid=new URLSearchParams(location.search).get('workspace')||'',page=new URLSearchParams(location.search).has('gmail')||new URLSearchParams(location.search).get('view')==='settings'?'settings':new URLSearchParams(location.search).get('view')==='keys'?'keys':'overview',filter='all',query='',liveReady=false,selectedMessage=null;
+let me,state,wid=new URLSearchParams(location.search).get('workspace')||'',page=detectPageFromUrl(),filter='all',query='',liveReady=false,selectedMessage=null;
 const authMessages={denied:'Google access was cancelled. You can try connecting again.',expired:'Google sign-in expired. Start again.',state:'Google sign-in could not be verified. Start a fresh sign-in.',network:'Google could not be reached. Please retry.',exchange:'Google authorization failed. Check the OAuth client and redirect URL, then retry.',identity:'Google identity could not be verified. Please retry.',account:'Choose the Gmail already linked to this mailbox. Use Add Gmail for a different account.',consent:'Approve Gmail read-only access to connect this mailbox.',owner:'Your owner session expired. Sign in to the dashboard and retry.',workspace:'You no longer own this workspace.'};
 authMessages.server='The Gmail connection could not be saved. Check the deployment configuration and retry.';
 let authMessage=authMessages[new URLSearchParams(location.search).get('auth_error')]||'';
 let inviteToken=location.hash.startsWith('#invite=')?location.hash.slice(8):sessionStorage.getItem('mailgrant-pending-invite');
 if(inviteToken){sessionStorage.setItem('mailgrant-pending-invite',inviteToken);history.replaceState(null,'',location.pathname+location.search);}
+
 async function request(path,method='GET',data){
   if(demo)return api.request(path,method,data);
   const response=await fetch(path,{method,credentials:'same-origin',headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined,cache:'no-store'});
   let json;try{json=await response.json();}catch{throw new Error('Live service is not connected here. Use the demo or follow the deployment guide.');}
   if(!response.ok)throw new Error(json.error||'The request could not be completed.');return json;
 }
+
 function toast(text){const el=$('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('visible'),4200);}
-function modal(title,html){$('#dialog').innerHTML=`<div class="dialog-head"><h2 id="dialog-title">${esc(title)}</h2><button class="icon-btn" data-action="close" aria-label="Close dialog">${icon('close')}</button></div><div class="dialog-body">${html}</div>`;if(!$('#dialog').open)$('#dialog').showModal();}
-function empty(title,text,action=''){return `<div class="empty">${icon('inbox')}<h3>${esc(title)}</h3><p>${esc(text)}</p>${action}</div>`;}
-const btn=(label,action,style='')=>`<button class="btn ${style}" data-action="${action}">${esc(label)}</button>`;
+function modal(title, html, options = {}) {
+  openModal(title, html, options);
+}
+
 const scoped=route=>`/api/w/${wid}/${route}`;
-async function loadWorkspace(){state=await request(scoped('state'));if(state.owner&&page==='keys')state.keys=(await request(scoped('keys'))).keys;render();}
+function syncUserProfile(user){
+  if(!user?.id)return;
+  try{
+    localStorage.removeItem(`mailgrant_avatar_${user.id}`);
+  }catch{}
+}
+async function loadWorkspace(){
+  state=await request(scoped('state'));
+  if(state.owner && (page === 'keys' || page === 'people')){
+    try {
+      const res = await request(scoped('keys'));
+      state.keys = res.keys || [];
+      tabLoaded['keys'] = true;
+    } catch {
+      state.keys = state.keys || [];
+    }
+  }
+  render();
+}
+
 async function boot(){
+  attachSidebarShortcuts();
+  initDropdownSystem();
+  if(page==='signin'){
+    document.title='Sign In · Mailgrant';
+    document.body.classList.add('is-auth-screen');
+    document.documentElement.classList.add('is-auth-screen');
+    try{
+      if(!demo&&!liveReady){
+        liveReady=(await request('/api/config')).configured===true;
+      }
+    }catch{}
+    renderLogin(authMessage);
+    authMessage='';
+    return;
+  }
   try{
     if(!demo&&!liveReady){try{liveReady=(await request('/api/config')).configured===true;}catch{}if(!liveReady){renderLogin('Live mail is not configured yet. Set up Google sign-in and Cloudflare to connect your mailbox; the sample workspace works now.');return;}}
-    me=await request('/api/me');if(!me.workspaces.some(w=>w.id===wid))wid=me.workspaces[0]?.id||'';
-    if(inviteToken&&!demo){const accepted=await request('/api/invitations/accept','POST',{token:inviteToken});inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');wid=accepted.id;me=await request('/api/me');toast('Invitation accepted. The owner can now grant company access.');}
-    if(wid)await loadWorkspace();else renderWelcome();if(authMessage){toast(authMessage);authMessage='';}
-  }catch(error){renderLogin(authMessage||error.message);}
+    me=await request('/api/me');
+    syncUserProfile(me?.user);
+    if(!me.workspaces.some(w=>w.id===wid))wid=me.workspaces[0]?.id||'';
+    if(inviteToken&&!demo){const accepted=await request('/api/invitations/accept','POST',{token:inviteToken});inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');wid=accepted.id;me=await request('/api/me');syncUserProfile(me?.user);toast('Invitation accepted. The workspace administrator can now grant company access.');}
+    if(wid){
+      await loadWorkspace();
+      if(page==='inbox')await lazyLoadForTab('inbox');
+    }else renderWelcome();
+    if(authMessage){toast(authMessage);authMessage='';}
+  }catch(error){
+    if(!demo){
+      page='signin';
+      if(location.pathname!=='/signin'&&location.pathname!=='/login'){
+        history.replaceState({page:'signin'},'','/signin'+(location.search||''));
+      }
+    }
+    renderLogin(authMessage||error.message);
+  }
 }
+
 function renderLogin(error=''){
+  document.title='Sign In · Mailgrant';
+  document.body.classList.add('is-auth-screen');
+  document.documentElement.classList.add('is-auth-screen');
   $('#app').innerHTML=`
-    <main class="intro card-hero" style="max-width:540px; margin: 40px auto; text-align:center;">
-      <a class="brand" href="/" style="justify-content:center; padding:0 0 20px;">
-        <span class="brand-mark" style="display:grid; place-items:center; background:var(--blue); color:#fff; width:38px; height:38px; border-radius:12px;">
-          ${icon('shield')}
-        </span>
-        <span style="font-size:22px; font-weight:800;">mailgrant</span>
-      </a>
+    <div class="auth-page-wrap">
+      <main class="auth-main">
+        <div class="auth-card">
+          <!-- Glowing Top Accent Bar -->
+          <div class="auth-card-accent-bar" aria-hidden="true"></div>
 
-      <div class="badge blue" style="margin: 0 auto 16px; font-size:12px;">
-        ${icon('lock')}
-        <span>Owner Authentication</span>
-      </div>
+          <!-- Embedded Header Row inside Card -->
+          <div class="auth-card-top-bar">
+            <a class="brand" href="/" aria-label="Mailgrant Home">
+              <span class="brand-mark">${icon('shield')}</span>
+              <span class="brand-title">mailgrant</span>
+            </a>
+            <button type="button" class="btn small theme-pill-btn" data-theme-toggle aria-label="Toggle theme">
+              ${icon('contrast')}
+              <span>Theme</span>
+            </button>
+          </div>
 
-      <h1 style="font-size:28px; font-weight:800; letter-spacing:-0.6px; margin:0 0 10px;">Sign in to Workspace</h1>
-      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 24px;">
-        Manage your private email whitelists, generate revocable sharing keys, or accept an invitation. Your Google password stays with Google.
-      </p>
+          <!-- Hero Icon Badge -->
+          <div class="auth-icon-badge" aria-hidden="true">
+            ${icon('lock')}
+          </div>
 
-      ${error ? `<div class="notice amber">${esc(error)}</div>` : ''}
+          <!-- Authentication Tag -->
+          <div class="auth-pill-badge">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span>Workspace Authentication</span>
+          </div>
 
-      <div class="button-row" style="flex-direction:column; gap:12px;">
-        ${liveReady ? `
-          <a class="btn primary" href="/auth/login" style="height:48px; font-size:15px; width:100%;">
-            <span>Continue with Google</span>
-            ${icon('arrow')}
-          </a>
-        ` : `
-          <a class="btn primary" href="/docs.html#build" style="height:48px; font-size:15px; width:100%;">
-            <span>View deployment setup guide</span>
-            ${icon('arrow')}
-          </a>
-        `}
-        <a class="btn" href="/app.html?demo=1" style="height:44px; width:100%;">
-          <span>Explore Sample Demo Workspace</span>
-        </a>
-      </div>
+          <!-- Title & Subtitle -->
+          <h1 class="auth-title">Sign in to <span class="gradient-text">Workspace</span></h1>
+          <p class="auth-subtitle">
+            Manage your private email whitelists, generate revocable sharing keys, or accept an invitation. Your Google password stays with Google.
+          </p>
 
-      <hr class="divider">
-      <div style="font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:10px;">
-        <span>Have an access key from someone? <a href="/access.html" style="font-weight:600; color:var(--blue);">Open Recipient Portal →</a></span>
-        <span><a href="/docs.html" style="color:var(--muted);">See the visual project guide</a> · <a href="/" style="color:var(--muted);">Home</a></span>
-      </div>
-    </main>
+          <!-- Security Trust Signals -->
+          <div class="auth-trust-matrix">
+            <span class="auth-trust-chip">
+              <svg class="google-icon" viewBox="0 0 24 24" style="width:12px;height:12px;">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+              </svg>
+              <span>OAuth 2.0 PKCE</span>
+            </span>
+            <span class="auth-trust-chip">
+              ${icon('shield')}
+              <span>Zero Passwords Shared</span>
+            </span>
+            <span class="auth-trust-chip">
+              ${icon('key')}
+              <span>Strict Boundary Isolation</span>
+            </span>
+          </div>
+
+          <!-- Error Alert if present -->
+          ${error ? `
+            <div class="auth-notice-alert" role="alert">
+              <span class="icon">${icon('shieldAlert')}</span>
+              <div class="alert-text">${esc(error)}</div>
+            </div>
+          ` : ''}
+
+          <!-- Main Actions -->
+          <div class="auth-actions-group">
+            ${liveReady ? `
+              <a class="btn-google-auth" href="/auth/login">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+                </svg>
+                <span>Continue with Google</span>
+                <span class="auth-btn-arrow" aria-hidden="true">→</span>
+              </a>
+            ` : `
+              <a class="btn-google-auth" href="/docs#build">
+                <span>View deployment setup guide</span>
+                <span class="auth-btn-arrow" aria-hidden="true">→</span>
+              </a>
+            `}
+          </div>
+
+          <!-- Recipient Direct Access Card -->
+          <div class="auth-recipient-box">
+            <div class="recipient-box-text">
+              <strong>Have an access key from someone?</strong>
+              <p>Direct zero-trust access. No Google account required.</p>
+            </div>
+            <a class="btn small primary" href="/access">
+              <span>Open Portal →</span>
+            </a>
+          </div>
+
+          <!-- Clean Footer Links -->
+          <div class="auth-footer-links">
+            <a href="/">Home</a>
+            <span class="sep">·</span>
+            <a href="/docs">Architecture Guide</a>
+            <span class="sep">·</span>
+            <a href="/privacy">Privacy Details</a>
+          </div>
+        </div>
+      </main>
+    </div>
   `;
 }
+
 function renderWelcome(){
   state=null;
   $('#app').innerHTML=`
-    <main class="intro card-hero" style="max-width:560px; margin: 40px auto; text-align:center;">
-      <a class="brand" href="/" style="justify-content:center; padding:0 0 20px;">
-        <span class="brand-mark" style="display:grid; place-items:center; background:var(--blue); color:#fff; width:38px; height:38px; border-radius:12px;">
-          ${icon('shield')}
-        </span>
-        <span style="font-size:22px; font-weight:800;">mailgrant</span>
-      </a>
+    <div class="auth-page-wrap">
+      <main class="auth-main">
+        <div class="auth-card">
+          <div class="auth-card-accent-bar" aria-hidden="true"></div>
 
-      <div class="badge green" style="margin: 0 auto 16px; font-size:12px;">
-        ${icon('check')}
-        <span>Account Ready</span>
-      </div>
+          <!-- Embedded Header Row inside Card -->
+          <div class="auth-card-top-bar">
+            <a class="brand" href="/" aria-label="Mailgrant Home">
+              <span class="brand-mark">${icon('shield')}</span>
+              <span class="brand-title">mailgrant</span>
+            </a>
+            <button type="button" class="btn small theme-pill-btn" data-theme-toggle aria-label="Toggle theme">
+              ${icon('contrast')}
+              <span>Theme</span>
+            </button>
+          </div>
 
-      <h1 style="font-size:28px; font-weight:800; letter-spacing:-0.6px; margin:0 0 10px;">Welcome, ${esc(me.user.name)}</h1>
-      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 24px;">
-        Create your first workspace to connect a Gmail mailbox, add approved sender rules, and issue sharing keys.
-      </p>
+          <div class="auth-icon-badge" style="background:rgba(16, 185, 129, 0.12); color:#10b981; border-color:rgba(16, 185, 129, 0.25);" aria-hidden="true">
+            ${icon('check')}
+          </div>
 
-      <div class="notice" style="text-align:left; background:var(--blue-light); border-color:var(--blue-border); color:var(--blue);">
-        <strong>How it works:</strong> Creating your own workspace lets you manage access to your own email. If someone invited you to their workspace, use their invitation link instead.
-      </div>
+          <div class="auth-pill-badge" style="background:rgba(16, 185, 129, 0.12); color:#10b981; border-color:rgba(16, 185, 129, 0.25);">
+            <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;" aria-hidden="true"></span>
+            <span>Google Account Authenticated</span>
+          </div>
 
-      <div class="button-row" style="flex-direction:column; gap:12px; margin-top:24px;">
-        <button class="btn primary" data-action="add-gmail" style="height:48px; font-size:15px; width:100%;">
-          ${icon('plus')}
-          <span>Connect your first Gmail account</span>
-        </button>
-        <a class="btn" href="/docs.html" style="height:44px; width:100%;">
-          <span>Visual project guide</span>
-        </a>
-      </div>
-    </main>
+          <h1 class="auth-title">Welcome, <span class="gradient-text">${esc(me?.user?.name || 'Administrator')}</span></h1>
+          <p class="auth-subtitle">
+            Create your first workspace to connect a Gmail mailbox, configure approved sender rules, and issue sharing keys.
+          </p>
+
+          <div class="auth-trust-matrix">
+            <span class="auth-trust-chip">
+              ${icon('mail')}
+              <span>${esc(me?.user?.email || '')}</span>
+            </span>
+            <span class="auth-trust-chip">
+              ${icon('shield')}
+              <span>Administrator</span>
+            </span>
+          </div>
+
+          <div class="auth-actions-group">
+            <button class="btn primary btn-full" data-action="add-gmail" style="height:48px; font-size:14px; font-weight:700;">
+              ${icon('plus')}
+              <span>Connect your first Gmail account</span>
+            </button>
+          </div>
+
+          <div class="auth-footer-links">
+            <a href="/">Home</a>
+            <span class="sep">·</span>
+            <a href="/docs">Guide</a>
+            <span class="sep">·</span>
+            <a href="/privacy">Privacy Details</a>
+          </div>
+        </div>
+      </main>
+    </div>
   `;
 }
+
 function render(){
-  if(!state)return renderWelcome();const owner=state.owner;
-  if(!owner&&!['overview','inbox'].includes(page))page='overview';
-  $('#app').innerHTML=`<div class="shell"><aside id="workspace-nav" class="sidebar" aria-label="Workspace navigation"><a class="brand" href="/"><span class="brand-mark">${icon('shield')}</span>mailgrant<small>BETA</small></a><div class="workspace-select"><span class="square-avatar">${esc(state.workspace.name[0])}</span><label><span class="section-label" style="display:block;padding:0;margin:0;font-size:8px">WORKSPACE</span><select id="workspace-select" aria-label="Choose workspace">${me.workspaces.map(w=>`<option value="${esc(w.id)}" ${w.id===wid?'selected':''}>${esc(w.name)}${w.mailbox_email?' · '+esc(w.mailbox_email):''}</option>`).join('')}</select></label></div><p class="section-label">WORKSPACE</p><nav class="nav">${[['overview','grid'],['inbox','inbox'],...(owner?[['mailboxes','mail'],['rules','shield'],['keys','key'],['people','people'],['activity','activity'],['settings','settings']]:[])].map(([p,i])=>`<button data-page="${p}" class="${p===page?'active':''}" ${p===page?'aria-current="page"':''}>${icon(i)}${labels[p]}${p==='inbox'?`<span class="nav-count">${state.messages.length}</span>`:''}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="guide-card"><h3>A little access goes a long way.</h3><p>See how selective sharing keeps everyone in their own lane.</p><a href="/docs.html">Explore the project guide ${icon('arrow')}</a></div><button class="sidebar-link" data-action="workspace">${icon('plus')}New workspace</button><div class="account"><span class="avatar">${initials(me.user.name)}</span><div><strong>${esc(me.user.name)}</strong><small>${owner?'Workspace owner':'Invited member'}</small></div><button class="icon-btn" data-action="logout" aria-label="Sign out">${icon('logout')}</button></div></div></aside><div class="content"><header class="topbar"><div class="crumb"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="workspace-nav">${icon('menu')}</button><span>Workspace</span><span>/</span><strong>${labels[page]}</strong></div><div class="top-actions"><button class="icon-btn" data-theme-toggle aria-label="Toggle light or dark mode">${icon('contrast')}</button>${badge(owner?'Owner access':'Restricted access',owner?'green':'blue')}<button class="icon-btn" data-action="refresh" aria-label="Refresh workspace">${icon('refresh')}</button><a class="icon-btn" href="/docs.html" aria-label="Open project guide">${icon('book')}</a></div></header><main id="main" class="main"><div class="demo-banner"><div>${demo?'<strong>Interactive demo</strong> · Sample data only. No real mailbox is connected.':'<strong>Private workspace</strong> · Access is checked on the server for every request.'}</div>${demo?`<div><select class="mode-select" id="demo-viewer" aria-label="Demo perspective"><option value="owner" ${owner?'selected':''}>View as owner</option><option value="brother" ${!owner?'selected':''}>View as brother</option></select> <button data-action="reset">Reset demo</button></div>`:`<a href="/docs.html">How sharing works →</a>`}</div><div class="fade-in">${renderPage()}</div></main></div></div>`;
+  if(page==='signin'||!state){
+    if(page==='signin'||!me?.user) return renderLogin();
+    return renderWelcome();
+  }
+  document.body.classList.remove('is-auth-screen');
+  document.documentElement.classList.remove('is-auth-screen');
+  const owner=state.owner;
+  if(!owner&&!['dashboard','overview','inbox','profile','404'].includes(page))page='dashboard';
+  const sidebarHtml=renderSidebar({state,me,page,labels,wid,owner,demo});
+  const isCollapsed=isSidebarCollapsed();
+  $('#app').innerHTML=`
+    <div class="shell ${isCollapsed?'sidebar-collapsed':''}">
+      ${sidebarHtml}
+      <div class="content">
+        <!-- Minimal mobile-only navigation trigger -->
+        <header class="mobile-topbar" aria-label="Mobile navigation">
+          <button class="icon-btn mobile-menu" data-action="menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="workspace-nav">
+            ${icon('menu')}
+          </button>
+          <div class="mobile-brand">
+            <span class="brand-mark">${icon('shield')}</span>
+            <span class="brand-name">mailgrant</span>
+          </div>
+          <button class="icon-btn" data-theme-toggle aria-label="Toggle light or dark mode">
+            ${icon('contrast')}
+          </button>
+        </header>
+
+        <main id="main" class="main clean-main">
+          <div class="fade-in">${renderPage()}</div>
+        </main>
+      </div>
+    </div>
+  `;
+  initDropdowns($('#main'));
 }
-function heading(title,sub,action=''){return `<div class="page-head"><div><p class="eyebrow">${page==='overview'?'YOUR PRIVATE SHARING SPACE':'MAILGRANT WORKSPACE'}</p><h1>${esc(title)}</h1><p class="subtitle">${esc(sub)}</p></div>${action}</div>`;}
-function renderPage(){switch(page){case'overview':return overview();case'mailboxes':return mailboxesPage();case'inbox':return inbox();case'rules':return rulesPage();case'people':return people();case'keys':return keysPage();case'activity':return activity();case'settings':return settings();}}
-function overview(){
-  const active=state.rules.filter(r=>r.enabled).length;
-  return heading(`Good ${new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, ${me.user.name.split(' ')[0]}.`,state.owner?'A clear view of what you share. And who you share it with.':'Only the companies and messages shared with you appear here.',state.owner?`<button class="btn primary" data-action="invite">${icon('plus')}Invite someone</button>`:'')+`<div class="stats"><div class="stat"><div class="stat-top">Approved companies ${icon('shield')}</div><strong>${active.toString().padStart(2,'0')}</strong><small><span>${active} active rules</span> · Everything else blocked</small></div><div class="stat"><div class="stat-top">${state.owner?'People with access':'Your access level'} ${icon('people')}</div><strong>${state.owner?Math.max(0,state.members.length-1).toString().padStart(2,'0'):'Limited'}</strong><small>${state.owner?'Individually controlled permissions':'No access to the owner’s Gmail'}</small></div><div class="stat"><div class="stat-top">Available messages ${icon('inbox')}</div><strong>${state.messages.length.toString().padStart(2,'0')}</strong><small>Automatically removed after retention</small></div></div><div class="dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Your shared inbox</h2><p>Just the messages that belong here.</p></div><button class="btn text small" data-page="inbox">View all ${icon('arrow')}</button></div>${messageList(state.messages.slice(0,4))}<div class="panel-footer"><span>${icon('lock').replace('class="icon"','class="icon" style="width:10px;height:10px;vertical-align:middle"')} Private to approved members</span><span>Short retention, less exposure</span></div></section><div class="aside-stack"><section class="panel protection"><div class="panel-body"><div class="shield-bubble">${icon('shield')}</div><h2>Shared on your terms.</h2><p>${state.owner?'Your Gmail password stays with Google. Only approved companies are shared with invited people. Direct Gmail mode grants the app broader read permission.':'You can view only what the owner permits. Other mail and workspace settings stay private.'}</p><hr><div class="check-line">${icon('check')} Everything blocked by default</div><div class="check-line">${icon('check')} Access checked on every request</div><div class="check-line">${icon('check')} Messages expire automatically</div></div></section>${state.owner?`<section class="panel"><div class="panel-head"><h2>People you trust</h2><button class="btn text small" data-page="people">Manage</button></div><div class="panel-body" style="padding-top:3px;padding-bottom:5px">${state.members.filter(m=>m.id!==state.workspace.owner_id).map(m=>`<div class="access-person"><span class="avatar">${initials(m.name)}</span><div><strong>${esc(m.name)}</strong><small>${state.grants.filter(g=>g.user_id===m.id&&g.mode!=='blocked'&&(!g.expires_at||g.expires_at>Date.now())).length} company permissions</small></div>${badge('Member','blue')}</div>`).join('')||'<p class="subtitle" style="padding:15px 0">Your workspace is private. Invite someone when you’re ready.</p>'}</div></section>`:''}</div></div><section class="bottom-section"><div class="section-heading"><h2>${state.owner?'Your access rules':'Shared with you'}</h2>${state.owner?'<button class="btn text small" data-page="rules">Manage rules →</button>':''}</div><div class="rule-grid">${state.rules.slice(0,3).map(ruleCard).join('')||`<div class="panel">${empty('Nothing shared yet','Add an approved company rule to get started.',state.owner?btn('Add your first rule','rule','primary small'):'')}</div>`}</div></section>`;
+
+function renderPage(){
+  switch(page){
+    case'dashboard':return dashboardPage({state,me});
+    case'mailboxes':return mailboxesPage({state,me,demo});
+    case'inbox':return inboxPage({state,demo,filter,query});
+    case'rules':return rulesPage({state});
+    case'people':return peoplePage({state,me,demo});
+    case'activity':return activityPage({state});
+    case'profile':return profilePage({state,me,demo});
+    case'404':
+    default:
+      return notFoundPage({path:location.pathname+location.search});
+  }
 }
-function messageList(messages){return messages.length?messages.map((m,i)=>`<button class="message-row" data-message="${esc(m.id)}">${vendor(m.name,i)}<div><h3>${esc(m.name)}</h3><p>${m.mode==='codes'?'A sign-in code is ready':m.mode==='links'?'An approved sign-in link is ready':'An approved email is ready to read'}</p></div><div class="message-right">${badge(modes[m.mode],m.mode==='codes'?'blue':'')}<small>${ago(m.received_at)} · ${remain(m.expires_at)}</small></div></button>`).join(''):empty('Your shared inbox is clear',state.owner?'New matching emails will appear here. Connect Gmail, add a sender rule, then refresh.':'New messages will appear after the owner grants you access. Earlier messages stay private.');}
-function inbox(){const messages=state.messages.filter(m=>(filter==='all'||m.mode===filter)&&m.name.toLowerCase().includes(query.toLowerCase()));return heading('A quieter kind of inbox.','Only approved messages. Nothing else gets through.',demo&&state.owner?`<button class="btn primary" data-action="simulate">${icon('plus')}Simulate new email</button>`:'')+`<section class="panel"><div class="toolbar"><div class="tabs">${[['all','All messages'],['codes','Codes'],['links','Links'],['read','Read-only']].map(([v,l])=>`<button data-filter="${v}" class="${filter===v?'active':''}">${l}</button>`).join('')}</div><label class="search-wrap">${icon('search')}<input id="inbox-search" aria-label="Search company names" placeholder="Search companies…" value="${esc(query)}"></label></div><div id="message-list">${messageList(messages)}</div><div class="panel-footer"><span>Showing up to 100 unexpired messages</span><span>${messages.length} available</span></div></section>`;}
-function ruleCard(r,i){return `<article class="rule-card"><div class="rule-card-top">${vendor(r.name,i)}${badge(r.enabled?'Active':'Paused',r.enabled?'green':'')}</div><h3>${esc(r.name)}</h3>${state.owner?`<p style="font-family:var(--font-mono);font-size:11px;">${esc(r.sender)}</p><p>${r.subject_contains?`Subject includes “${esc(r.subject_contains)}”`:'Any subject from this exact sender'}</p>`:''}<div class="rule-footer">${badge(modes[r.mode],'blue')}<small>${state.owner?`${r.retention_minutes} min retention`:'Shared by owner'}</small></div>${state.owner?`<div class="button-row" style="margin-top:14px"><button class="btn small" data-toggle-rule="${esc(r.id)}">${icon(r.enabled?'pause':'play')}<span>${r.enabled?'Pause':'Resume'}</span></button><button class="icon-btn" data-delete-rule="${esc(r.id)}" aria-label="Delete ${esc(r.name)} rule">${icon('trash')}</button></div>`:''}</article>`;}
-function rulesPage(){return heading('A rule for every boundary.','Choose exact senders, what to retain, and how long it stays.',`<button class="btn primary" data-action="rule">${icon('plus')}Add access rule</button>`)+`<div class="notice">Codes-only rules retain the extracted code. Read-message rules retain a plain-text copy and can grant narrower access to individual people. Sending and Gmail deletion are not enabled.</div><div class="rule-grid">${state.rules.map(ruleCard).join('')||empty('Start with one company','Use a sender address from an actual email. The demo addresses are illustrative.')}</div>`;}
-function people(){const members=state.members.filter(m=>m.id!==state.workspace.owner_id),pending=state.invitations.filter(i=>!i.accepted_at&&i.expires_at>Date.now());return heading('The right people. The right access.','Invite someone, then set their permissions for each company.',`<button class="btn primary" data-action="invite">${icon('plus')}Invite someone</button>`)+`<section class="panel"><div class="panel-head"><div><h2>Permission matrix</h2><p>Changes take effect on the next server request. New grants start with future messages.</p></div>${badge(`${members.length} members`)}</div>${members.length?`<div class="table-wrap"><table><thead><tr><th>PERSON</th>${state.rules.map(r=>`<th>${esc(r.name)}</th>`).join('')}<th>MANAGE</th></tr></thead><tbody>${members.map(m=>`<tr><td><div class="person-cell"><span class="avatar">${initials(m.name)}</span><div><strong>${esc(m.name)}</strong><small>${esc(m.email)}</small></div></div></td>${state.rules.map(r=>{const g=state.grants.find(g=>g.rule_id===r.id&&g.user_id===m.id),mode=g&&(!g.expires_at||g.expires_at>Date.now())?g.mode:'blocked',options=r.mode==='read'?['blocked','codes','links','read']:['blocked',r.mode];return `<td><label><span class="inline-label">${esc(modes[mode])}</span><br><button class="btn small" data-grant-member="${esc(m.id)}" data-grant-rule="${esc(r.id)}">Change access</button>${g?.expires_at?`<small class="muted" style="display:block;font-size:9px">Until ${esc(new Date(g.expires_at).toLocaleString())}</small>`:''}</label></td>`;}).join('')}<td><button class="btn danger small" data-remove="${esc(m.id)}">Remove</button></td></tr>`).join('')}</tbody></table></div>`:empty('Keep your circle intentional','Send a private invitation link to someone’s Google account email. They begin with no company access.')}<div class="panel-footer"><span>${esc(me.user.email)} · Workspace owner</span><span>Owner has access to retained messages</span></div></section><section class="panel bottom-section"><div class="panel-head"><div><h2>Pending invitations</h2><p>Private links expire after 48 hours and can be used only by the invited Google account.</p></div></div>${pending.map(i=>`<div class="pending-row"><div>${esc(i.email)}<small>Expires ${esc(new Date(i.expires_at).toLocaleDateString())}</small></div><div class="button-row">${demo?`<button class="btn small" data-accept-demo="${esc(i.id)}">Accept in demo</button>`:''}<button class="btn small" data-revoke-invite="${esc(i.id)}">Revoke</button></div></div>`).join('')||'<div class="panel-body"><p class="subtitle">No pending invitations.</p></div>'}</section>`;}
-const actionNames={'workspace.created':'Workspace created','invitation.created':'Invitation created','invitation.accepted':'Invitation accepted','invitation.revoked':'Invitation revoked','permission.changed':'Permission updated','message.viewed':'Message opened','message.received':'Sample email received','rule.created':'Access rule added','rule.paused':'Access rule paused','rule.resumed':'Access rule resumed','rule.deleted':'Access rule deleted','member.removed':'Member removed','messages.deleted':'Retained messages deleted','mailbox.address_rotated':'Receiving address rotated','mailbox.confirmation_viewed':'Forwarding confirmation opened','access_key.created':'Access key created','access_key.revoked':'Access key revoked','access_key.redeemed':'Access key used on a browser','access_key.message_viewed':'Message opened using access key','gmail.connected':'Gmail connected','gmail.disconnected':'Gmail disconnected'};
-function activity(){return heading('Every access has a trail.','A 30-day activity history without email bodies, codes, or login links.')+`<section class="panel"><div class="panel-head"><h2>Recent workspace activity</h2>${badge('Latest 100 events')}</div>${state.events.map(e=>`<div class="activity-row"><div class="activity-icon">${icon(e.action==='message.viewed'?'inbox':'shield')}</div><div><p>${esc(actionNames[e.action]||e.action)}</p><small>${esc(e.actor||'System')} ${e.target?`· ${esc(e.target)}`:''}</small></div><time datetime="${new Date(e.created_at).toISOString()}">${ago(e.created_at)}</time></div>`).join('')||empty('A fresh start','Workspace changes and message reads will appear here.')}</section>`;}
-function settings(){const m=state.mailbox;return heading('Your mailbox. Your controls.','Connect Gmail directly, or optionally forward selected messages if you own a domain.')+gmailSettings(m)+`<div class="settings-grid">${m.forwarding_available===false?`<section class="panel"><div class="panel-head"><h2>Optional filtered forwarding</h2></div><div class="panel-body"><p class="subtitle">Direct Gmail above works without a domain. Filtered forwarding is also available if you later configure an inbound domain in Cloudflare.</p><div class="notice">Forwarding keeps unrelated messages out of this app entirely and does not require Gmail read permission.</div></div></section>`:`<section class="panel"><div class="panel-head"><h2>Optional Gmail forwarding</h2>${badge(m.verified_at?'Receiving mail':'Awaiting first email',m.verified_at?'green':'amber')}</div><div class="panel-body"><p class="inline-label">Connected mailbox</p><p class="subtitle">${esc(m.email)}</p><ol class="steps"><li><strong>Add this address in Gmail</strong>Settings → Forwarding and POP/IMAP → Add a forwarding address.<div class="copy-box"><code>${esc(m.alias)}</code><button class="icon-btn" data-copy="${esc(m.alias)}" aria-label="Copy receiving address">${icon('copy')}</button></div></li><li><strong>Confirm the forwarding address</strong>Gmail sends a confirmation here. Open it below and enter the code in Gmail.<br><button class="btn small" style="margin-top:10px" data-action="setup">View forwarding confirmation</button></li><li><strong>Create a filter for an approved sender</strong>In Gmail, create a filter using the exact sender and select “Forward it to” this address. Keep global forwarding disabled.</li><li><strong>Receive a matching email</strong>The workspace becomes active when an authenticated, approved email addressed to your mailbox arrives.</li></ol><div class="notice amber">Demo sender addresses are samples. In live mode, use the actual sender from a received email. BCC-only messages and messages that fail authentication are rejected.</div><a class="btn small" href="https://support.google.com/mail/answer/10957?hl=en" target="_blank" rel="noopener noreferrer">Gmail setup instructions ${icon('arrow')}</a></div></section>`}<div class="aside-stack" style="grid-template-columns:1fr"><section class="panel"><div class="panel-head"><h2>Data & retention</h2></div><div class="panel-body"><div class="check-line">${icon('lock')} Sensitive content encrypted before storage</div><div class="check-line">${icon('clock')} Expiry checked before every message read</div><div class="check-line">${icon('shield')} Code-only access returns only the code</div><p class="subtitle" style="margin-top:15px;line-height:1.9">The server processes message content. This is not end-to-end encryption. Infrastructure backups expire on the hosting provider’s schedule.</p><hr class="divider"><p class="inline-label">Export workspace configuration</p><p class="subtitle" style="margin-bottom:13px">Rules and permissions only. No message contents or receiving address.</p>${btn('Download configuration','export','small')}</div></section><section class="panel danger-zone"><div class="panel-head"><h2>Owner controls</h2></div><div class="panel-body"><p class="subtitle" style="margin-bottom:15px">${m.forwarding_available===false?'Disconnect Gmail above to stop syncing. Deleting retained messages here does not delete originals in Gmail.':'Rotating the receiving address stops new mail to the old address. Update your Gmail filters afterwards.'}</p><div class="button-row">${m.forwarding_available===false?'':btn('Rotate address','rotate','small')}${btn('Delete messages','purge','danger small')}${btn('Delete workspace','delete-workspace','danger small')}</div><p class="subtitle" style="margin-top:15px;line-height:1.8">Also remove the corresponding forwarding filters in Gmail when you disconnect. Existing sessions in shared services are managed by those services.</p></div></section></div></div>`;}
-function formFooter(label){return `<p class="form-error" role="alert"></p><div class="dialog-actions">${btn('Cancel','close')}<button type="submit" class="btn primary">${label}</button></div>`;}
-function mailboxesPage(){return heading('Your Gmail accounts, together.','One dashboard login. Separate mailboxes, rules and sharing keys.',`<button class="btn primary" data-action="add-gmail">${icon('plus')}Add Gmail account</button>`)+`<div class="notice">Each Gmail account has its own workspace. Choose a mailbox here or in the workspace selector. Its rules and keys apply only to that mailbox.</div><div class="rule-grid">${me.workspaces.filter(w=>w.owner_id===me.user.id).map(w=>`<article class="rule-card"><div class="rule-card-top"><span class="square-avatar">${icon('mail')}</span>${badge(w.gmail_connected?'Connected':'Setup needed',w.gmail_connected?'green':'amber')}</div><h3>${esc(w.name)}</h3><p>${esc(w.mailbox_email||'Choose a Gmail account during connection')}</p><div class="rule-footer"><button class="btn small" data-open-mailbox="${esc(w.id)}">${w.gmail_connected?'Manage mailbox':'Connect / manage'}</button></div></article>`).join('')}</div><p class="subtitle" style="margin-top:20px">Adding an account opens Google’s account picker and consent. After linking, reconnecting this workspace requires the same Gmail. Add a new workspace for a different account.</p>`;}
-function openMailbox(){modal('Add a Gmail account',`<p>Name this mailbox. Google will ask which Gmail account to connect, while your dashboard stays signed in as ${esc(me.user.email)}.</p><form id="mailbox-form">${field('Mailbox name','name','e.g. Personal Gmail or Work Gmail','required minlength="2" maxlength="60"')}${demo?field('Sample Gmail address','demo_email','second-mailbox@example.com','type="email" required'):''}<div class="notice amber">The selected Google account must authorize Gmail read-only access. It can be different from your dashboard account. Your sharing keys expose only the companies you select.</div>${formFooter(demo?'Add sample mailbox':'Continue to Google')}</form>`);}
-function keysPage(){const keys=state.keys||[];return heading('One key. Only what you allow.','Choose sender rules, create a key, and share the recipient page. No recipient Google login needed.',`<button class="btn primary" data-action="key">${icon('plus')}Create access key</button>`)+`<div class="notice">Give each person a different key. Anyone holding a key can use it until its expiry, message-open limit, or your revocation. Keep your Google credentials private.</div><section class="panel"><div class="panel-head"><div><h2>Distribution keys</h2><p>The full key is shown once. Only its hash is stored on the server.</p></div><a class="btn small" href="/access.html${demo?'?demo=1':''}" target="_blank" rel="noopener noreferrer">Recipient page ↗</a></div>${keys.length?`<div class="table-wrap"><table class="key-table"><thead><tr><th>KEY / PERSON</th><th>COMPANY ACCESS</th><th>EXPIRY / LIMIT</th><th>STATUS</th><th>CONTROL</th></tr></thead><tbody>${keys.map(k=>{const inactive=k.revoked_at||k.expires_at&&k.expires_at<=Date.now()||k.max_views!==null&&k.views>=k.max_views;return `<tr><td><strong>${esc(k.name)}</strong><small style="font-family:var(--font-mono);">${esc(k.prefix)}…</small></td><td>${k.scopes.map(s=>`<span class="badge" style="font-size:10px; margin:2px 0;">${esc(s.name)} · ${modes[s.mode]}</span>`).join(' ')||'<small>No remaining rules</small>'}</td><td>${k.expires_at?esc(new Date(k.expires_at).toLocaleDateString()):'No expiry'}<small>${k.views} / ${k.max_views===null?'unlimited':k.max_views} message opens</small></td><td>${badge(k.revoked_at?'Revoked':k.expires_at&&k.expires_at<=Date.now()?'Expired':inactive?'Limit reached':'Active',inactive?'':'green')}</td><td>${k.revoked_at?'—':`<button class="btn danger small" data-revoke-key="${esc(k.id)}">${icon('trash')}<span>Revoke</span></button>`}</td></tr>`;}).join('')}</tbody></table></div>`:empty('Share a page, not your password.','First add exact-sender rules in Access rules. Then create a key for your brother or friend.',btn('Create your first key','key','primary'))}</section><div class="notice">The recipient enters the key once at <strong>/access.html</strong>. A protected cookie remembers this browser; the raw key is not saved in browser storage. Keys may have no expiry, while browsers can still expire or clear their saved session.</div>`;}
-function openKey(){if(!state.rules.length){toast('Add an approved sender in Access rules first.');return;}modal('Create an access key',`<p>Name the person or purpose, then choose exactly what they may see. New messages from key creation are eligible.</p><form id="key-form">${field('Key name / person','name','e.g. Brother — Claude codes','required minlength="2" maxlength="60"')}<div class="field"><label>Company permissions</label>${state.rules.map(r=>{const options=r.mode==='read'?['blocked','codes','links','read']:['blocked',r.mode];return `<div class="key-scope"><label for="key-rule-${esc(r.id)}">${esc(r.name)}<small>${esc(r.sender)}</small></label><select id="key-rule-${esc(r.id)}" data-key-rule="${esc(r.id)}">${options.map(m=>`<option value="${m}">${modes[m]}</option>`).join('')}</select></div>`;}).join('')}</div><div class="field"><label for="key-duration">Key expiry</label><select id="key-duration" name="duration"><option value="24">After 24 hours</option><option value="168">After 7 days</option><option value="720" selected>After 30 days</option><option value="0">No expiry — until revoked</option></select></div>${field('Maximum message opens (optional)','max_views','Blank means no limit','type="number" min="1" max="1000000000" step="1"')}<div class="notice">Opening a message uses one open, including repeats. Refreshing the inbox does not. A key can never expose mail outside its selected rules.</div>${formFooter('Generate access key')}</form>`);}
-function showKey(result){modal('Your access key is ready',`<p>Copy this key now. It is shown only once. Share it privately with its intended recipient.</p><div class="key-secret">${esc(result.key)}</div><div class="button-row" style="margin-top:12px"><button class="btn primary" data-copy="${esc(result.key)}">${icon('copy')}Copy access key</button></div><hr class="divider"><p><strong>Recipient page</strong></p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy recipient page URL">${icon('copy')}</button></div><div class="button-row" style="margin-top:15px"><a class="btn" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">Open recipient page ↗</a></div><p>The recipient pastes the key there once. Revoke this key in Access keys whenever you want to stop future access.</p>`);}
-function gmailSettings(m){return `<section class="panel" style="margin-bottom:26px"><div class="panel-head"><div><h2>Direct Gmail connection</h2><p>No custom domain needed. Works with your Cloudflare workers.dev address.</p></div>${badge(m.gmail?(demo?'Sample connected':'Connected'):'Not connected',m.gmail?'green':'')}</div><div class="panel-body"><p class="subtitle">${m.identity_pinned?`Reconnect the linked Gmail ${esc(m.email)} when needed.`:`Choose the Gmail you want to link. It can differ from your dashboard login.`} Add exact-sender rules after connection. Click Refresh to fetch matching mail. While the dashboard is open, it checks about every 30 seconds.</p><div class="notice amber">Google grants this app mailbox-wide read permission, even though it fetches messages using approved-sender filters. Invitees never receive your Gmail token or unrestricted inbox access. Public Gmail integrations may need Google verification and a security assessment.</div>${m.gmail?.needs_reconnect?'<div class="notice amber">Google authorization needs renewal. Reconnect using the same Google account.</div>':''}<div class="button-row"><button class="btn primary" data-action="gmail-connect">${icon('mail')}${m.gmail?'Reconnect Gmail':'Connect Gmail'}</button>${m.gmail?btn('Disconnect Gmail','gmail-disconnect','danger'):''}<a class="btn" href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Google account connections ↗</a></div><p class="subtitle" style="margin-top:13px">Only messages received after connection and rule creation are imported. A sync handles up to 10 matches; refresh again for a busy inbox. No background mailbox polling runs while everyone is away.</p></div></section>`;}
-function field(label,name,placeholder='',extra=''){return `<div class="field"><label for="f-${name}">${label}</label><input id="f-${name}" name="${name}" placeholder="${placeholder}" ${extra}></div>`;}
+
 async function message(id){
   modal('Opening message…','<p>Checking your current permissions.</p>');
-  try{const m=await request(scoped(`messages/${id}`));selectedMessage=m;modal(m.name,`${badge(modes[m.mode],'blue')}<div class="meta-line"><span>Approved message</span><span id="message-expiry">${remain(m.expires_at)}</span></div>${m.mode==='codes'?m.code?`<div class="code-display"><strong>${esc(m.code)}</strong><small>PRIVATE SIGN-IN CODE</small></div><button class="btn primary" data-copy="${esc(m.code)}">${icon('copy')}Copy code</button>`:'<div class="notice amber">No unambiguous code could be extracted. The original email is not exposed with this permission.</div>':m.mode==='links'?m.link?`<div class="notice">Only links to the exact hostname approved by the owner are available.</div><a class="btn primary" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${demo?'Open illustrative link':'Open sign-in link'} ${icon('arrow')}</a>`:'<div class="notice amber">No single approved sign-in link could be extracted.</div>':`<h3 style="margin-top:20px">${esc(m.subject)}</h3><p>${esc(m.sender)}</p><p class="message-text">${esc(m.text)}</p>`}<hr class="divider"><p>Codes and links can grant access to the service’s account. Removing a member here does not end a session already created there.</p>`);}catch(e){selectedMessage=null;modal('Message unavailable',`<p>${esc(e.message)}</p>${btn('Close','close')}`);}
+  try{
+    const m=await request(scoped(`messages/${id}`));
+    selectedMessage=m;
+    modal(m.name,`
+      ${badge(modes[m.mode],'blue')}
+      <div class="meta-line"><span>Approved message</span><span id="message-expiry">${remain(m.expires_at)}</span></div>
+      ${m.mode==='codes'?m.code?`<div class="code-display"><strong>${esc(m.code)}</strong><small>PRIVATE SIGN-IN CODE</small></div><button class="btn primary" data-copy="${esc(m.code)}">${icon('copy')}Copy code</button>`:'<div class="notice amber">No unambiguous code could be extracted. The original email is not exposed with this permission.</div>':m.mode==='links'?m.link?`<div class="notice">Only links to the exact hostname approved by the owner are available.</div><a class="btn primary" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${demo?'Open illustrative link':'Open sign-in link'} ${icon('arrow')}</a>`:'<div class="notice amber">No single approved sign-in link could be extracted.</div>':`<h3 style="margin-top:20px">${esc(m.subject)}</h3><p>${esc(m.sender)}</p><p class="message-text">${esc(m.text)}</p>`}
+      <hr class="divider">
+      <p>Codes and links can grant access to the service’s account. Removing a member here does not end a session already created there.</p>
+    `);
+  }catch(e){
+    selectedMessage=null;
+    modal('Message unavailable',`<p>${esc(e.message)}</p>${btn('Close','close')}`);
+  }
 }
-function openRule(){modal('Add an access rule',`<p>Allow an exact sender or wildcard (e.g. *@mail.anthropic.com). Anything that does not match an active rule is rejected.</p><form id="rule-form">${field('Company or rule name','name','e.g. Claude','required minlength="2" maxlength="60"')}${field('Sender email or pattern','sender','e.g. *@mail.anthropic.com or exact email','required maxlength="254"')}${field('Subject must contain (optional)','subject_contains','e.g. sign in','maxlength="120"')}<div class="field"><label for="f-mode">What should this rule retain?</label><select id="f-mode" name="mode"><option value="codes">Extracted codes only</option><option value="links">Approved sign-in links only</option><option value="read">Full plain-text message</option></select><small>People can receive narrower access than the retained content. Codes-only rules never retain the full body.</small></div>${field('Approved link hostname (required for links)','link_host','e.g. claude.ai','maxlength="253"')}<div class="field"><label for="f-retention">Retention</label><select id="f-retention" name="retention_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="1440">24 hours</option></select></div>${formFooter('Create rule')}</form>`);}
-function openInvite(){modal('Invite someone you trust',`<p>Create a private invitation for a specific Google account. Share the generated link yourself; the app does not send invitation emails.</p><form id="invite-form">${field('Their Google account email','email','name@gmail.com','type="email" required maxlength="254"')}<div class="notice">The invitation expires in 48 hours. After acceptance, this person starts with no company access. Set their permissions in People & permissions.</div>${formFooter('Create invitation')}</form>`);}
-function openGrant(memberId,ruleId){const r=state.rules.find(r=>r.id===ruleId),m=state.members.find(m=>m.id===memberId),g=state.grants.find(g=>g.rule_id===ruleId&&g.user_id===memberId),options=r.mode==='read'?['blocked','codes','links','read']:['blocked',r.mode];modal(`Access to ${r.name}`,`<p>Set what ${esc(m.name)} can see. Changing permission starts a new access window for future messages.</p><form id="grant-form" data-member="${esc(memberId)}" data-rule="${esc(ruleId)}"><div class="field"><label for="grant-mode">Permission</label><select name="mode" id="grant-mode">${options.map(mode=>`<option value="${mode}" ${g?.mode===mode?'selected':''}>${modes[mode]}</option>`).join('')}</select></div><div class="field"><label for="grant-expiry">Access expires</label><select name="duration" id="grant-expiry"><option value="0">Until revoked</option><option value="1">After 1 hour</option><option value="24">After 24 hours</option><option value="168">After 7 days</option><option value="720">After 30 days</option></select></div>${formFooter('Save permission')}</form>`);}
-function confirmAction(title,text,action){modal(title,`<p>${esc(text)}</p><div class="dialog-actions">${btn('Cancel','close')}${btn('Confirm',action,'danger')}</div>`);}
-async function mutate(route,method='POST',data,success='Saved.'){await request(scoped(route),method,data);$('#dialog').close();selectedMessage=null;if(route.startsWith('gmail/'))me=await request('/api/me');await loadWorkspace();toast(success);}
+
+function confirmAction(title,text,action){
+  modal(title,`<p>${esc(text)}</p><div class="dialog-actions">${btn('Cancel','close')}${btn('Confirm',action,'danger')}</div>`);
+}
+
+async function mutate(route,method='POST',data,success='Saved.'){
+  await request(scoped(route),method,data);
+  closeModal();
+  selectedMessage=null;
+  if(route.startsWith('gmail/')){me=await request('/api/me');syncUserProfile(me?.user);}
+  await loadWorkspace();
+  toast(success);
+}
+
+window.mailgrantLogout = async () => {
+  try {
+    if (demo) {
+      location.href = '/signin';
+      return;
+    }
+    await request('/api/logout', 'POST', {});
+  } catch (err) {
+    console.warn('Logout exception:', err);
+  } finally {
+    location.href = '/signin';
+  }
+};
+
 async function handleAction(action,el){
   switch(action){
-    case'close':$('#dialog').close();selectedMessage=null;break;
-    case'menu':{const open=$('.sidebar')?.classList.toggle('open');el.setAttribute('aria-expanded',String(open));break;}
+    case'close':closeModal();selectedMessage=null;break;
+    case'toggle-sidebar':toggleSidebarCollapse();break;
+    case'menu':toggleMobileSidebar();break;
+    case'close-menu':toggleMobileSidebar(false);break;
+    case'workspace-picker':
+      modal('Choose workspace', `<div class="mg-workspace-list">${me.workspaces.map(w=>`<button type="button" class="mg-workspace-card-btn ${w.id===wid?'active':''}" data-switch-workspace="${esc(w.id)}"><span class="square-avatar">${esc((w.name&&w.name[0])?w.name[0].toUpperCase():'W')}</span><div><strong style="color:var(--ink);font-size:13px;display:block;">${esc(w.name)}</strong>${w.mailbox_email?`<small style="color:var(--muted);font-size:11px;">${esc(w.mailbox_email)}</small>`:''}</div>${w.id===wid?`<span class="active-badge">Active</span>`:''}</button>`).join('')}</div>`, { subtitle: 'Select an active workspace to manage its inboxes, rules, and settings.' });
+      break;
     case'refresh':if(!demo&&state.gmail_connected)await request(scoped('gmail/sync'),'POST',{});await loadWorkspace();toast('Workspace refreshed.');break;
-    case'invite':openInvite();break;
-    case'add-gmail':openMailbox();break;
-    case'key':openKey();break;
+    case'invite':openInviteModal(modal);break;
+    case'add-gmail':openMailboxModal({me,demo,modal});break;
+    case'key':openKeyModal({state,modal,toast});break;
+    case'rule':openRuleModal(modal, state);break;
+    case'trigger-avatar-upload':{const input=$('#avatar-file-input');if(input)input.click();break;}
+    case'remove-avatar':{
+      if(demo){if(me?.user)delete me.user.avatar;render();toast('Profile photo removed.');break;}
+      try{
+        await request('/api/avatar','DELETE');
+        if(me?.user)delete me.user.avatar;
+        render();
+        toast('Profile photo removed.');
+      }catch(err){toast(err.message);}
+      break;
+    }
+    case'revoke-current-session':{
+      modal('Revoke active session?', '<p>This will sign out your current session on this device and return you to sign-in.</p><div class="dialog-actions">' + btn('Cancel','close') + btn('Revoke & Sign out', 'confirm-revoke-current-session', 'danger') + '</div>');
+      break;
+    }
+    case'confirm-revoke-current-session':{
+      $('#dialog').close();
+      await handleAction('logout');
+      break;
+    }
     case'gmail-connect':if(demo){modal('Gmail connection in live mode','<p>In the live app, this opens Google’s read-only Gmail consent screen. No real account is connected in the sample workspace.</p><div class="notice amber">The app receives mailbox-wide read permission from Google. Your invitees still receive only the content allowed by your rules.</div><button class="btn primary" data-action="demo-gmail-connect">Simulate Gmail connection</button>');break;}else{const result=await request(scoped('gmail/connect'),'POST',{});location.assign(result.url);break;}
     case'demo-gmail-connect':await mutate('gmail/connect','POST',{},'Sample Gmail connection enabled. No real account connected.');break;
     case'gmail-disconnect':confirmAction('Disconnect Gmail?','This removes the stored Gmail credential from this workspace and stops syncing. Retained messages expire normally. You can also revoke the app in your Google Account connections.','confirm-gmail-disconnect');break;
     case'confirm-gmail-disconnect':await mutate('gmail/disconnect','POST',{},'Gmail disconnected.');break;
-    case'rule':openRule();break;
     case'workspace':modal('Create a private workspace',`<p>Each workspace has its own receiving address, rules, members, and message history.</p><form id="workspace-form">${field('Workspace name','name','e.g. Personal workspace','required minlength="2" maxlength="60"')}${formFooter('Create workspace')}</form>`);break;
-    case'logout':if(demo){location.href='/';return;}await request('/api/logout','POST',{});location.href='/';break;
-    case'reset':api.reset();wid='personal';page='overview';await boot();toast('Sample workspace reset.');break;
+    case'logout':await window.mailgrantLogout();break;
+    case'reset':api.reset();wid='personal';await navigate('dashboard',true);await boot();toast('Sample workspace reset.');break;
     case'simulate':api.simulate(wid);await loadWorkspace();toast('New sample email received.');break;
-    case'setup':{const setup=await request(scoped('setup'));modal('Gmail forwarding confirmation',`<p>Owner-only setup message. Enter the code or use the confirmation instructions in Gmail.</p><p class="message-text">${esc(setup.text)}</p><div class="notice">Do not enable global forwarding. Create a filter for each approved sender instead.</div>`);break;}
+    case'setup':{const setup=await request(scoped('setup'));modal('Gmail forwarding confirmation',`<p>Administrator setup message. Enter the code or use the confirmation instructions in Gmail.</p><p class="message-text">${esc(setup.text)}</p><div class="notice">Do not enable global forwarding. Create a filter for each approved sender instead.</div>`);break;}
     case'rotate':confirmAction('Rotate receiving address?','The old address will stop receiving mail. You must verify the new address and update your Gmail filters.','confirm-rotate');break;
     case'confirm-rotate':await mutate('mailbox/rotate','POST',{},'Receiving address rotated. Update Gmail forwarding.');break;
     case'purge':confirmAction('Delete retained messages?','This deletes the messages currently stored in this workspace. It does not delete originals in Gmail.','confirm-purge');break;
     case'confirm-purge':await mutate('messages','DELETE',undefined,'Retained messages deleted.');break;
     case'delete-workspace':modal('Delete this workspace',`<p>Members, rules, retained messages, and workspace history will be deleted. Remove its forwarding filters in Gmail too.</p><form id="delete-form">${field(`Type “${esc(state.workspace.name)}” to confirm`,'name','','required')}${formFooter('Delete workspace')}</form>`);break;
     case'export':{const data={workspace:state.workspace.name,exported_at:new Date().toISOString(),rules:state.rules.map(({name,sender,subject_contains,mode,retention_minutes,link_host,enabled})=>({name,sender,subject_contains,mode,retention_minutes,link_host,enabled})),permissions:state.grants.map(g=>({person:state.members.find(m=>m.id===g.user_id)?.email,rule:state.rules.find(r=>r.id===g.rule_id)?.name,mode:g.mode,expires_at:g.expires_at}))};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='mailgrant-configuration.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Configuration downloaded.');break;}
+    case'export-audit':{
+      const data={workspace:state.workspace?.name||'Workspace',exported_at:new Date().toISOString(),event_count:(state.events||[]).length,events:state.events||[]};
+      const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');
+      a.href=url;a.download=`mailgrant-audit-trail-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast('Audit trail log downloaded.');
+      break;
+    }
+    case'refresh-audit':{
+      delete tabLoaded['activity'];
+      await lazyLoadForTab('activity');
+      toast('Audit trail refreshed.');
+      break;
+    }
   }
 }
+
 document.addEventListener('click',async e=>{
-  const el=e.target.closest('button,a');if(!el)return;
+  const el=e.target.closest('button,a,[data-page],[data-action],[data-message],[data-filter]');if(!el)return;
   try{
-    if(el.dataset.openMailbox){wid=el.dataset.openMailbox;page='settings';await loadWorkspace();return;}
-    if(el.dataset.page){page=el.dataset.page;query='';if(page==='keys')await loadWorkspace();else render();return;}
+    if(el.dataset.action==='logout'||el.closest('[data-action="logout"]')){await window.mailgrantLogout();return;}
+    if(el.dataset.openMailbox){wid=el.dataset.openMailbox;toggleMobileSidebar(false);await navigate('profile');await loadWorkspace();return;}
+    if(el.dataset.switchWorkspace){wid=el.dataset.switchWorkspace;resetLazyCache();toggleMobileSidebar(false);closeModal();await navigate('dashboard');await loadWorkspace();return;}
+    if(el.dataset.page){toggleMobileSidebar(false);await navigate(el.dataset.page);return;}
     if(el.dataset.message){await message(el.dataset.message);return;}
     if(el.dataset.filter){filter=el.dataset.filter;render();return;}
     if(el.dataset.copy){await navigator.clipboard.writeText(el.dataset.copy);toast('Copied to clipboard.');return;}
     if(el.dataset.toggleRule){const rule=state.rules.find(r=>r.id===el.dataset.toggleRule);await mutate(`rules/${rule.id}`,'PATCH',{enabled:!rule.enabled},rule.enabled?'Rule paused.':'Rule resumed.');return;}
+    if(el.dataset.editRule){const rule=state.rules.find(r=>r.id===el.dataset.editRule);if(rule)openRuleModal(modal,state,rule);return;}
+    if(el.dataset.applyPreset){const preset=RULE_PRESETS.find(p=>p.id===el.dataset.applyPreset);if(preset)openRuleModal(modal,state,null,preset);return;}
+    if(el.dataset.syncPreset){const preset=RULE_PRESETS.find(p=>p.id===el.dataset.syncPreset);if(preset){await mutate('rules','POST',{name:preset.name,sender:preset.sender,subject_contains:preset.subject_contains||'',mode:preset.mode,link_host:preset.link_host||'',retention_minutes:preset.retention_minutes},`${preset.name} access rule activated.`);}return;}
+    if(el.dataset.syncStarterRules){
+      const starter=RULE_PRESETS.filter(p=>['claude','google','github','notion'].includes(p.id));
+      const toAdd=starter.filter(p=>!state.rules.some(r=>r.name.toLowerCase()===p.name.toLowerCase()||r.sender.toLowerCase()===p.sender.toLowerCase()));
+      if(!toAdd.length){toast('Starter rules are already active in this workspace.');return;}
+      for(const preset of toAdd){
+        await request(scoped('rules'),'POST',{name:preset.name,sender:preset.sender,subject_contains:preset.subject_contains||'',mode:preset.mode,link_host:preset.link_host||'',retention_minutes:preset.retention_minutes});
+      }
+      await loadWorkspace();
+      toast(`Activated ${toAdd.length} recommended access rules.`);
+      return;
+    }
     if(el.dataset.deleteRule){const rid=el.dataset.deleteRule;modal('Delete access rule?',`<p>Its retained messages and member permissions will also be deleted.</p><div class="dialog-actions">${btn('Cancel','close')}<button class="btn danger" data-confirm-delete-rule="${esc(rid)}">Delete rule</button></div>`);return;}
     if(el.dataset.confirmDeleteRule){await mutate(`rules/${el.dataset.confirmDeleteRule}`,'DELETE',undefined,'Rule deleted.');return;}
-    if(el.dataset.grantMember){openGrant(el.dataset.grantMember,el.dataset.grantRule);return;}
+    if(el.dataset.grantMember){openGrantModal({state,memberId:el.dataset.grantMember,ruleId:el.dataset.grantRule,modal});return;}
     if(el.dataset.remove){modal('Remove this person?',`<p>They will lose all workspace permissions on their next request. Previously copied codes and sessions in other services cannot be recalled.</p><div class="dialog-actions">${btn('Cancel','close')}<button class="btn danger" data-confirm-remove="${esc(el.dataset.remove)}">Remove member</button></div>`);return;}
     if(el.dataset.confirmRemove){await mutate(`members/${el.dataset.confirmRemove}`,'DELETE',undefined,'Member removed.');return;}
     if(el.dataset.revokeKey){modal('Revoke this access key?',`<p>All browsers using this key will lose access on their next request. Copied codes and existing service sessions cannot be recalled.</p><div class="dialog-actions">${btn('Cancel','close')}<button class="btn danger" data-confirm-revoke-key="${esc(el.dataset.revokeKey)}">Revoke key</button></div>`);return;}
-    if(el.dataset.confirmRevokeKey){await mutate(`keys/${el.dataset.confirmRevokeKey}`,'DELETE',undefined,'Access key revoked on all devices.');return;}
+    if(el.dataset.confirmRevokeKey){
+      delete tabLoaded['keys'];
+      await mutate(`keys/${el.dataset.confirmRevokeKey}`,'DELETE',undefined,'Access key revoked on all devices.');
+      return;
+    }
     if(el.dataset.revokeInvite){await mutate(`invitations/${el.dataset.revokeInvite}`,'DELETE',undefined,'Invitation revoked.');return;}
+    if(el.dataset.resendInvite){
+      const email=el.dataset.resendInvite;
+      const oldId=el.dataset.inviteId;
+      try{if(oldId)await request(scoped(`invitations/${oldId}`),'DELETE');}catch{}
+      const result=await request(scoped('invitations'),'POST',{email});
+      await loadWorkspace();
+      modal('Your invitation is ready',`<p>A fresh invitation link was generated for <strong>${esc(email)}</strong>. It can be used once by that Google account and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'Share this fresh link privately with your invitee.'}</div>`);
+      toast('Fresh invitation link generated.');
+      return;
+    }
     if(el.dataset.acceptDemo){await mutate(`accept-demo/${el.dataset.acceptDemo}`,'POST',{},'Sample invitation accepted. Set their permissions next.');return;}
+    if(el.dataset.peopleTab){
+      const tabName=el.dataset.peopleTab;
+      try{localStorage.setItem('mailgrant_people_tab',tabName);}catch{}
+      document.querySelectorAll('[data-people-tab]').forEach(b=>b.classList.toggle('active',b===el));
+      
+      const btnInvite=document.getElementById('btn-header-invite');
+      const btnKey=document.getElementById('btn-header-key');
+      const btnPortal=document.getElementById('btn-header-portal');
+      if(btnInvite)btnInvite.style.display=tabName==='direct'?'none':'inline-flex';
+      if(btnKey)btnKey.style.display=tabName==='platform'?'none':'inline-flex';
+      if(btnPortal)btnPortal.style.display=tabName==='direct'?'inline-flex':'none';
+
+      const banner=document.getElementById('dedicated-tab-banner');
+      if(banner){
+        if(tabName==='direct'){
+          banner.innerHTML=`
+            <div class="banner-content">
+              <strong>⚡ Direct Access (No Login Required):</strong>
+              Recipients open their sandboxed inbox at <code>/access</code> using a passwordless access key or 1-click magic link. Access is stored encrypted in device session cookies. Expired tokens automatically delete from the list and database 5 days post-expiration.
+            </div>
+          `;
+        }else if(tabName==='platform'){
+          banner.innerHTML=`
+            <div class="banner-content">
+              <strong>🛡️ Platform Verified Accounts:</strong>
+              Team members authenticated through Google Workspace / Gmail OAuth sign-in. Subdomain filters and company rules are granted and audited per individual account.
+            </div>
+          `;
+        }else{
+          banner.innerHTML=`
+            <div class="banner-content">
+              <strong>🌐 Complete Access Distribution Hub:</strong>
+              Overview of both Direct Passwordless Keys (5-day auto-purge retention) and Verified Google Platform Members.
+            </div>
+          `;
+        }
+      }
+
+      const q=(document.getElementById('people-search-input')?.value||'').toLowerCase().trim();
+      const activeFilter=document.querySelector('[data-filter-people].active')?.dataset.filterPeople||'all';
+      let visibleCount=0;
+      document.querySelectorAll('#people-table-body tr, #people-grid-container .unified-person-card').forEach(item=>{
+        const type=item.dataset.personFilterType;
+        const distType=item.dataset.personDistributionType;
+        const searchData=(item.dataset.personSearch||'').toLowerCase();
+        const matchTab=tabName==='all'||distType===tabName;
+        const matchFilter=activeFilter==='all'||type===activeFilter;
+        const matchSearch=!q||searchData.includes(q);
+        const isVisible=matchTab&&matchFilter&&matchSearch;
+        if(item.tagName==='TR'){
+          item.style.display=isVisible?'':'none';
+        }else{
+          item.style.display=isVisible?'flex':'none';
+        }
+        if(isVisible)visibleCount++;
+      });
+      const emptyNotice=document.getElementById('people-no-results');
+      if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+      return;
+    }
+    if(el.dataset.filterPeople){
+      const filterType=el.dataset.filterPeople;
+      let activeTab=document.querySelector('[data-people-tab].active')?.dataset.peopleTab||'all';
+
+      // If user selected a filter that belongs to another tab, adapt the active tab
+      if(filterType==='keys' && activeTab==='platform'){
+        activeTab='direct';
+        document.querySelectorAll('[data-people-tab]').forEach(b=>b.classList.toggle('active',b.dataset.peopleTab==='direct'));
+      }else if((filterType==='members'||filterType==='invites') && activeTab==='direct'){
+        activeTab='platform';
+        document.querySelectorAll('[data-people-tab]').forEach(b=>b.classList.toggle('active',b.dataset.peopleTab==='platform'));
+      }
+
+      document.querySelectorAll('[data-filter-people]').forEach(b=>b.classList.toggle('active',b===el));
+      const q=(document.getElementById('people-search-input')?.value||'').toLowerCase().trim();
+      let visibleCount=0;
+      document.querySelectorAll('#people-table-body tr, #people-grid-container .unified-person-card').forEach(item=>{
+        const type=item.dataset.personFilterType;
+        const distType=item.dataset.personDistributionType;
+        const searchData=(item.dataset.personSearch||'').toLowerCase();
+        const matchTab=activeTab==='all'||distType===activeTab;
+        const matchType=filterType==='all'||type===filterType;
+        const matchSearch=!q||searchData.includes(q);
+        const isVisible=matchTab&&matchType&&matchSearch;
+        if(item.tagName==='TR'){
+          item.style.display=isVisible?'':'none';
+        }else{
+          item.style.display=isVisible?'flex':'none';
+        }
+        if(isVisible)visibleCount++;
+      });
+      const emptyNotice=document.getElementById('people-no-results');
+      if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+      return;
+    }
+    if(el.dataset.setView){
+      const viewMode=el.dataset.setView;
+      try{localStorage.setItem('mailgrant_people_view',viewMode);}catch{}
+      document.querySelectorAll('[data-set-view]').forEach(b=>b.classList.toggle('active',b.dataset.setView===viewMode));
+      const tableEl=document.getElementById('people-table-container');
+      const cardsEl=document.getElementById('people-grid-container');
+      if(tableEl&&cardsEl){
+        if(viewMode==='cards'){
+          tableEl.style.display='none';
+          cardsEl.style.display='grid';
+        }else{
+          tableEl.style.display='block';
+          cardsEl.style.display='none';
+        }
+      }
+      return;
+    }
+    if(el.dataset.filterActivity){
+      const filterType=el.dataset.filterActivity;
+      document.querySelectorAll('[data-filter-activity]').forEach(b=>b.classList.toggle('active',b===el));
+      const q=(document.getElementById('activity-search-input')?.value||'').toLowerCase().trim();
+      let visibleCount=0;
+      document.querySelectorAll('#activity-timeline-feed .activity-timeline-item').forEach(item=>{
+        const cat=item.dataset.activityFilter;
+        const searchData=(item.dataset.activitySearch||'').toLowerCase();
+        const matchCat=filterType==='all'||cat===filterType;
+        const matchSearch=!q||searchData.includes(q);
+        const isVisible=matchCat&&matchSearch;
+        item.style.display=isVisible?'flex':'none';
+        if(isVisible)visibleCount++;
+      });
+      const emptyNotice=document.getElementById('activity-no-results');
+      if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+      return;
+    }
     if(el.dataset.action)await handleAction(el.dataset.action,el);
   }catch(err){toast(err.message);}
 });
-document.addEventListener('change',async e=>{try{if(e.target.id==='workspace-select'){wid=e.target.value;page='overview';await loadWorkspace();}if(e.target.id==='demo-viewer'){if((e.target.value==='owner')!==(me.user.id==='demo-owner'))api.switchViewer();wid='personal';page='overview';await boot();}}catch(e){toast(e.message);}});
-document.addEventListener('input',e=>{if(e.target.id==='inbox-search'){query=e.target.value;$('#message-list').innerHTML=messageList(state.messages.filter(m=>(filter==='all'||m.mode===filter)&&m.name.toLowerCase().includes(query.toLowerCase())));}});
-document.addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.target,b=Object.fromEntries(new FormData(form)),submit=form.querySelector('[type=submit]');if(submit.disabled)return;submit.disabled=true;form.querySelector('.form-error').textContent='';
-  try{
-    if(form.id==='mailbox-form'){const created=await request('/api/workspaces','POST',{name:b.name});wid=created.id;page='settings';if(demo){await request(scoped('gmail/connect'),'POST',{email:b.demo_email||'sample-mailbox@example.com'});$('#dialog').close();await boot();toast('Sample mailbox linked.');}else{const result=await request(scoped('gmail/connect'),'POST',{});location.assign(result.url);}}
-    if(form.id==='workspace-form'){const result=await request('/api/workspaces','POST',b);wid=result.id;$('#dialog').close();page='settings';await boot();toast('Private workspace created.');}
-    if(form.id==='rule-form'){b.retention_minutes=Number(b.retention_minutes);b.sender=b.sender.toLowerCase();b.link_host=b.link_host.toLowerCase();if(b.mode==='links'&&!b.link_host)throw new Error('Enter the exact hostname allowed for sign-in links.');await mutate('rules','POST',b,'Access rule created. Receive a new matching email and refresh.');}
-    if(form.id==='invite-form'){const result=await request(scoped('invitations'),'POST',{email:b.email.toLowerCase()});await loadWorkspace();modal('Your invitation is ready',`<p>Share this link privately with <strong>${esc(b.email)}</strong>. It can be used once by that Google account and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'No email has been sent. Copy the link and share it with your invitee.'}</div>`);}
-    if(form.id==='key-form'){const scopes=[...form.querySelectorAll('[data-key-rule]')].filter(s=>s.value!=='blocked').map(s=>({rule_id:s.dataset.keyRule,mode:s.value}));if(!scopes.length)throw new Error('Choose at least one company permission.');const result=await request(scoped('keys'),'POST',{name:b.name,scopes,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null,max_views:b.max_views?Number(b.max_views):null});await loadWorkspace();showKey(result);}
-    if(form.id==='grant-form'){await mutate('grants','PUT',{rule_id:form.dataset.rule,user_id:form.dataset.member,mode:b.mode,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null},'Permission updated for future messages.');}
-    if(form.id==='delete-form'){if(b.name!==state.workspace.name)throw new Error('The workspace name does not match.');await request(scoped('workspace'),'DELETE',b);$('#dialog').close();wid='';page='overview';await boot();toast('Workspace deleted.');}
-  }catch(err){const error=form.querySelector('.form-error');if(error?.isConnected)error.textContent=err.message;else toast(err.message);}finally{submit.disabled=false;}
+
+document.addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('.sidebar-account,[data-page],.workspace-card,[data-message]')){
+    e.preventDefault();
+    e.target.click();
+  }
 });
+
+document.addEventListener('change',async e=>{
+  try{
+    if(e.target.id==='avatar-file-input'){
+      const file=e.target.files?.[0];
+      if(!file)return;
+      if(!file.type.startsWith('image/')){toast('Please select a valid image file.');return;}
+      if(file.size>2*1024*1024){toast('Image file must be under 2MB.');return;}
+      if(demo){
+        const reader=new FileReader();
+        reader.onload=()=>{
+          if(me?.user)me.user.avatar=reader.result;
+          render();
+          toast('Profile photo updated (demo mode).');
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+      toast('Uploading photo…');
+      try{
+        const res=await fetch('/api/avatar',{
+          method:'PUT',
+          headers:{'content-type':file.type},
+          body:file
+        });
+        if(!res.ok){
+          const err=await res.json().catch(()=>({}));
+          throw new Error(err.error||'Failed to upload photo.');
+        }
+        const data=await res.json();
+        if(me?.user)me.user.avatar=data.avatar;
+        render();
+        toast('Profile photo updated.');
+      }catch(err){toast(err.message);}
+      return;
+    }
+    if(e.target.id==='workspace-select'){wid=e.target.value;await navigate('dashboard');await loadWorkspace();}
+    if(e.target.id==='demo-viewer'){if((e.target.value==='owner')!==(me.user.id==='demo-owner'))api.switchViewer();wid='personal';await navigate('dashboard',true);await boot();}
+  }catch(err){toast(err.message);}
+});
+
+document.addEventListener('themechange',()=>{
+  if(page==='signin'||document.body.classList.contains('is-auth-screen')||!state){
+    return;
+  }
+  render();
+});
+
+document.addEventListener('input',e=>{
+  if(e.target.id==='inbox-search'){
+    query=e.target.value;
+    const filtered=state.messages.filter(m=>(filter==='all'||m.mode===filter)&&m.name.toLowerCase().includes(query.toLowerCase()));
+    $('#message-list').innerHTML=messageList(filtered,state);
+  }
+  if(e.target.id==='people-search-input'){
+    const q=e.target.value.toLowerCase().trim();
+    const activeTab=document.querySelector('[data-people-tab].active')?.dataset.peopleTab||'direct';
+    const activeFilter=document.querySelector('[data-filter-people].active')?.dataset.filterPeople||'all';
+    let visibleCount=0;
+    document.querySelectorAll('#people-table-body tr, #people-grid-container .unified-person-card').forEach(item=>{
+      const type=item.dataset.personFilterType;
+      const distType=item.dataset.personDistributionType;
+      const searchData=(item.dataset.personSearch||'').toLowerCase();
+      const matchTab=activeTab==='all'||distType===activeTab;
+      const matchFilter=activeFilter==='all'||type===activeFilter;
+      const matchSearch=!q||searchData.includes(q);
+      const isVisible=matchTab&&matchFilter&&matchSearch;
+      if(item.tagName==='TR'){
+        item.style.display=isVisible?'':'none';
+      }else{
+        item.style.display=isVisible?'flex':'none';
+      }
+      if(isVisible)visibleCount++;
+    });
+    const emptyNotice=document.getElementById('people-no-results');
+    if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+  }
+  if(e.target.id==='activity-search-input'){
+    const q=e.target.value.toLowerCase().trim();
+    const activeFilter=document.querySelector('[data-filter-activity].active')?.dataset.filterActivity||'all';
+    let visibleCount=0;
+    document.querySelectorAll('#activity-timeline-feed .activity-timeline-item').forEach(item=>{
+      const cat=item.dataset.activityFilter;
+      const searchData=(item.dataset.activitySearch||'').toLowerCase();
+      const matchCat=activeFilter==='all'||cat===activeFilter;
+      const matchSearch=!q||searchData.includes(q);
+      const isVisible=matchCat&&matchSearch;
+      item.style.display=isVisible?'flex':'none';
+      if(isVisible)visibleCount++;
+    });
+    const emptyNotice=document.getElementById('activity-no-results');
+    if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+  }
+});
+
+document.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.target,b=Object.fromEntries(new FormData(form)),submit=form.querySelector('[type=submit]');
+  if(submit.disabled)return;
+  submit.disabled=true;
+  form.querySelector('.form-error').textContent='';
+  try{
+    if(form.id==='profile-form'){
+      const newName=b.name?.trim();
+      if(!newName)throw new Error('Please enter a display name.');
+      if(demo){
+        if(me?.user)me.user.name=newName;
+        render();
+        toast('Profile details updated.');
+        return;
+      }
+      await request('/api/profile','PATCH',{name:newName});
+      if(me?.user)me.user.name=newName;
+      if(state?.members){const member=state.members.find(m=>m.id===me.user.id);if(member)member.name=newName;}
+      render();
+      toast('Profile details saved.');
+      return;
+    }
+    if(form.id==='mailbox-form'){
+      const created=await request('/api/workspaces','POST',{name:b.name});
+      wid=created.id;
+      await navigate('profile',true);
+      if(demo){await request(scoped('gmail/connect'),'POST',{email:b.demo_email||'sample-mailbox@example.com'});$('#dialog').close();await boot();toast('Sample mailbox linked.');}
+      else{const result=await request(scoped('gmail/connect'),'POST',{});location.assign(result.url);}
+    }
+    if(form.id==='workspace-form'){
+      const result=await request('/api/workspaces','POST',b);
+      wid=result.id;
+      $('#dialog').close();
+      await navigate('profile',true);
+      await boot();
+      toast('Private workspace created.');
+    }
+    if(form.id==='rule-form'){
+      b.retention_minutes=Number(b.retention_minutes);
+      b.sender=b.sender.toLowerCase();
+      b.link_host=b.link_host.toLowerCase();
+      if(b.mode==='links'&&!b.link_host)throw new Error('Enter the exact hostname allowed for sign-in links.');
+      if(form.dataset.ruleId){
+        await mutate(`rules/${form.dataset.ruleId}`,'PATCH',b,`${b.name} access rule updated.`);
+      } else {
+        await mutate('rules','POST',b,'Access rule created. Receive a new matching email and refresh.');
+      }
+    }
+    if(form.id==='invite-form'){const result=await request(scoped('invitations'),'POST',{email:b.email.toLowerCase()});await loadWorkspace();modal('Your invitation is ready',`<p>Share this link privately with <strong>${esc(b.email)}</strong>. It can be used once by that Google account and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'No email has been sent. Copy the link and share it with your invitee.'}</div>`);}
+    if(form.id==='key-form'){const scopes=[...form.querySelectorAll('[data-key-rule]')].filter(s=>s.value!=='blocked').map(s=>({rule_id:s.dataset.keyRule,mode:s.value,subdomain:form.querySelector(`[data-key-subdomain="${s.dataset.keyRule}"]`)?.value?.trim()||'*'}));if(!scopes.length)throw new Error('Choose at least one company permission.');const accent=(typeof document!=='undefined'&&document.documentElement?.dataset?.accent)||'cyan';const result=await request(scoped('keys'),'POST',{name:b.name,scopes,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null,max_views:b.max_views?Number(b.max_views):null,accent});delete tabLoaded['keys'];await loadWorkspace();showKeyModal({result,modal});}
+    if(form.id==='grant-form'){await mutate('grants','PUT',{rule_id:form.dataset.rule,user_id:form.dataset.member,mode:b.mode,subdomain:b.subdomain||'*',expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null},'Permission updated for future messages.');}
+    if(form.id==='delete-form'){if(b.name!==state.workspace.name)throw new Error('The workspace name does not match.');await request(scoped('workspace'),'DELETE',b);$('#dialog').close();wid='';await navigate('dashboard',true);await boot();toast('Workspace deleted.');}
+  }catch(err){
+    const error=form.querySelector('.form-error');
+    if(error?.isConnected)error.textContent=err.message;
+    else toast(err.message);
+  }finally{
+    submit.disabled=false;
+  }
+});
+
 $('#dialog').addEventListener('close',()=>{selectedMessage=null;});
+
 setInterval(async()=>{
-  if(selectedMessage){if(selectedMessage.expires_at<=Date.now()){modal('Message expired','<p>This message has reached its retention limit and is no longer available.</p>');selectedMessage=null;}else if($('#message-expiry'))$('#message-expiry').textContent=remain(selectedMessage.expires_at);}
-  if(state && !$('#dialog').open && !$('.sidebar.open') && !document.hidden && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)){try{if(!demo&&state.gmail_connected)await request(scoped('gmail/sync'),'POST',{});await loadWorkspace();}catch{try{await loadWorkspace();}catch{state=null;renderLogin('Workspace access has changed. Sign in again to continue.');}}}
+  if(selectedMessage){
+    if(selectedMessage.expires_at<=Date.now()){modal('Message expired','<p>This message has reached its retention limit and is no longer available.</p>');selectedMessage=null;}
+    else if($('#message-expiry'))$('#message-expiry').textContent=remain(selectedMessage.expires_at);
+  }
+  // Only poll and sync when actively viewing the Shared Inbox screen
+  if(page==='inbox' && state && !$('#dialog').open && !$('.sidebar.open') && !$('.sidebar.mobile-open') && !document.hidden && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)){
+    try{
+      if(!demo&&state.gmail_connected)await request(scoped('gmail/sync'),'POST',{});
+      await loadWorkspace();
+    }catch{
+      try{await loadWorkspace();}catch{state=null;renderLogin('Workspace access has changed. Sign in again to continue.');}
+    }
+  }
 },30000);
+
 boot();

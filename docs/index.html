@@ -3,126 +3,761 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Mailgrant Open Source Documentation & Interactive Demo Hub. Self-hosting guide, visual architecture docs, and client-side demo workspace.">
-  <title>Mailgrant · Open Source Documentation & Demo Hub</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./tokens.css">
-  <link rel="stylesheet" href="./app.css">
-  <link rel="stylesheet" href="./setup.css">
-  <script type="module" src="./theme.js"></script>
+  <meta name="description" content="Share selected email verification codes and sign-in links without sharing your Google password. Zero-trust email proxy with 3D interactive models and revocable access keys.">
+  <title>Mailgrant · Selective Email Sharing Without Sharing Passwords</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/landing.css">
+  <script type="module" src="/theme.js"></script>
+  <script type="module" src="/home.js"></script>
 </head>
-<body class="setup-body">
-  <!-- Header -->
-  <header class="setup-header">
-    <div class="setup-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding-bottom:0;">
-      <a class="brand" href="./index.html" aria-label="Mailgrant Home">
-        <span class="brand-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;">
+<body class="landing-body">
+  <!-- Ambient background glow -->
+  <div class="ambient-glow" aria-hidden="true">
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+    <div class="glow-3"></div>
+  </div>
+
+  <!-- Pinned Top Navigation Bar -->
+  <header class="landing-header">
+    <div class="landing-nav-inner">
+      <a class="landing-brand" href="/" aria-label="Mailgrant Home">
+        <div class="landing-brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             <path d="M8 11h8"/>
             <path d="M12 7v8"/>
           </svg>
+        </div>
+        <span class="landing-brand-text">mailgrant</span>
+        <span class="landing-tag-status">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>Zero-Trust</span>
         </span>
-        <span>mailgrant</span>
-        <span class="tag-beta">OPEN SOURCE</span>
       </a>
 
-      <nav class="setup-nav-links" aria-label="Navigation">
-        <a class="setup-nav-link active" href="./index.html">Overview</a>
-        <a class="setup-nav-link" href="./setup.html">Setup Guide</a>
-        <a class="setup-nav-link" href="./docs.html">Architecture Docs</a>
-        <a class="setup-nav-link" href="./app.html?demo=1">Interactive Demo</a>
-        <a class="setup-nav-link" href="https://github.com/arush-hub02/Mailgrant" target="_blank" rel="noopener">GitHub ↗</a>
+      <nav class="landing-nav-links" aria-label="Main Navigation">
+        <a class="nav-link" href="#problem-solution">Why Mailgrant</a>
+        <a class="nav-link" href="#pipeline">Live Pipeline</a>
+        <a class="nav-link" href="#usecases">Use Cases</a>
+        <a class="nav-link" href="#preview">Interactive Preview</a>
+        <a class="nav-link" href="#security">Security</a>
+        <a class="nav-link" href="#faq">FAQ</a>
+        <a class="nav-link" href="/docs">Guide</a>
       </nav>
 
-      <div style="display:flex; align-items:center; gap:12px;">
-        <button class="btn btn-secondary btn-sm" data-theme-toggle aria-label="Toggle theme" title="Toggle light or dark mode">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+      <div class="landing-nav-actions">
+        <button type="button" class="btn-theme-circle" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
             <circle cx="12" cy="12" r="5"></circle>
             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
           </svg>
         </button>
-        <a class="btn btn-primary btn-sm" href="./app.html?demo=1">Launch Demo ↗</a>
+        <a class="btn-nav-key" href="/access" title="Recipient Direct Access Portal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <circle cx="7.5" cy="15.5" r="5.5"/>
+            <path d="m21 2-9.6 9.6"/>
+            <path d="m15.5 7.5 3 3"/>
+          </svg>
+          <span>I have a key</span>
+        </a>
+        <a class="btn-nav-signin" href="/signin">
+          <span>Sign In</span>
+          <span class="nav-arrow" aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
   </header>
 
-  <main class="setup-container">
-    <!-- Hero -->
-    <section class="setup-hero">
-      <div class="setup-hero-pill">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span>Open Source Documentation & Interactive Playground</span>
-      </div>
-      <h1>Mailgrant Public Portal</h1>
-      <p>
-        The zero-trust cryptographic proxy for selective email sharing. Everything you need to self-host your own instance or explore the client-side interactive demo.
-      </p>
+  <main>
+    <!-- Hero Section with 3D WebGL Vault Model -->
+    <section class="hero-section">
+      <div class="landing-container">
+        <div class="hero-grid">
+          <!-- Left Column: Copy & Actions -->
+          <div>
+            <div class="hero-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              Zero Password Sharing · Surgical Email Whitelisting
+            </div>
 
-      <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:40px;">
-        <a class="btn btn-primary btn-lg" href="./setup.html">
-          <span>Self-Hosting Setup Guide</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </a>
-        <a class="btn btn-secondary btn-lg" href="./app.html?demo=1">
-          <span>Launch In-Browser Demo</span>
-        </a>
-        <a class="btn btn-secondary btn-lg" href="./docs.html">
-          <span>Read Architecture Docs</span>
-        </a>
+            <h1 class="hero-title">
+              Share Specific Emails & Codes.<br>
+              <span class="gradient-text">Never Your Gmail Password.</span>
+            </h1>
+
+            <p class="hero-subhead">
+              The cryptographic proxy for selective email sharing. Give teammates, contractors, or external collaborators access to only the sign-in OTP codes or magic links they need from Claude, Notion, GitHub, and AWS—while personal emails stay strictly blocked.
+            </p>
+
+            <div class="hero-cta-group">
+              <a class="btn btn-primary btn-lg" href="/signin">
+                <span>Sign In to Workspace</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </a>
+              <a class="btn btn-secondary btn-lg" href="/access">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3"/></svg>
+                <span>I Have An Access Key</span>
+              </a>
+            </div>
+
+            <!-- Live Status Banner -->
+            <div class="status-banner" role="status" aria-live="polite">
+              <span id="status-dot" class="status-dot"></span>
+              <span id="status-text">Checking backend service status…</span>
+              <span id="service-status" style="display:none;"></span>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive 3D WebGL Three.js Model -->
+          <div class="vault-3d-card" aria-label="Interactive 3D Security Vault">
+            <div class="vault-3d-header">
+              <div class="vault-status-chip">
+                <span class="status-dot"></span>
+                <span>3D Zero-Trust Gateway Active</span>
+              </div>
+              <span class="vault-hint">Drag to rotate in 3D · Click any email to test</span>
+            </div>
+
+            <!-- Real-time 3D Telemetry HUD -->
+            <div class="vault-hud" aria-live="polite">
+              <div class="vault-hud-line">
+                <span class="vault-hud-label">SIGNAL:</span>
+                <span id="vault-hud-status" class="vault-hud-value">INBOUND: *@mail.anthropic.com</span>
+              </div>
+              <div class="vault-hud-line">
+                <span class="vault-hud-label">EDGE:</span>
+                <span id="vault-hud-rule" class="vault-hud-value">RULE: Match -> Extract OTP Code Only</span>
+              </div>
+              <div class="vault-hud-line">
+                <span class="vault-hud-label">OUTPUT:</span>
+                <span id="vault-hud-result" class="vault-hud-value"><span class="hud-green">✓ Extracted: 849 201 (Body Stripped)</span></span>
+              </div>
+            </div>
+
+            <div id="vault-3d-canvas"></div>
+
+            <div class="vault-controls-bar">
+              <button class="vault-scenario-btn active" data-3d-scenario="claude" type="button">
+                <span>✨ Claude 2FA</span>
+              </button>
+              <button class="vault-scenario-btn" data-3d-scenario="notion" type="button">
+                <span>🔗 Notion Link</span>
+              </button>
+              <button class="vault-scenario-btn blocked" data-3d-scenario="chase" type="button">
+                <span>🚫 Chase Bank</span>
+              </button>
+              <button id="vault-sim-btn" class="vault-action-btn" type="button">
+                <span>⚡ Next Simulation</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 3 Core Cards -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:50px;">
-      <!-- Card 1: Setup Guide -->
-      <article class="step-section" style="margin-bottom:0;">
-        <div style="width:48px; height:48px; border-radius:var(--radius-lg); background:var(--blue-light); color:var(--blue); display:grid; place-items:center; margin-bottom:18px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    <!-- The Problem vs Solution (Eliminates All Confusion) -->
+    <section id="problem-solution" class="vs-section">
+      <div class="landing-container">
+        <div style="text-align:center;">
+          <div class="section-tag">The Fundamental Problem</div>
+          <h2 class="section-title">Why Sharing Your Password Is a Disaster</h2>
+          <p class="section-subtitle">
+            When someone needs to log into Claude, AWS, or Notion, sharing your email password exposes your entire digital existence.
+          </p>
         </div>
-        <h2 style="font-size:20px; font-weight:800; margin:0 0 8px; color:var(--ink);">1. Self-Hosting Setup Guide</h2>
-        <p style="font-size:14px; color:var(--muted); line-height:1.6; margin:0 0 20px;">
-          Step-by-step instructions to deploy Mailgrant to your own Cloudflare Workers & Cloudflare D1 account in ~5 minutes with interactive key generators and terminal snippets.
-        </p>
-        <a class="btn btn-primary btn-sm" href="./setup.html">Open Setup Guide →</a>
-      </article>
 
-      <!-- Card 2: Interactive Demo -->
-      <article class="step-section" style="margin-bottom:0;">
-        <div style="width:48px; height:48px; border-radius:var(--radius-lg); background:var(--green-light); color:var(--green); display:grid; place-items:center; margin-bottom:18px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </div>
-        <h2 style="font-size:20px; font-weight:800; margin:0 0 8px; color:var(--ink);">2. Interactive Sample Demo</h2>
-        <p style="font-size:14px; color:var(--muted); line-height:1.6; margin:0 0 20px;">
-          Try the owner dashboard and recipient experience right now. Runs 100% client-side in localStorage with sample messages. No login or cloud setup needed.
-        </p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn btn-success btn-sm" href="./app.html?demo=1">Owner Demo →</a>
-          <a class="btn btn-secondary btn-sm" href="./access.html?demo=1">Recipient Demo →</a>
-        </div>
-      </article>
+        <div class="vs-grid">
+          <!-- The Dangerous Method -->
+          <article class="vs-card danger">
+            <span class="vs-badge danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              The Old Way: Sharing Passwords
+            </span>
+            <h3 class="vs-title">Total Inbox & Identity Exposure</h3>
+            <p class="vs-desc">
+              Sending your Gmail password or 2FA recovery codes hands the other person the master key to your entire digital life.
+            </p>
+            <ul class="vs-list danger">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Banking & Taxes Exposed:</strong> Recipient can read Chase/Wells Fargo balances, tax forms, and PayPal statements.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Full Google Account Compromised:</strong> Grants unrestricted access to Google Drive files, Photos, and location history.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Account Takeovers:</strong> Recipient can initiate "Forgot Password" on your other services and reset them.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Painful Revocation:</strong> Revoking access forces you to change your Google password and re-authenticate dozens of personal devices.</span>
+              </li>
+            </ul>
+          </article>
 
-      <!-- Card 3: Architecture Docs -->
-      <article class="step-section" style="margin-bottom:0;">
-        <div style="width:48px; height:48px; border-radius:var(--radius-lg); background:rgba(168, 85, 247, 0.12); color:#a855f7; display:grid; place-items:center; margin-bottom:18px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <!-- The Mailgrant Zero-Trust Solution -->
+          <article class="vs-card safe">
+            <span class="vs-badge safe">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              The Mailgrant Way: Zero-Trust Proxy
+            </span>
+            <h3 class="vs-title">Surgical Extraction · Zero Password</h3>
+            <p class="vs-desc">
+              Grant temporary access to specific services with strict edge filtering and automatic code extraction.
+            </p>
+            <ul class="vs-list safe">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>No Password Sharing:</strong> Connects via read-only Google OAuth. Recipient never receives your Google password.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Personal Mail 100% Blocked:</strong> Unapproved senders (banks, personal contacts, family) are rejected immediately at the edge.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Body-Stripping Engine:</strong> Full message bodies are discarded. The recipient sees only the 6-digit OTP code or sign-in link.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Instant 1-Click Revocation:</strong> Revoke any key instantly or set it to auto-expire after 15m, 24h, or 30 days.</span>
+              </li>
+            </ul>
+          </article>
         </div>
-        <h2 style="font-size:20px; font-weight:800; margin:0 0 8px; color:var(--ink);">3. Architecture & Privacy Docs</h2>
-        <p style="font-size:14px; color:var(--muted); line-height:1.6; margin:0 0 20px;">
-          Explore the zero-trust security boundaries, AES-256-GCM encryption model, edge body-stripping engine, and interactive permission boundary lab.
-        </p>
-        <a class="btn btn-secondary btn-sm" href="./docs.html">Read Architecture Docs →</a>
-      </article>
-    </div>
+      </div>
+    </section>
 
-    <!-- Security Isolation Notice -->
-    <div class="callout info">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      <div>
-        <strong>Isolated Public Environment:</strong>
-        This documentation portal and demo workspace run on GitHub Pages and store sample mutations exclusively in your browser's local memory. When you are ready to use live Gmail accounts, follow the <a href="./setup.html" style="color:inherit; font-weight:700; text-decoration:underline;">Setup Guide</a> to deploy your private Worker.
+    <!-- Interactive Live Pipeline Walkthrough -->
+    <section id="pipeline" class="pipeline-section">
+      <div class="landing-container">
+        <div class="section-tag">Interactive Architecture</div>
+        <h2 class="section-title">See How Mailgrant Routes & Strips Emails</h2>
+        <p class="section-subtitle">
+          Click any email scenario below to watch how the proxy filters out sensitive content and delivers only the allowed 2FA code or sign-in link.
+        </p>
+
+        <div class="pipeline-card">
+          <div class="pipeline-selector" role="tablist" aria-label="Email Scenarios">
+            <button class="pipeline-pill active" data-pipeline-key="claude" type="button">
+              <span class="dot" style="background:#60a5fa;"></span>
+              Claude 2FA Code (Whitelisted)
+            </button>
+            <button class="pipeline-pill" data-pipeline-key="notion" type="button">
+              <span class="dot" style="background:#34d399;"></span>
+              Notion Magic Link (Whitelisted)
+            </button>
+            <button class="pipeline-pill" data-pipeline-key="github" type="button">
+              <span class="dot" style="background:#a78bfa;"></span>
+              GitHub Security Advisory (Plaintext)
+            </button>
+            <button class="pipeline-pill blocked" data-pipeline-key="chase" type="button">
+              <span class="dot" style="background:#f87171;"></span>
+              Chase Bank Email (Blocked & Private)
+            </button>
+          </div>
+
+          <div class="pipeline-flow">
+            <!-- Node 1: Inbound -->
+            <div class="pipeline-node" id="pipe-from">
+              <strong>From: signin@mail.anthropic.com</strong>
+              <small>Subject: Your Claude verification code</small>
+              <span class="badge blue">2FA Email Inbound</span>
+            </div>
+
+            <!-- Arrow -->
+            <div class="pipeline-arrow">→</div>
+
+            <!-- Node 2: Mailgrant Edge Rule -->
+            <div class="pipeline-node" id="pipe-rule" style="border-color:var(--blue-border); background:var(--blue-light);">
+              <strong>Rule: *@mail.anthropic.com</strong>
+              <small>Whitelist Match: Codes-only extraction</small>
+              <span class="badge green">✓ Body Stripped</span>
+            </div>
+
+            <!-- Arrow -->
+            <div class="pipeline-arrow">→</div>
+
+            <!-- Node 3: Result to Recipient -->
+            <div class="pipeline-node" id="pipe-out" style="border-color:var(--green-border);">
+              <strong>Delivered to Recipient:</strong>
+              <span class="badge code" style="font-size:16px; margin:4px 0;">482 917</span>
+              <small>Recipient sees only OTP code</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Real-World Use Cases Section -->
+    <section id="usecases" class="usecases-section">
+      <div class="landing-container">
+        <div style="text-align:center;">
+          <div class="section-tag">Real-World Utility</div>
+          <h2 class="section-title">Built for Everyday Sharing Scenarios</h2>
+          <p class="section-subtitle">
+            See how teams, families, and professionals use Mailgrant to share access without leaking master credentials.
+          </p>
+        </div>
+
+        <div class="usecases-grid">
+          <div class="usecase-card">
+            <div class="usecase-icon-box blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3 class="usecase-title">Startups & Dev Teams</h3>
+            <p class="usecase-desc">
+              Share Claude Team, AWS root, ChatGPT Plus, or GitHub 2FA codes with engineers without buying redundant seats or sharing founder passwords.
+            </p>
+            <div class="usecase-example">
+              <strong>Rule configured:</strong>
+              <code>*@mail.anthropic.com</code> &rarr; 15 min OTP extraction only.
+            </div>
+          </div>
+
+          <div class="usecase-card">
+            <div class="usecase-icon-box green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <h3 class="usecase-title">Families & Subscriptions</h3>
+            <p class="usecase-desc">
+              Let your kids, siblings, or parents log into Netflix, Disney+, Uber, or PlayStation without letting them browse your personal inbox or credit card alerts.
+            </p>
+            <div class="usecase-example">
+              <strong>Rule configured:</strong>
+              <code>*@netflix.com</code> &rarr; Magic login link only.
+            </div>
+          </div>
+
+          <div class="usecase-card">
+            <div class="usecase-icon-box purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            </div>
+            <h3 class="usecase-title">Contractors & Virtual Assistants</h3>
+            <p class="usecase-desc">
+              Give overseas assistants or freelance bookkeepers access to QuickBooks, Stripe, or shipping verification emails while keeping financial & personal mail locked.
+            </p>
+            <div class="usecase-example">
+              <strong>Rule configured:</strong>
+              <code>*@intuit.com</code> &rarr; 7-day auto-expiring access key.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The Core Dual-Role Hub (Resolves All Confusion) -->
+    <section class="landing-container">
+      <div style="text-align:center;">
+        <div class="section-tag">Choose Your Path</div>
+        <h2 class="section-title">Two Distinct Experiences</h2>
+        <p class="section-subtitle">
+          Whether you own the Gmail account or received an access key, Mailgrant keeps access separated and completely friction-free.
+        </p>
+      </div>
+
+      <div class="role-hub">
+        <!-- Role 1: Workspace Administrators -->
+        <article class="role-card featured">
+          <span class="role-badge owner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            For Workspace Administrators
+          </span>
+          <div class="role-header">
+            <div class="role-icon-box blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div>
+              <h3 class="role-title">Share Your Mail Safely</h3>
+              <p class="role-desc">Connect your Gmail, whitelist approved senders, and issue auto-expiring keys.</p>
+            </div>
+          </div>
+
+          <ul class="role-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>No password sharing:</strong> Works via read-only Google OAuth</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Granular rules:</strong> Extract 6-digit OTP codes or login links only</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Full control:</strong> Set 15m/24h/30d expiry and revoke anytime</span>
+            </li>
+          </ul>
+
+          <div class="role-actions">
+            <a class="btn btn-primary btn-lg" href="/signin">
+              <span>Sign In to Workspace</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- Role 2: Access Key Recipients -->
+        <article class="role-card">
+          <span class="role-badge recipient">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            For Key Holders & Invitees
+          </span>
+          <div class="role-header">
+            <div class="role-icon-box green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            </div>
+            <div>
+              <h3 class="role-title">Enter An Access Key</h3>
+              <p class="role-desc">Received a key from someone? View only your permitted emails with zero login.</p>
+            </div>
+          </div>
+
+          <ul class="role-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>No Google account needed:</strong> Zero login friction</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Instant code copying:</strong> 1-click copy for 2FA and OTP codes</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Multiple keys supported:</strong> Combine keys into one inbox</span>
+            </li>
+          </ul>
+
+          <!-- Direct Quick Input -->
+          <form id="landing-key-form" class="direct-key-form">
+            <div class="key-input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+              <input id="hero-access-key" class="key-input" type="password" placeholder="Paste access key: mgk_…" autocomplete="off" spellcheck="false" required>
+            </div>
+            <button class="btn btn-success btn-lg" type="submit">
+              <span>Open Shared Inbox</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+            <div class="key-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--green);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Keys are safely converted into a protected device session</span>
+            </div>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <!-- Interactive Perspective Simulator Section -->
+    <section id="preview" class="demo-preview-section">
+      <div class="landing-container" style="text-align:center;">
+        <div class="section-tag">Interactive Preview</div>
+        <h2 class="section-title">See The Difference in Perspective</h2>
+        <p class="section-subtitle">
+          Toggle between perspectives to see how Mailgrant isolates sensitive emails while granting exact access to what matters.
+        </p>
+
+        <div class="preview-container">
+          <div class="preview-nav">
+            <div class="preview-dots">
+              <span class="preview-dot"></span>
+              <span class="preview-dot"></span>
+              <span class="preview-dot"></span>
+            </div>
+
+            <div class="preview-tabs" role="tablist" aria-label="Perspective Switcher">
+              <button class="preview-tab active" data-preview-role="recipient" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                Recipient Perspective
+              </button>
+              <button class="preview-tab" data-preview-role="owner" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Administrator Perspective
+              </button>
+            </div>
+          </div>
+
+          <div id="simulator-content" class="preview-content">
+            <!-- Rendered by home.js initSimulator() -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table: Sharing Password vs Mailgrant -->
+    <section id="comparison" class="comparison-section">
+      <div class="landing-container">
+        <div style="text-align:center;">
+          <div class="section-tag">Security Comparison</div>
+          <h2 class="section-title">Why Giving Away Passwords Is Dangerous</h2>
+          <p class="section-subtitle">
+            Traditional methods compromise your entire digital life. Mailgrant replaces full inbox exposure with minimal, cryptographic access.
+          </p>
+        </div>
+
+        <div class="comparison-table-wrapper">
+          <table class="comp-table">
+            <thead>
+              <tr>
+                <th>Security Dimension</th>
+                <th class="bad">Sharing Your Google Password</th>
+                <th class="good">Mailgrant Zero-Trust Proxy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Personal & Banking Mail</strong></td>
+                <td>❌ Exposed. Recipient can browse all your private emails and bank statements.</td>
+                <td class="good">✅ Strictly Blocked. Only whitelisted senders ever pass through.</td>
+              </tr>
+              <tr>
+                <td><strong>Google Account Scope</strong></td>
+                <td>❌ Total Takeover. Grants access to Google Drive, Docs, Search History & Photos.</td>
+                <td class="good">✅ Zero Account Access. Recipient never receives Google credentials.</td>
+              </tr>
+              <tr>
+                <td><strong>Email Body Retention</strong></td>
+                <td>❌ Full Message Visible. Can be read, forwarded, or scraped.</td>
+                <td class="good">✅ Code-Only Extraction. Retains only the 6-digit OTP; strips the body.</td>
+              </tr>
+              <tr>
+                <td><strong>Revocation Control</strong></td>
+                <td>❌ Painful. Requires changing your Google password and logging out all devices.</td>
+                <td class="good">✅ Instant 1-Click Revocation. Invalidates all recipient sessions immediately.</td>
+              </tr>
+              <tr>
+                <td><strong>Access Lifespan</strong></td>
+                <td>❌ Forever until you manually change your password.</td>
+                <td class="good">✅ Auto-Expiring. Set keys to expire after 15m, 24h, or 30 days.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works in 3 Steps -->
+    <section id="how" class="steps-section">
+      <div class="landing-container">
+        <div class="section-tag">Simple & Robust</div>
+        <h2 class="section-title">How Mailgrant Works in 3 Steps</h2>
+        <p class="section-subtitle">
+          From full Gmail isolation to granular code sharing in less than 2 minutes.
+        </p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-number">STEP 01</span>
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <h3 class="step-title">Connect Your Mailbox</h3>
+            <p class="step-desc">
+              Sign in with your Google account. Mailgrant connects with read-only Gmail access without requiring you to purchase a custom domain.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="step-number">STEP 02</span>
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <h3 class="step-title">Whitelist Approved Senders</h3>
+            <p class="step-desc">
+              Create exact sender rules (e.g. <code>*@mail.anthropic.com</code>). Choose whether to extract 6-digit codes only, magic sign-in links, or plain text.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="step-number">STEP 03</span>
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            </div>
+            <h3 class="step-title">Share Revocable Keys</h3>
+            <p class="step-desc">
+              Copy an access key and send it privately. Recipients paste the key once at <code>/access</code> and view their codes. Revoke anytime in one click.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security & Architecture Pillars -->
+    <section id="security" class="features-section">
+      <div class="landing-container">
+        <div style="text-align:center;">
+          <div class="section-tag">Security Architecture</div>
+          <h2 class="section-title">Built on Zero-Trust Principles</h2>
+          <p class="section-subtitle">
+            Every boundary is enforced on the server. Your Google password and sensitive personal emails are never exposed.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h3 class="feature-title">Zero Password Sharing</h3>
+            <p class="feature-desc">
+              Never give away your Gmail credentials. Recipients only receive temporary, scoped access tokens managed by the proxy.
+            </p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            </div>
+            <h3 class="feature-title">Strict Sender Whitelisting</h3>
+            <p class="feature-desc">
+              Only matching authenticated emails pass through. Bank alerts, personal correspondence, and unapproved services are rejected at the edge.
+            </p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            </div>
+            <h3 class="feature-title">Code-Only Retention</h3>
+            <p class="feature-desc">
+              For 2FA verification rules, the application strips out the entire email body and retains only the extracted OTP code digits.
+            </p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <h3 class="feature-title">Automatic Expiry</h3>
+            <p class="feature-desc">
+              Messages automatically expire after 15 to 60 minutes. Once expired, message content is completely inaccessible.
+            </p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <h3 class="feature-title">Multi-Mailbox Isolation</h3>
+            <p class="feature-desc">
+              Manage personal, work, and team Gmail accounts in isolated workspaces under a single unified administration console.
+            </p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <h3 class="feature-title">30-Day Activity Audit</h3>
+            <p class="feature-desc">
+              Every key redemption, permission update, and message open is logged in a tamper-resistant activity ledger without storing sensitive bodies.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section with Interactive Accordions -->
+    <section id="faq" class="faq-section">
+      <div class="landing-container">
+        <div style="text-align:center;">
+          <div class="section-tag">Common Questions</div>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-subtitle">Everything you need to know about setting up and using Mailgrant.</p>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item open">
+            <button class="faq-question" type="button">
+              <span>Do recipients need a Google account or password?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              No! Recipients never need a Google account, password, or third-party sign-in. You simply generate an access key, and they paste it at <code>/access</code>.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" type="button">
+              <span>Can Mailgrant send or delete emails in my Gmail?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              No. Mailgrant only requests read-only search permission. It has zero capability to send emails, delete messages, or alter your account settings.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" type="button">
+              <span>What happens when I revoke an access key?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              Revocation is immediate. The moment you revoke a key in your dashboard, all remembered browser devices holding that key are locked out permanently.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" type="button">
+              <span>How does the interactive demo work?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              The demo runs completely in your browser local storage using simulated messages. You can test adding rules, creating keys, and viewing codes without connecting any real accounts.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Banner -->
+    <section class="landing-container">
+      <div class="cta-banner">
+        <h2>Ready for secure, selective email sharing?</h2>
+        <p>Get started with your secure workspace console or access approved dispatches with your key.</p>
+        <div class="cta-buttons">
+          <a class="btn btn-white btn-lg" href="/signin">
+            <span>Sign In to Workspace</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+          <a class="btn btn-glass btn-lg" href="/access">
+            <span>I Have An Access Key</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="landing-footer">
+    <div class="landing-container">
+      <div class="footer-top">
+        <a class="brand" href="/" aria-label="Mailgrant Home">
+          <span class="brand-badge" style="width:32px;height:32px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <span style="font-size:18px;">mailgrant</span>
+        </a>
+
+        <div class="footer-links">
+          <a class="footer-link" href="/signin">Workspace Sign-in</a>
+          <a class="footer-link" href="/access">Recipient Portal</a>
+          <a class="footer-link" href="/docs">Visual Project Guide</a>
+          <a class="footer-link" href="/privacy">Privacy Policy</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© Mailgrant · Selective Email Sharing · Built on Cloudflare & Google OAuth</div>
+        <div>Zero password sharing. Complete access control.</div>
       </div>
     </div>
-  </main>
+  </footer>
 </body>
 </html>

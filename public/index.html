@@ -20,19 +20,22 @@
     <div class="glow-3"></div>
   </div>
 
-  <!-- Header Navigation -->
+  <!-- Pinned Top Navigation Bar -->
   <header class="landing-header">
-    <div class="landing-container" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-      <a class="brand" href="/" aria-label="Mailgrant Home">
-        <span class="brand-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <div class="landing-nav-inner">
+      <a class="landing-brand" href="/" aria-label="Mailgrant Home">
+        <div class="landing-brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             <path d="M8 11h8"/>
             <path d="M12 7v8"/>
           </svg>
+        </div>
+        <span class="landing-brand-text">mailgrant</span>
+        <span class="landing-tag-status">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>Zero-Trust</span>
         </span>
-        <span>mailgrant</span>
-        <span class="tag-beta">BETA</span>
       </a>
 
       <nav class="landing-nav-links" aria-label="Main Navigation">
@@ -42,18 +45,28 @@
         <a class="nav-link" href="#preview">Interactive Preview</a>
         <a class="nav-link" href="#security">Security</a>
         <a class="nav-link" href="#faq">FAQ</a>
-        <a class="nav-link" href="/docs.html">Guide</a>
+        <a class="nav-link" href="/docs">Guide</a>
       </nav>
 
       <div class="landing-nav-actions">
-        <button class="btn btn-secondary btn-sm" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle light or dark mode">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+        <button type="button" class="btn-theme-circle" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
             <circle cx="12" cy="12" r="5"></circle>
             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
           </svg>
         </button>
-        <a class="btn btn-secondary btn-sm" href="/access.html">I have a key</a>
-        <a class="btn btn-primary btn-sm" href="/app.html">Owner Sign-in →</a>
+        <a class="btn-nav-key" href="/access" title="Recipient Direct Access Portal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <circle cx="7.5" cy="15.5" r="5.5"/>
+            <path d="m21 2-9.6 9.6"/>
+            <path d="m15.5 7.5 3 3"/>
+          </svg>
+          <span>I have a key</span>
+        </a>
+        <a class="btn-nav-signin" href="/signin">
+          <span>Sign In</span>
+          <span class="nav-arrow" aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
   </header>
@@ -79,16 +92,17 @@
             </h1>
 
             <p class="hero-subhead">
-              The cryptographic proxy for selective email sharing. Give teammates, family, or assistants access to only the sign-in OTP codes or magic links they need from Claude, Notion, GitHub, and AWS—while personal emails stay strictly blocked.
+              The cryptographic proxy for selective email sharing. Give teammates, contractors, or external collaborators access to only the sign-in OTP codes or magic links they need from Claude, Notion, GitHub, and AWS—while personal emails stay strictly blocked.
             </p>
 
             <div class="hero-cta-group">
-              <a class="btn btn-primary btn-lg" href="/app.html">
-                <span>Open Owner Dashboard</span>
+              <a class="btn btn-primary btn-lg" href="/signin">
+                <span>Sign In to Workspace</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </a>
-              <a class="btn btn-secondary btn-lg" href="/app.html?demo=1">
-                <span>Explore Interactive Demo</span>
+              <a class="btn btn-secondary btn-lg" href="/access">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3"/></svg>
+                <span>I Have An Access Key</span>
               </a>
             </div>
 
@@ -274,7 +288,7 @@
 
             <!-- Node 3: Result to Recipient -->
             <div class="pipeline-node" id="pipe-out" style="border-color:var(--green-border);">
-              <strong>Delivered to Brother:</strong>
+              <strong>Delivered to Recipient:</strong>
               <span class="badge code" style="font-size:16px; margin:4px 0;">482 917</span>
               <small>Recipient sees only OTP code</small>
             </div>
@@ -351,11 +365,11 @@
       </div>
 
       <div class="role-hub">
-        <!-- Role 1: Mailbox Owners -->
+        <!-- Role 1: Workspace Administrators -->
         <article class="role-card featured">
           <span class="role-badge owner">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            For Mailbox Owners
+            For Workspace Administrators
           </span>
           <div class="role-header">
             <div class="role-icon-box blue">
@@ -383,12 +397,9 @@
           </ul>
 
           <div class="role-actions">
-            <a class="btn btn-primary btn-lg" href="/app.html">
-              <span>Open Owner Dashboard</span>
+            <a class="btn btn-primary btn-lg" href="/signin">
+              <span>Sign In to Workspace</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
-            <a class="btn btn-secondary btn-sm" href="/app.html?demo=1">
-              <span>Explore Interactive Demo (Sample Data)</span>
             </a>
           </div>
         </article>
@@ -467,13 +478,9 @@
               </button>
               <button class="preview-tab" data-preview-role="owner" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Owner Perspective
+                Administrator Perspective
               </button>
             </div>
-
-            <a class="btn btn-secondary btn-sm" href="/app.html?demo=1">
-              Launch Full Demo ↗
-            </a>
           </div>
 
           <div id="simulator-content" class="preview-content">
@@ -574,7 +581,7 @@
             </div>
             <h3 class="step-title">Share Revocable Keys</h3>
             <p class="step-desc">
-              Copy an access key and send it privately. Recipients paste the key once at <code>/access.html</code> and view their codes. Revoke anytime in one click.
+              Copy an access key and send it privately. Recipients paste the key once at <code>/access</code> and view their codes. Revoke anytime in one click.
             </p>
           </div>
         </div>
@@ -639,7 +646,7 @@
             </div>
             <h3 class="feature-title">Multi-Mailbox Isolation</h3>
             <p class="feature-desc">
-              Manage personal, work, and family Gmail accounts in isolated workspaces under a single owner dashboard.
+              Manage personal, work, and team Gmail accounts in isolated workspaces under a single unified administration console.
             </p>
           </div>
 
@@ -672,7 +679,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
             <div class="faq-answer">
-              No! Recipients never need a Google account, password, or third-party sign-in. You simply generate an access key, and they paste it at <code>/access.html</code>.
+              No! Recipients never need a Google account, password, or third-party sign-in. You simply generate an access key, and they paste it at <code>/access</code>.
             </div>
           </div>
 
@@ -713,16 +720,13 @@
     <section class="landing-container">
       <div class="cta-banner">
         <h2>Ready for secure, selective email sharing?</h2>
-        <p>Get started with the owner dashboard or test drive the interactive sample workspace in seconds.</p>
+        <p>Get started with your secure workspace console or access approved dispatches with your key.</p>
         <div class="cta-buttons">
-          <a class="btn btn-white btn-lg" href="/app.html">
-            <span>Open Owner Dashboard</span>
+          <a class="btn btn-white btn-lg" href="/signin">
+            <span>Sign In to Workspace</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </a>
-          <a class="btn btn-glass btn-lg" href="/app.html?demo=1">
-            <span>Try Sample Demo Workspace</span>
-          </a>
-          <a class="btn btn-glass btn-lg" href="/access.html">
+          <a class="btn btn-glass btn-lg" href="/access">
             <span>I Have An Access Key</span>
           </a>
         </div>
@@ -742,11 +746,10 @@
         </a>
 
         <div class="footer-links">
-          <a class="footer-link" href="/app.html">Owner Dashboard</a>
-          <a class="footer-link" href="/access.html">Recipient Portal</a>
-          <a class="footer-link" href="/app.html?demo=1">Demo Workspace</a>
-          <a class="footer-link" href="/docs.html">Visual Project Guide</a>
-          <a class="footer-link" href="/privacy.html">Privacy Policy</a>
+          <a class="footer-link" href="/signin">Workspace Sign-in</a>
+          <a class="footer-link" href="/access">Recipient Portal</a>
+          <a class="footer-link" href="/docs">Visual Project Guide</a>
+          <a class="footer-link" href="/privacy">Privacy Policy</a>
         </div>
       </div>
 

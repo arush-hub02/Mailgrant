@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="404 - Page outside authorized security boundaries. Return to Mailgrant Dashboard.">
+  <title>404 · Outside Boundaries · Mailgrant</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/theme.js"></script>
+</head>
+<body class="designer-404-standalone-body">
+  <!-- Ambient background glow orbs -->
+  <div class="ambient-glow" aria-hidden="true">
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+  </div>
+
+  <!-- Header minimal bar -->
+  <header class="designer-404-header">
+    <a class="brand" href="/" aria-label="Mailgrant Home">
+      <span class="brand-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M8 11h8"/>
+          <path d="M12 7v8"/>
+        </svg>
+      </span>
+      <span class="brand-name">mailgrant</span>
+      <span class="tag-beta">BETA</span>
+    </a>
+
+    <div class="header-right">
+      <button type="button" class="theme-toggle-btn" data-theme-toggle aria-label="Toggle light or dark theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+          <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M12 3v18"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Central 404 Showcase Card -->
+  <main class="designer-404-main-wrap">
+    <div class="designer-404-card glass-neon-card">
+      <div class="notfound-glow-ambient" aria-hidden="true"></div>
+      
+      <!-- Status Pill -->
+      <div class="notfound-status-row">
+        <div class="notfound-status-pill">
+          <span class="notfound-pulse-dot" aria-hidden="true"></span>
+          <span>BOUNDARY NOT FOUND · 404</span>
+        </div>
+        <span class="notfound-security-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Fail-Closed Policy
+        </span>
+      </div>
+
+      <!-- Holographic Neon 404 Number -->
+      <div class="notfound-hero-number" aria-hidden="true">
+        <span class="number-glitch" data-text="404">404</span>
+      </div>
+
+      <!-- Title & Explanation -->
+      <h1 class="notfound-title">Outside Authorized Boundaries</h1>
+      <p class="notfound-desc">
+        The requested route or resource does not exist, has expired, or is beyond your active security permissions. Unmapped pathways fail closed by design.
+      </p>
+
+      <!-- Cyber Telemetry Box -->
+      <div class="notfound-telemetry-box">
+        <div class="telemetry-item">
+          <span class="telemetry-label">Attempted Path:</span>
+          <code class="telemetry-code" id="target-path">/unknown</code>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Security Posture:</span>
+          <span class="telemetry-status">STRICT_ISOLATION</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Redirection Links -->
+      <div class="notfound-actions-group">
+        <a href="/" id="btn-return-home" class="notfound-btn primary-glow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>Return to Landing Page</span>
+        </a>
+      </div>
+
+      <!-- Redirection notice -->
+      <div class="notfound-redirect-hint">
+        <span>Automatic redirect to landing page in <strong id="countdown-timer">6</strong>s · <button type="button" id="btn-cancel-timer" class="link-cancel">Cancel</button></span>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    if (location.pathname === '/access' || location.pathname === '/access/') {
+      location.replace('/access.html' + location.search + location.hash);
+    }
+    // Populate attempted path
+    const pathEl = document.getElementById('target-path');
+    if (pathEl) {
+      pathEl.textContent = location.pathname + location.search;
+    }
+
+    // Auto-redirect to landing page where application starts
+    const targetLanding = '/';
+
+    // Gentle auto-redirect countdown
+    let secondsLeft = 6;
+    let timerId = null;
+    const timerEl = document.getElementById('countdown-timer');
+    const cancelBtn = document.getElementById('btn-cancel-timer');
+
+    function updateTimer() {
+      secondsLeft--;
+      if (timerEl) timerEl.textContent = secondsLeft;
+      if (secondsLeft <= 0) {
+        clearInterval(timerId);
+        location.assign(targetLanding);
+      }
+    }
+
+    timerId = setInterval(updateTimer, 1000);
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        clearInterval(timerId);
+        const hint = document.querySelector('.notfound-redirect-hint');
+        if (hint) hint.innerHTML = '<span>Auto-redirection cancelled.</span>';
+      });
+    }
+  </script>
+</body>
+</html>
+

@@ -7,7 +7,7 @@
   --bg-subtle: #f1f5f9;
   --bg-card: #ffffff;
   --bg-card-hover: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.82);
+  --bg-glass: rgba(255, 255, 255, 0.85);
   --bg-overlay: rgba(15, 23, 42, 0.45);
   
   --ink: #0f172a;
@@ -23,6 +23,22 @@
   --blue-light: #eff6ff;
   --blue-border: #bfdbfe;
   
+  /* Dynamic Theme Accent Defaults (Light) */
+  --accent: #0284c7;
+  --accent-bright: #0ea5e9;
+  --accent-glow: rgba(2, 132, 199, 0.25);
+  --accent-subtle: rgba(2, 132, 199, 0.08);
+  --accent-border: rgba(2, 132, 199, 0.28);
+  --accent-gradient: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  --heading-gradient: linear-gradient(135deg, var(--ink) 20%, var(--accent) 100%);
+  
+  --neon-cyan: var(--accent);
+  --neon-cyan-bright: var(--accent-bright);
+  --neon-cyan-glow: var(--accent-glow);
+  --neon-cyan-subtle: var(--accent-subtle);
+  --neon-cyan-border: var(--accent-border);
+  --neon-cyan-text: var(--ink);
+
   --green: #059669;
   --green-hover: #047857;
   --green-light: #ecfdf5;
@@ -39,18 +55,19 @@
   --purple: #7c3aed;
   --purple-light: #f5f3ff;
   
-  /* Elevation & Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 25px -5px rgba(37, 99, 235, 0.25);
+  /* Elevation & Shadows - Light Mode with Theme Color Halo */
+  --shadow-sm: 0 2px 8px -1px rgba(15, 23, 42, 0.08), 0 0 10px -2px var(--accent-glow);
+  --shadow-md: 0 6px 20px -2px rgba(15, 23, 42, 0.12), 0 0 18px -2px var(--accent-glow);
+  --shadow-lg: 0 12px 30px -4px rgba(15, 23, 42, 0.16), 0 0 24px -2px var(--accent-glow);
+  --shadow-xl: 0 20px 42px -6px rgba(15, 23, 42, 0.18), 0 0 32px -3px var(--accent-glow);
+  --shadow-glow: 0 0 28px -2px var(--accent-glow);
   
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  /* Radii - sleek, technical, less curved */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
   --radius-full: 9999px;
   
   /* Transitions */
@@ -60,26 +77,43 @@
 }
 
 html[data-theme="dark"] {
-  --bg: #0b1120;
-  --bg-subtle: #0f172a;
-  --bg-card: #172237;
-  --bg-card-hover: #1e2c46;
-  --bg-glass: rgba(17, 26, 44, 0.85);
-  --bg-overlay: rgba(2, 6, 23, 0.7);
+  /* Ultra-sleek, deep pitch blackish aesthetic (replacing washed-out navy) */
+  --bg: #09090b;
+  --bg-subtle: #111114;
+  --bg-card: #141418;
+  --bg-card-hover: #1b1b22;
+  --bg-glass: rgba(13, 13, 17, 0.92);
+  --bg-overlay: rgba(0, 0, 0, 0.85);
   
   --ink: #f8fafc;
   --ink-secondary: #cbd5e1;
   --muted: #94a3b8;
   --muted-light: #64748b;
   
-  --line: rgba(255, 255, 255, 0.09);
+  --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.16);
   
-  --blue: #3b82f6;
+  --blue: #38bdf8;
   --blue-hover: #60a5fa;
-  --blue-light: rgba(59, 130, 246, 0.15);
-  --blue-border: rgba(59, 130, 246, 0.3);
+  --blue-light: rgba(56, 189, 248, 0.12);
+  --blue-border: rgba(56, 189, 248, 0.28);
   
+  /* Dynamic Theme Accent Defaults (Dark) */
+  --accent: #00f0ff;
+  --accent-bright: #38bdf8;
+  --accent-glow: rgba(0, 240, 255, 0.42);
+  --accent-subtle: rgba(0, 240, 255, 0.1);
+  --accent-border: rgba(0, 240, 255, 0.35);
+  --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, var(--accent-bright) 75%, var(--accent) 100%);
+
+  --neon-cyan: var(--accent);
+  --neon-cyan-bright: var(--accent-bright);
+  --neon-cyan-glow: var(--accent-glow);
+  --neon-cyan-subtle: var(--accent-subtle);
+  --neon-cyan-border: var(--accent-border);
+  --neon-cyan-text: #ffffff;
+
   --green: #10b981;
   --green-hover: #34d399;
   --green-light: rgba(16, 185, 129, 0.15);
@@ -96,11 +130,96 @@ html[data-theme="dark"] {
   --purple: #a855f7;
   --purple-light: rgba(168, 85, 247, 0.15);
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px -5px rgba(59, 130, 246, 0.35);
+  /* Elevation & Cyber Shadows - Dark Mode with Theme Color Halo */
+  --shadow-sm: 0 2px 8px 0 rgba(0, 0, 0, 0.65), 0 0 12px -3px var(--accent-glow);
+  --shadow-md: 0 8px 24px -3px rgba(0, 0, 0, 0.75), 0 0 20px -3px var(--accent-glow);
+  --shadow-lg: 0 14px 34px -4px rgba(0, 0, 0, 0.85), 0 0 26px -3px var(--accent-glow);
+  --shadow-xl: 0 24px 44px -5px rgba(0, 0, 0, 0.95), 0 0 34px -4px var(--accent-glow);
+  --shadow-glow: 0 0 30px -2px var(--accent-glow);
   
   color-scheme: dark;
+}
+
+/* ==========================================================================
+   Dynamic Multi-Color Accent System (Crimson Red, Cyber Cyan, Neon Green, etc.)
+   ========================================================================== */
+
+/* 1. Crimson / Neon Red */
+html[data-accent="red"] {
+  --accent: #f43f5e;
+  --accent-bright: #ff3b5c;
+  --accent-glow: rgba(244, 63, 94, 0.45);
+  --accent-subtle: rgba(244, 63, 94, 0.12);
+  --accent-border: rgba(244, 63, 94, 0.38);
+  --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, #ff4d6d 70%, #f43f5e 100%);
+  --blue: #f43f5e;
+  --blue-hover: #e11d48;
+  --blue-light: rgba(244, 63, 94, 0.12);
+  --blue-border: rgba(244, 63, 94, 0.35);
+}
+
+/* 2. Cyber Cyan / Electric Sky */
+html[data-accent="cyan"] {
+  --accent: #00f0ff;
+  --accent-bright: #38bdf8;
+  --accent-glow: rgba(0, 240, 255, 0.42);
+  --accent-subtle: rgba(0, 240, 255, 0.1);
+  --accent-border: rgba(0, 240, 255, 0.35);
+  --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, var(--accent-bright) 75%, var(--accent) 100%);
+  --blue: #0284c7;
+  --blue-hover: #0369a1;
+  --blue-light: rgba(2, 132, 199, 0.1);
+  --blue-border: rgba(2, 132, 199, 0.3);
+}
+
+/* 3. Matrix / Neon Emerald Green */
+html[data-accent="green"] {
+  --accent: #10b981;
+  --accent-bright: #00ff9d;
+  --accent-glow: rgba(16, 185, 129, 0.45);
+  --accent-subtle: rgba(16, 185, 129, 0.12);
+  --accent-border: rgba(16, 185, 129, 0.38);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, #34d399 70%, #10b981 100%);
+  --blue: #10b981;
+  --blue-hover: #059669;
+  --blue-light: rgba(16, 185, 129, 0.12);
+  --blue-border: rgba(16, 185, 129, 0.35);
+}
+
+/* 4. Cyber Violet / Electric Purple */
+html[data-accent="purple"] {
+  --accent: #a855f7;
+  --accent-bright: #c084fc;
+  --accent-glow: rgba(168, 85, 247, 0.45);
+  --accent-subtle: rgba(168, 85, 247, 0.14);
+  --accent-border: rgba(168, 85, 247, 0.4);
+  --accent-gradient: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, #c084fc 70%, #a855f7 100%);
+  --blue: #8b5cf6;
+  --blue-hover: #7c3aed;
+  --blue-light: rgba(168, 85, 247, 0.14);
+  --blue-border: rgba(168, 85, 247, 0.38);
+}
+
+/* 5. Sunset Solar Amber / Gold */
+html[data-accent="amber"] {
+  --accent: #f59e0b;
+  --accent-bright: #fbbf24;
+  --accent-glow: rgba(245, 158, 11, 0.45);
+  --accent-subtle: rgba(245, 158, 11, 0.14);
+  --accent-border: rgba(245, 158, 11, 0.4);
+  --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  --heading-gradient: linear-gradient(135deg, #ffffff 15%, #fbbf24 70%, #f59e0b 100%);
+  --blue: #f59e0b;
+  --blue-hover: #d97706;
+  --blue-light: rgba(245, 158, 11, 0.14);
+  --blue-border: rgba(245, 158, 11, 0.38);
+}
+
+/* Light Mode Dynamic Heading Gradient */
+html:not([data-theme="dark"]) {
+  --heading-gradient: linear-gradient(135deg, var(--ink) 30%, var(--accent) 100%);
 }

@@ -6,10 +6,9 @@
 	"assets": {
 		"directory": "./public",
 		"binding": "ASSETS",
-		"run_worker_first": [
-			"/api/*",
-			"/auth/*"
-		]
+		"html_handling": "none",
+		"not_found_handling": "404-page",
+		"run_worker_first": true
 	},
 	"d1_databases": [
 		{
@@ -17,6 +16,12 @@
 			"database_name": "mailgrant",
 			"database_id": "d85c1fab-e71e-40d2-917a-39849114fccd",
 			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "AVATARS",
+			"bucket_name": "mailgrant-avatars"
 		}
 	],
 	"triggers": {

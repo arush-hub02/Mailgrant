@@ -124,3 +124,195 @@ test('wildcard sender rules accept VERP and randomized addresses like Anthropic'
   const msg=f.DB.db.prepare('SELECT * FROM messages WHERE workspace_id=? AND rule_id=?').get('one',ruleId);
   assert.ok(msg);
 });
+test('wildcard subdomain sender rules and rule field updates work correctly',async()=>{
+  const f=await fixture();
+  const ruleResp=await f.call('/api/w/one/rules',{user:'owner',method:'POST',body:{name:'Anthropic',sender:'*@*.anthropic.com',mode:'codes',retention_minutes:15}});
+  assert.equal(ruleResp.status,201);
+  const {id:ruleId}=await ruleResp.json();
+  assert.ok(gmailQuery(f.t,['*@*.anthropic.com']).includes('from:anthropic.com'));
+
+  // Test matching sender for both root and subdomains
+  const mail1={from:{address:'login@anthropic.com'},to:[{address:'mailbox-one@example.com'}],subject:'Your code is 111222',text:'Code: 111222',date:new Date()};
+  const count1=await storeApprovedMail(f.env,{id:'mb1',workspace_id:'one',email:'mailbox-one@example.com'},mail1);
+  assert.equal(count1,1);
+
+  const mail2={from:{address:'security@auth.mail.anthropic.com'},to:[{address:'mailbox-one@example.com'}],subject:'Your code is 333444',text:'Code: 333444',date:new Date()};
+  const count2=await storeApprovedMail(f.env,{id:'mb1',workspace_id:'one',email:'mailbox-one@example.com'},mail2);
+  assert.equal(count2,1);
+
+  // Update rule properties via PATCH
+  const patchResp=await f.call(`/api/w/one/rules/${ruleId}`,{user:'owner',method:'PATCH',body:{name:'Anthropic Claude VIP',sender:'*@anthropic.com',retention_minutes:30}});
+  assert.equal(patchResp.status,200);
+  const updatedRule=f.DB.db.prepare('SELECT * FROM rules WHERE id=?').get(ruleId);
+  assert.equal(updatedRule.name,'Anthropic Claude VIP');
+  assert.equal(updatedRule.sender,'*@anthropic.com');
+  assert.equal(updatedRule.retention_minutes,30);
+});
+test('R2 avatar storage organizes files folder-wise under avatars/:userId/avatar and syncs with profile',async()=>{
+  const f=await fixture();
+  const storage=new Map();
+  f.env.AVATARS={
+    async put(key,body,options){
+      const bytes=Buffer.from(await new Response(body).arrayBuffer());
+      storage.set(key,{bytes,options,uploaded:new Date()});
+    },
+    async get(key){
+      const item=storage.get(key);
+      if(!item)return null;
+      return {
+        body:item.bytes,
+        httpEtag:'"mock-etag"',
+        writeHttpMetadata(headers){
+          if(item.options?.httpMetadata?.contentType){headers.set('content-type',item.options.httpMetadata.contentType);}
+        }
+      };
+    },
+    async head(key){
+      const item=storage.get(key);
+      if(!item)return null;
+      return {uploaded:item.uploaded};
+    },
+    async delete(key){
+      storage.delete(key);
+    }
+  };
+
+  // Upload an avatar for owner
+  const imgData=Buffer.from('test-image-bytes');
+  const uploadResp=await worker.fetch(new Request(`${f.env.APP_ORIGIN}/api/avatar`,{
+    method:'PUT',
+    headers:{
+      cookie:'mg_session=token-owner',
+      origin:f.env.APP_ORIGIN,
+      'content-type':'image/png'
+    },
+    body:imgData
+  }),f.env);
+  assert.equal(uploadResp.status,200);
+  const uploadJson=await uploadResp.json();
+  assert.ok(uploadJson.avatar.includes('/api/avatar/owner'));
+
+  // Verify folder-wise storage key
+  assert.ok(storage.has('avatars/owner/avatar'));
+  assert.equal(storage.get('avatars/owner/avatar').options.httpMetadata.contentType,'image/png');
+
+  // Verify public retrieval endpoint with correct content-type
+  const getResp=await worker.fetch(new Request(`${f.env.APP_ORIGIN}/api/avatar/owner`),f.env);
+  assert.equal(getResp.status,200);
+  assert.equal(getResp.headers.get('content-type'),'image/png');
+
+  // Verify /api/me includes R2 avatar URL
+  const meResp=await f.call('/api/me',{user:'owner'});
+  assert.equal(meResp.status,200);
+  const meData=await meResp.json();
+  assert.ok(meData.user.avatar.includes('/api/avatar/owner'));
+
+  // Update profile name via PATCH /api/profile
+  const patchResp=await f.call('/api/profile',{user:'owner',method:'PATCH',body:{name:'Updated Owner'}});
+  assert.equal(patchResp.status,200);
+  const updatedUser=f.DB.db.prepare('SELECT name FROM users WHERE id=?').get('owner');
+  assert.equal(updatedUser.name,'Updated Owner');
+
+  // Delete avatar from R2
+  const delResp=await f.call('/api/avatar',{user:'owner',method:'DELETE'});
+  assert.equal(delResp.status,200);
+  assert.equal(storage.has('avatars/owner/avatar'),false);
+});
+
+test('redirects logged-in root visits to /dashboard while serving landing page to visitors',async()=>{
+  const {env}=await fixture();
+  // Unauthenticated visit to root /
+  const unauthResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/`),env);
+  assert.equal(unauthResp.status,200);
+
+  // Authenticated visit to root /
+  const authResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/`,{headers:{cookie:'mg_session=token-owner'}}),env);
+  assert.equal(authResp.status,302);
+  assert.equal(authResp.headers.get('location'),`${env.APP_ORIGIN}/dashboard`);
+
+  // Unwanted legacy routes redirect 301
+  const overviewResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/overview`),env);
+  assert.equal(overviewResp.status,301);
+  assert.equal(overviewResp.headers.get('location'),`${env.APP_ORIGIN}/dashboard`);
+
+  const keysResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/keys`),env);
+  assert.equal(keysResp.status,301);
+  assert.equal(keysResp.headers.get('location'),`${env.APP_ORIGIN}/people`);
+
+  const settingsResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/settings`),env);
+  assert.equal(settingsResp.status,301);
+  assert.equal(settingsResp.headers.get('location'),`${env.APP_ORIGIN}/profile`);
+
+  // Disallow .html extensions - all .html routes redirect 301 to clean URLs
+  const accessHtmlResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/access.html`),env);
+  assert.equal(accessHtmlResp.status,301);
+  assert.equal(accessHtmlResp.headers.get('location'),`${env.APP_ORIGIN}/access`);
+
+  const indexHtmlResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/index.html`),env);
+  assert.equal(indexHtmlResp.status,301);
+  assert.equal(indexHtmlResp.headers.get('location'),`${env.APP_ORIGIN}/`);
+
+  const dashHtmlResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/dashboard.html`),env);
+  assert.equal(dashHtmlResp.status,301);
+  assert.equal(dashHtmlResp.headers.get('location'),`${env.APP_ORIGIN}/dashboard`);
+
+  // Unauthenticated visit to /dashboard redirects 302 to /signin
+  const unauthDashResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/dashboard`),env);
+  assert.equal(unauthDashResp.status,302);
+  assert.equal(unauthDashResp.headers.get('location'),`${env.APP_ORIGIN}/signin`);
+
+  // Direct visit to /signin serves signin screen directly
+  const signinResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/signin`),env);
+  assert.equal(signinResp.status,200);
+
+  // /login redirects 301 to /signin
+  const loginResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/login`),env);
+  assert.equal(loginResp.status,301);
+  assert.equal(loginResp.headers.get('location'),`${env.APP_ORIGIN}/signin`);
+
+  // /signin.html redirects 301 to /signin
+  const signinHtmlResp=await worker.fetch(new Request(`${env.APP_ORIGIN}/signin.html`),env);
+  assert.equal(signinHtmlResp.status,301);
+  assert.equal(signinHtmlResp.headers.get('location'),`${env.APP_ORIGIN}/signin`);
+});
+
+test('individual access supports subdomain selection and expired keys auto-purge after 5 days', async () => {
+  const f = await fixture();
+  
+  // 1. Issue access key with specific subdomain scope (e.g. auth.*)
+  const createResp = await f.call('/api/w/one/keys', {
+    user: 'owner',
+    method: 'POST',
+    body: {
+      name: 'Contractor — Auth Only',
+      scopes: [{ rule_id: 'r1', mode: 'codes', subdomain: 'auth' }],
+      expires_at: f.t + 24 * 3600000,
+      max_views: 10
+    }
+  });
+  assert.equal(createResp.status, 201);
+  const created = await createResp.json();
+  assert.ok(created.key.startsWith('mgk_'));
+
+  // 2. Verify listAccessKeys returns subdomain in scopes
+  const listResp = await f.call('/api/w/one/keys', { user: 'owner' });
+  assert.equal(listResp.status, 200);
+  const listData = await listResp.json();
+  const found = listData.keys.find(k => k.id === created.id);
+  assert.ok(found);
+  assert.equal(found.scopes[0].subdomain, 'auth');
+
+  // 3. Insert an old key expired 6 days ago (> 5 days) and a recent key expired 2 days ago (< 5 days)
+  const sixDaysAgo = f.t - 6 * DAY;
+  const twoDaysAgo = f.t - 2 * DAY;
+  f.DB.db.prepare('INSERT INTO access_keys(id,workspace_id,name,token_hash,prefix,expires_at,max_views,created_at) VALUES(?,?,?,?,?,?,?,?)')
+    .run('old-key', 'one', 'Old Key', 'hash-old', 'mgk_old...', sixDaysAgo, null, f.t - 10 * DAY);
+  f.DB.db.prepare('INSERT INTO access_keys(id,workspace_id,name,token_hash,prefix,expires_at,max_views,created_at) VALUES(?,?,?,?,?,?,?,?)')
+    .run('recent-key', 'one', 'Recent Key', 'hash-recent', 'mgk_recent...', twoDaysAgo, null, f.t - 3 * DAY);
+
+  // 4. Fetch keys again: old-key (expired > 5 days) should be auto-purged, recent-key (< 5 days) preserved
+  const listResp2 = await f.call('/api/w/one/keys', { user: 'owner' });
+  const listData2 = await listResp2.json();
+  assert.equal(listData2.keys.some(k => k.id === 'old-key'), false);
+  assert.equal(listData2.keys.some(k => k.id === 'recent-key'), true);
+});

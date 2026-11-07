@@ -3,6 +3,24 @@ import { Vault3D } from './vault3d.js';
 
 let vault = null;
 
+// Check if user is already authenticated -> redirect / to /dashboard
+async function checkAuthSession() {
+  if (typeof window === 'undefined') return;
+  if (new URLSearchParams(location.search).has('landing')) return;
+  try {
+    const res = await fetch('/api/me', { credentials: 'same-origin', cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.user && data.user.id) {
+        location.replace('/dashboard');
+      }
+    }
+  } catch {}
+}
+
+// Immediate eager session check before DOMContentLoaded
+checkAuthSession();
+
 // Status check on boot
 async function initStatus() {
   const statusEl = document.querySelector('#service-status');
@@ -88,7 +106,7 @@ function syncPipelineSelection(key) {
     claude: {
       from: '<strong>From: signin@mail.anthropic.com</strong><small>Subject: Your Claude verification code</small><span class="badge blue">2FA Email Inbound</span>',
       rule: '<strong>Rule: *@mail.anthropic.com</strong><small>Whitelist Match: Codes-only extraction</small><span class="badge green">✓ Body Stripped</span>',
-      out: '<strong>Delivered to Brother:</strong><span class="badge code" style="font-size:16px; margin:4px 0;">849 201</span><small>Recipient sees only OTP code</small>',
+      out: '<strong>Delivered to Recipient:</strong><span class="badge code" style="font-size:16px; margin:4px 0;">849 201</span><small>Recipient sees only OTP code</small>',
       isBlocked: false
     },
     notion: {
@@ -154,7 +172,7 @@ function initSimulator() {
       <div class="simulation-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12px; color:var(--muted);">
           <span>Connected Mailbox: <strong>alex@example.com</strong></span>
-          <span class="role-badge owner" style="margin:0; font-size:11px;">Owner View (Full Control)</span>
+          <span class="role-badge owner" style="margin:0; font-size:11px;">Administrator View (Full Control)</span>
         </div>
         <div class="sim-row">
           <div class="sim-vendor">
@@ -194,7 +212,7 @@ function initSimulator() {
     recipient: `
       <div class="simulation-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12px; color:var(--muted);">
-          <span>Access Key: <strong>Brother — Claude Codes</strong></span>
+          <span>Access Key: <strong>Contractor — Claude Codes</strong></span>
           <span class="role-badge recipient" style="margin:0; font-size:11px;">Recipient View (Zero Google Login)</span>
         </div>
         <div class="sim-row" style="border: 2px solid var(--blue-border); background: var(--bg-card);">
@@ -202,7 +220,7 @@ function initSimulator() {
             <span class="sim-avatar claude">C</span>
             <div class="sim-meta">
               <strong>Claude Sign-in Code</strong>
-              <small>Approved by owner · Expires in 14 min</small>
+              <small>Approved by administrator · Expires in 14 min</small>
             </div>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
@@ -230,7 +248,7 @@ function initSimulator() {
             </div>
             <div class="sim-meta">
               <strong>Everything Else in Gmail</strong>
-              <small>Bank alerts, personal mail, family threads</small>
+              <small>Bank alerts, financial statements, private threads</small>
             </div>
           </div>
           <span class="sim-badge owner-only">Completely Inaccessible</span>
@@ -283,7 +301,7 @@ function initQuickKey() {
     const key = (input?.value || '').trim();
     if (!key) return;
 
-    window.location.href = `/access.html?key=${encodeURIComponent(key)}`;
+    window.location.href = `/access?key=${encodeURIComponent(key)}`;
   });
 }
 

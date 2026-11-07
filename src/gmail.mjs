@@ -4,7 +4,18 @@ import {storeApprovedMail} from './mail.mjs';
 
 export const GMAIL_SCOPE='https://www.googleapis.com/auth/gmail.readonly';
 export function gmailQuery(after,senders,before=null){
-  const formatSender=s=>{s=s.trim();if(s.startsWith('@'))return `from:${s.slice(1)}`;if(s.includes('*')){const at=s.indexOf('@');if(at>=0&&at<s.length-1)return `from:${s.slice(at+1)}`;}return `from:"${s}"`;};
+  const formatSender=s=>{
+    s=s.trim();
+    if(s.startsWith('@'))return `from:${s.slice(1).replace(/^\*\.?/, '')}`;
+    if(s.includes('*')){
+      const at=s.indexOf('@');
+      if(at>=0&&at<s.length-1){
+        const domain=s.slice(at+1).replace(/^\*\.?/, '');
+        return `from:${domain}`;
+      }
+    }
+    return `from:"${s}"`;
+  };
   return `after:${Math.floor(after/1000)} ${before?`before:${Math.floor(before/1000)} `:''}{${[...new Set(senders)].sort().map(formatSender).join(' ')}} -in:spam -in:trash`;
 }
 export function gmailAuthenticated(mail){const first=mail.headers?.find(h=>h.key.toLowerCase()==='authentication-results')?.value||'';return /^mx\.google\.com\s*;/i.test(first)&&/(?:^|;)\s*dmarc=pass(?:\s|;|$)/i.test(first);}
