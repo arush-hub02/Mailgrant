@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mailgrant",
+	"main": "src/worker.mjs",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"run_worker_first": [
+			"/api/*",
+			"/auth/*"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mailgrant",
+			"database_id": "d85c1fab-e71e-40d2-917a-39849114fccd",
+			"migrations_dir": "migrations"
+		}
+	],
+	"triggers": {
+		"crons": [
+			"*/15 * * * *"
+		]
+	},
+	"observability": {
+		"enabled": false
+	},
+}

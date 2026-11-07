@@ -1,0 +1,23 @@
+{
+  "name": "mailgrant",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "db:local": "wrangler d1 migrations apply mailgrant --local",
+    "db:remote": "wrangler d1 migrations apply mailgrant --remote",
+    "deploy": "wrangler deploy",
+    "showcase": "node scripts/showcase.mjs"
+  },
+  "dependencies": {
+    "jose": "^6.1.0",
+    "postal-mime": "^2.5.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,8 @@
+GOOGLE_CLIENT_ID=replace-with-your-google-web-client-id
+GOOGLE_CLIENT_SECRET=replace-with-your-google-client-secret
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+CONTENT_KEY=replace-with-a-base64-encoded-32-byte-key
+# Must exactly match the public origin. Use http://localhost:8787 locally.
+APP_ORIGIN=http://localhost:8787
+# Optional. Leave blank when using direct Gmail connection (no custom domain).
+INBOUND_DOMAIN=

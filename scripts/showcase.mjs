@@ -1,0 +1,20 @@
+import {cp,mkdir,readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const root=new URL('../',import.meta.url),publicDir=new URL('public/',root);
+let html=await readFile(new URL('docs.html',publicDir),'utf8');
+const tokens=await readFile(new URL('tokens.css',publicDir),'utf8');
+const css=(await readFile(new URL('docs.css',publicDir),'utf8')).replace("@import url('/tokens.css');",tokens);
+const theme=(await readFile(new URL('theme.js',publicDir),'utf8')).replaceAll('export function ','function ');
+const docs=(await readFile(new URL('docs.js',publicDir),'utf8')).replace("import {getTheme} from './theme.js';",'');
+// The downloaded guide is self-contained. Its live-demo links target the published showcase.
+const origin='https://mailgrant-overview.supermelon18.chatgpt.site';
+html=html.replace('<link rel="stylesheet" href="/docs.css">',`<style>${css}</style>`).replace('<script type="module" src="/theme.js"></script>',`<script type="module">${theme}</script>`).replace('<script type="module" src="/docs.js"></script>',`<script type="module">${docs}</script>`).replace(/href="\/app.html/g,`href="${origin}/app.html`).replace(/href="\/access.html/g,`href="${origin}/access.html`).replace('href="/Mailgrant-Project-Guide.html" download','href="#intro"').replace('<link rel="icon" href="/favicon.svg" type="image/svg+xml">','');
+html=html.replace('Download this guide <span>↓</span>','Back to overview <span>↑</span>');
+const scriptHashes=[theme,docs].map(code=>`'sha256-${createHash('sha256').update(code).digest('base64')}'`).join(' ');
+const headers=(await readFile(new URL('_headers',publicDir),'utf8')).replace(/script-src 'self'[^;]*;/,`script-src 'self' ${scriptHashes};`);
+await writeFile(new URL('_headers',publicDir),headers);
+await writeFile(new URL('Mailgrant-Project-Guide.html',root),html);
+await writeFile(new URL('Mailgrant-Project-Guide.html',publicDir),html);
+await mkdir(new URL('showcase/dist/',root),{recursive:true});
+await cp(publicDir,new URL('showcase/dist/',root),{recursive:true});
+console.log('Prepared standalone HTML guide and static showcase.');
