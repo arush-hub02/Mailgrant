@@ -74,15 +74,43 @@ export function authenticatedEmail(headers) {
   const first = (headers.get('authentication-results') || '').split(/,(?=\s*[^;]+;)/)[0];
   return /^mx\.cloudflare\.net\s*;/i.test(first) && /(?:^|;)\s*dmarc=pass(?:\s|;|$)/i.test(first);
 }
+export function stripCssGarbage(text = '') {
+  if (!text || typeof text !== 'string') return '';
+  let str = text;
+  // Strip CSS at-rules: @import ... ; @media ... { ... }
+  str = str.replace(/@import\b[^;]+;/gi, ' ');
+  str = str.replace(/@media[^{]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, ' ');
+  str = str.replace(/@charset\b[^;]+;/gi, ' ');
+  // Strip CSS rules: e.g. .mj-column-per-100 { width: 100% !important; }
+  str = str.replace(/(?:^|\n)\s*[.#a-zA-Z_-][^{}\n]*\{[^}]*\}/g, '\n');
+  // Strip any remaining curly braced property blocks with !important
+  str = str.replace(/\{[^{}]*!(?:important|default)[^{}]*\}/gi, ' ');
+  // Strip lines that look purely like CSS properties, media queries, or selectors
+  str = str.split('\n').filter(line => {
+    const t = line.trim();
+    if (!t) return true;
+    if (/^(?:@media|@import|\.mj-|\.moz-text|table\.mj-|family-Roboto)/i.test(t)) return false;
+    if (/\b(?:width|max-width|min-width|font-family|margin|padding|background)\s*:\s*[^;]+!important/i.test(t)) return false;
+    if (/^[.#\w-]+\s*\{/i.test(t) && t.endsWith('}')) return false;
+    return true;
+  }).join('\n');
+  return str.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+export function hasCssGarbage(str = '') {
+  if (!str || typeof str !== 'string') return false;
+  return /(@media|@import|\.mj-|\.moz-text|table\.mj-|family-Roboto|!important|\b[\w-]+\s*:\s*[^;]+;(?:\s*[\w-]+\s*:\s*[^;]+;)+)/i.test(str);
+}
+
 export function htmlToText(html) {
   if (!html || typeof html !== 'string') return '';
   let str = html;
-  str = str.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ');
-  str = str.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ');
-  str = str.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, ' ');
-  str = str.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ');
-  str = str.replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, ' ');
   str = str.replace(/<!--[\s\S]*?-->/g, ' ');
+  str = str.replace(/<style\b[^>]*>[\s\S]*?(?:<\/style>|$)/gi, ' ');
+  str = str.replace(/<script\b[^>]*>[\s\S]*?(?:<\/script>|$)/gi, ' ');
+  str = str.replace(/<head\b[^>]*>[\s\S]*?(?:<\/head>|$)/gi, ' ');
+  str = str.replace(/<noscript\b[^>]*>[\s\S]*?(?:<\/noscript>|$)/gi, ' ');
+  str = str.replace(/<iframe\b[^>]*>[\s\S]*?(?:<\/iframe>|$)/gi, ' ');
   str = str.replace(/<a\b[^>]*href=["'](https?:\/\/[^"'\s<>]+)["'][^>]*>([\s\S]*?)<\/a>/gi, (match, href, inner) => {
     const cleanInner = inner.replace(/<[^>]*>/g, '').trim();
     if (!cleanInner) return href;
@@ -106,24 +134,27 @@ export function htmlToText(html) {
     });
   str = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   str = str.split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).join('\n');
-  return str.replace(/\n{3,}/g, '\n\n').trim();
+  return stripCssGarbage(str.replace(/\n{3,}/g, '\n\n').trim());
 }
 
 export function extractContent(mail, rule) {
   let text = '';
   const rawText = typeof mail.text === 'string' ? mail.text.trim() : '';
-  const looksLikeCssOrHtml = /^(@import|@media|\.[\w-]+\s*\{|<style|<html|<!doctype)/i.test(rawText);
-  if (rawText && !looksLikeCssOrHtml) {
-    if (!rawText.includes('https://') && mail.html && mail.html.includes('https://')) {
+  const isCorruptText = !rawText || hasCssGarbage(rawText) || /^(@import|@media|\.[\w-]+\s*\{|<style|<html|<!doctype)/i.test(rawText);
+
+  if (isCorruptText && mail.html) {
+    text = htmlToText(mail.html);
+  } else if (rawText) {
+    if (mail.html && (!rawText.includes('https://') || hasCssGarbage(rawText))) {
       const fromHtml = htmlToText(mail.html);
-      text = fromHtml || rawText;
+      text = fromHtml || stripCssGarbage(rawText);
     } else {
-      text = rawText;
+      text = stripCssGarbage(rawText);
     }
   } else if (mail.html) {
     text = htmlToText(mail.html);
   }
-  text = text.slice(0, 60000);
+  text = stripCssGarbage(text).slice(0, 60000);
 
   const source = `${mail.subject || ''}\n${text}`;
   // Ambiguous emails stay unavailable instead of guessing a number or exposing the original body.
@@ -141,13 +172,34 @@ export function extractContent(mail, rule) {
     ...[...(mail.html || '').matchAll(/https:\/\/[^\s<>"')]+/g)].map(m => m[0])
   ].map(u => u.replaceAll('&amp;', '&').replace(/[.,;>)]+$/, ''));
 
+  const allowedHosts = new Set();
+  if (rule.link_host) allowedHosts.add(rule.link_host.toLowerCase());
+  if (rule.domain) allowedHosts.add(rule.domain.toLowerCase());
+  if (rule.sender) {
+    const senderMatch = rule.sender.match(/@(?:\*\.)?([a-z0-9.-]+)/i);
+    if (senderMatch) {
+      const sDom = senderMatch[1].toLowerCase();
+      allowedHosts.add(sDom);
+      const parts = sDom.split('.');
+      if (parts.length > 2) allowedHosts.add(parts.slice(-2).join('.'));
+    }
+  }
+  if (allowedHosts.has('claude.ai') || allowedHosts.has('anthropic.com')) {
+    allowedHosts.add('claude.ai');
+    allowedHosts.add('anthropic.com');
+  }
+
   const links = [...new Set(rawUrls)].filter(raw => {
     try {
       const u = new URL(raw);
       if (u.protocol !== 'https:' || u.username || u.password) return false;
       if (u.port && u.port !== '443') return false;
       if (ignoredHosts.has(u.hostname.toLowerCase())) return false;
-      if (rule.link_host && !(u.hostname === rule.link_host || u.hostname.endsWith('.' + rule.link_host))) return false;
+      if (allowedHosts.size > 0) {
+        const h = u.hostname.toLowerCase();
+        const matchesAny = [...allowedHosts].some(allowed => h === allowed || h.endsWith('.' + allowed));
+        if (!matchesAny) return false;
+      }
       const pathname = u.pathname.split('?')[0];
       if (assetExt.test(pathname)) return false;
       return true;

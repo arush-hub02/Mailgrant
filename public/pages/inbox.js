@@ -29,7 +29,7 @@ export function getMessageSharing(m, state) {
     };
   });
 
-  // Check if message belongs to a Team Pool (e.g. Netflix)
+  // Check if message belongs to a Team Pool
   const pool = (m.pools || [])[0] || (state.team_pools || []).find(p => (p.rules || []).some(r => r.id === m.rule_id || r.rule_id === m.rule_id));
   if (pool) {
     const memberCount = pool.members?.length || recipientMembers.length || 1;
@@ -123,7 +123,7 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
       <h3 class="empty-title">${isReceivers ? 'No Active Team Pool Dispatches' : 'Your Mailbox Stream is Secure & Clear'}</h3>
       <p class="empty-desc">
         ${isReceivers 
-          ? 'When family or team members trigger sign-ins for pooled services (like Netflix, AWS, or Claude), temporary OTP codes and links will appear here automatically.'
+          ? 'When family or team members trigger sign-ins for pooled services, temporary verification codes and links will appear here automatically.'
           : 'No active ephemeral messages in this workspace. Inbound emails from approved senders will appear here automatically and auto-purge once their retention window expires.'
         }
       </p>
@@ -138,14 +138,15 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
         </div>
       ` : ''}
 
-      ${isReceivers ? `
+      ${isReceivers ? (isOwner ? `
         <div class="empty-quick-action" style="margin-top: 12px;">
-          <button type="button" class="btn primary netflix-quick-btn pulse-glow" data-action="quick-netflix-pool">
-            <span>🎬 Setup Netflix Family & Team Pool</span>
+          <button type="button" class="btn primary btn-lg pulse-glow" data-action="create-team-pool">
+            ${icon('plus')}
+            <span>Create Team Access Pool</span>
           </button>
-          <span class="empty-action-hint">1-click setup: Netflix rule + Team pool + Instant OTP portal link</span>
+          <span class="empty-action-hint">Bundle sign-in codes for shared team or family services</span>
         </div>
-      ` : `
+      ` : '') : `
         <div class="inbox-guidance-grid">
           <div class="guidance-card" data-page="rules" role="button" tabindex="0">
             <div class="guidance-card-icon">${icon('shield')}</div>
@@ -223,8 +224,8 @@ export function messageList(messages, state, isSearch = false, query = '', view 
             <h3 class="inbox-card-company">${esc(m.name)}</h3>
             
             ${isPool ? `
-              <span class="inbox-card-pool-tag ${pool.color || 'red'}" title="Pooled for team/family access">
-                <span class="pool-icon-symbol">${pool.name.toLowerCase().includes('netflix') ? '🎬' : '👥'}</span>
+              <span class="inbox-card-pool-tag" title="Pooled for team/family access">
+                <span class="pool-icon-symbol">${icon('people')}</span>
                 <span>${esc(pool.name)}</span>
               </span>
             ` : ''}
@@ -287,7 +288,7 @@ export function messageList(messages, state, isSearch = false, query = '', view 
 /**
  * Main Shared Inbox Page View with Segmented Tabs:
  * - Own Mailbox: Direct messages arriving to user's linked mailbox
- * - Receivers & Team Inboxes: Shared streams & Team Pools (like Netflix OTP)
+ * - Receivers & Team Inboxes: Shared streams & Team Pools
  */
 export function inboxPage({ state = {}, demo = false, filter = 'all', query = '', view = 'own', pool = 'all' }) {
   const allMessages = state.messages || [];
@@ -332,8 +333,6 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
   const teamGrantsCount = teamMemberIdsWithGrants.size;
   const activeRulesCount = rules.filter(r => r.enabled).length;
 
-  const hasNetflixPool = teamPools.some(p => p.name.toLowerCase().includes('netflix'));
-
   return heading(
     'Shared Inbox',
     'Selective zero-trust inbound stream. Manage personal mail dispatches or shared team pools.',
@@ -369,7 +368,7 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
         <span class="view-tab-icon">${icon('people')}</span>
         <div class="view-tab-text">
           <span class="view-tab-title">Receivers & Team Inboxes</span>
-          <span class="view-tab-sub">Shared pools, Netflix & team recipients</span>
+          <span class="view-tab-sub">Shared access pools & team recipients</span>
         </div>
         <span class="view-tab-count">${receiverMessages.length}</span>
       </button>
@@ -393,17 +392,16 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
 
           ${teamPools.map(p => {
             const pCount = receiverMessages.filter(m => (m.pools || []).some(mp => mp.id === p.id)).length;
-            const isNetflix = p.name.toLowerCase().includes('netflix');
             return `
               <button 
                 type="button" 
-                class="pool-pill ${pool === p.id ? 'active' : ''} pool-${p.color || 'blue'}" 
+                class="pool-pill ${pool === p.id ? 'active' : ''}" 
                 data-pool-filter="${esc(p.id)}"
                 role="tab"
                 aria-selected="${pool === p.id}"
                 title="${esc(p.description || p.name)}"
               >
-                <span class="pool-icon-symbol">${isNetflix ? '🎬' : '👥'}</span>
+                <span class="pool-icon-symbol">${icon('people')}</span>
                 <span>${esc(p.name)}</span>
                 <span class="pool-pill-count">${pCount}</span>
               </button>
@@ -412,15 +410,10 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
         </div>
 
         <div class="inbox-pools-actions">
-          ${!hasNetflixPool ? `
-            <button type="button" class="btn small netflix-quick-btn pulse-glow" data-action="quick-netflix-pool" title="1-click setup: Netflix rule + Team Pool + Portal Link">
-              <span>🎬 Add Netflix Team Pool</span>
-            </button>
-          ` : ''}
           ${isOwner ? `
             <button type="button" class="btn small primary" data-action="create-team-pool">
               ${icon('plus')}
-              <span>New Team Pool</span>
+              <span>+ New Team Pool</span>
             </button>
           ` : ''}
         </div>

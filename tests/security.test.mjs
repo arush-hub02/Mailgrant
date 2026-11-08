@@ -26,10 +26,17 @@ test('encryption hides content and binds ciphertext to its workspace/rule',async
 test('code extraction fails closed for ambiguous values and strips message bodies',()=>{const rule={mode:'codes',link_host:''};assert.deepEqual(extractContent({subject:'Your sign-in code is 123456',text:'Private body',from:{address:'a@b.com'}},rule),{code:'123456'});assert.equal(extractContent({text:'Codes: 123456 and 789012'},rule).code,null);assert.equal(extractContent({text:'Invoice number 123456'},rule).code,null);assert.deepEqual(projectContent({code:'123456',text:'secret',subject:'secret'},'codes'),{code:'123456'});});
 test('links require an exact HTTPS hostname, no credentials or unusual port',()=>{const rule={mode:'links',link_host:'accounts.example.com'};for(const url of ['https://accounts.example.com.evil.test/token','https://accounts.example.com@evil.test/token','https://accounts.example.com:444/token','http://accounts.example.com/token'])assert.equal(extractContent({text:url},rule).link,null);assert.equal(extractContent({text:'https://accounts.example.com/token'},rule).link,'https://accounts.example.com/token');});
 test('HTML emails strip CSS stylesheets and extract magic links from anchor tags',()=>{
-  const rule={mode:'read',link_host:''};
+  const rule={mode:'read',link_host:'claude.ai',sender:'*@*.anthropic.com'};
   const mail={
     subject:'Your secure link to Claude is here | 2026-11-07 13:57:23',
     from:{address:'no-reply@mail.anthropic.com'},
+    text:`family-Roboto:300,400,500,700); @media only screen and (min-width:480px) {
+.mj-column-per-100 { width:100% !important; max-width: 100%; }
+.mj-column-per-65 { width:65% !important; max-width: 65%; }
+.mj-column-per-35 { width:35% !important; max-width: 35%; }
+} .moz-text-html .mj-column-per-100 {
+width:100% !important; max-width: 100%; }
+https://fonts.googleapis.com`,
     html:`<!doctype html><html><head>
       <style type="text/css">
         @import url(https://fonts.googleapis.com/css?family=Roboto:300,400,500,700);
@@ -46,7 +53,8 @@ test('HTML emails strip CSS stylesheets and extract magic links from anchor tags
   const extracted=extractContent(mail,rule);
   assert.ok(!extracted.text.includes('.mj-column-per-100'),'CSS classes must not appear in text');
   assert.ok(!extracted.text.includes('@media'),'Media queries must not appear in text');
-  assert.ok(!extracted.text.includes('family=Roboto'),'Font imports must not appear in text');
+  assert.ok(!extracted.text.includes('family-Roboto'),'Font imports must not appear in text');
+  assert.ok(!extracted.text.includes('fonts.googleapis.com'),'Asset urls must not appear in text');
   assert.ok(extracted.text.includes('Sign in to Claude'),'Message body text must be present');
   assert.equal(extracted.link,'https://claude.ai/magic-link#token=secure-token-12345');
 });

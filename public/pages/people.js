@@ -486,11 +486,100 @@ function renderPersonCard(person, { state, me, demo, activeTab = 'direct' }) {
 }
 
 /**
+ * Renders Team Access Pools grid or clean empty state
+ */
+export function renderTeamPools(teamPools = [], state = {}) {
+  const rules = state.rules || [];
+  const members = state.members || [];
+
+  if (!teamPools.length) {
+    return `
+      <div class="people-empty-hero glass-neon-card" style="padding:40px 24px;text-align:center;margin-bottom:24px;">
+        <div style="width:54px;height:54px;margin:0 auto 16px;border-radius:var(--radius-lg);background:var(--accent-subtle);color:var(--accent-bright);display:grid;place-items:center;border:1px solid var(--accent-border);">
+          ${icon('people')}
+        </div>
+        <h3 style="margin:0 0 8px;font-size:18px;color:var(--ink);">No Team Access Pools Configured Yet</h3>
+        <p style="max-width:520px;margin:0 auto 20px;font-size:13.5px;color:var(--muted);line-height:1.5;">
+          Team Pools bundle inbound service rules and grant instant OTP verification codes and magic sign-in access to a group of team or family members.
+        </p>
+        <button type="button" class="btn primary pulse-glow" data-action="create-team-pool">
+          ${icon('plus')}
+          <span>Create Team Access Pool</span>
+        </button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="team-pools-grid">
+      ${teamPools.map(pool => {
+        const pRules = (pool.rule_ids || []).map(rid => rules.find(r => r.id === rid)).filter(Boolean);
+        const pMembers = (pool.member_ids || []).map(mid => members.find(m => m.id === mid)).filter(Boolean);
+        const portalUrl = pool.access_key ? `${location.origin}/access?key=${pool.access_key.key}` : '';
+
+        return `
+          <div class="team-pool-card glass-neon-card">
+            <div class="team-pool-head">
+              <div class="team-pool-title-group">
+                <div class="team-pool-icon">${icon('people')}</div>
+                <div>
+                  <h3 class="team-pool-name">${esc(pool.name)}</h3>
+                  <p class="team-pool-desc">${esc(pool.description || 'Shared service access pool')}</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn danger" data-delete-pool="${esc(pool.id)}" title="Delete pool" aria-label="Delete pool">
+                ${icon('trash')}
+              </button>
+            </div>
+
+            <div class="team-pool-meta-row">
+              <span class="team-pool-meta-label">Included Service Rules (${pRules.length})</span>
+              <div class="team-pool-rules-chips">
+                ${pRules.length > 0 ? pRules.map(r => `
+                  <span class="team-pool-rule-chip">
+                    ${getCompanyLogo(r.name, 18)}
+                    <span>${esc(r.name)}</span>
+                    <span class="badge ${r.mode === 'codes' ? 'blue' : r.mode === 'links' ? 'green' : 'purple'}" style="padding:1px 5px;font-size:10px;">${r.mode === 'codes' ? 'Codes' : r.mode === 'links' ? 'Links' : 'Read'}</span>
+                  </span>
+                `).join('') : '<span style="color:var(--muted);font-size:12px;">No rules assigned</span>'}
+              </div>
+            </div>
+
+            <div class="team-pool-meta-row">
+              <span class="team-pool-meta-label">Assigned Members (${pMembers.length})</span>
+              <div class="team-pool-members-row">
+                ${pMembers.length > 0 ? pMembers.map(m => `
+                  <span class="team-pool-member-pill">
+                    <span style="width:18px;height:18px;font-size:9px;border-radius:50%;background:var(--accent-subtle);color:var(--accent-bright);display:grid;place-items:center;font-weight:700;">${initials(m.name || m.email)}</span>
+                    <span>${esc(m.name || m.email.split('@')[0])}</span>
+                  </span>
+                `).join('') : '<span style="color:var(--muted);font-size:12px;">All active members</span>'}
+              </div>
+            </div>
+
+            ${portalUrl ? `
+              <div class="team-pool-meta-row">
+                <span class="team-pool-meta-label">Instant Access Portal Link (/access)</span>
+                <div class="copy-box" style="margin:0;">
+                  <code style="font-size:11px;">${esc(portalUrl)}</code>
+                  <button type="button" class="icon-btn" data-copy="${esc(portalUrl)}" aria-label="Copy portal link">${icon('copy')}</button>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+/**
  * Unified People & Access Hub Page with Dedicated Tabbed Interface
  */
 export function peoplePage({ state, me, demo }) {
   const members = state.members || [];
   const keys = state.keys || [];
+  const teamPools = state.pools || [];
   const pending = (state.invitations || []).filter(i => !i.accepted_at && i.expires_at > Date.now());
 
   // Filter out workspace owner: owner is managed in profile and mailbox sections
@@ -526,7 +615,7 @@ export function peoplePage({ state, me, demo }) {
   let activeTab = 'all';
   try {
     const saved = localStorage.getItem('mailgrant_people_tab');
-    if (saved && ['all', 'direct', 'platform'].includes(saved)) {
+    if (saved && ['all', 'direct', 'platform', 'pools'].includes(saved)) {
       activeTab = saved;
     }
   } catch {}
@@ -541,16 +630,20 @@ export function peoplePage({ state, me, demo }) {
     <div class="people-page-container">
       ${heading(
         'People & Access Distribution',
-        'Manage external distribution to recipients — dedicated direct passwordless access (no login required) and verified mail provider accounts.',
+        'Manage external distribution to recipients — dedicated direct passwordless access (no login required), team pools, and verified mail provider accounts.',
         `
         <div class="people-header-actions" id="people-header-actions">
-          <button type="button" class="btn primary add-access-btn" data-action="key" id="btn-header-key" title="Create a passwordless, time-bound key for a recipient" style="display: ${activeTab === 'platform' ? 'none' : 'inline-flex'};">
+          <button type="button" class="btn primary add-access-btn" data-action="key" id="btn-header-key" title="Create a passwordless, time-bound key for a recipient" style="display: ${activeTab === 'platform' || activeTab === 'pools' ? 'none' : 'inline-flex'};">
             ${icon('key')}
             <span>+ Add Access Key</span>
           </button>
-          <button type="button" class="btn outline" data-action="invite" id="btn-header-invite" title="Invite a user to this workspace" style="display: ${activeTab === 'direct' ? 'none' : 'inline-flex'};">
+          <button type="button" class="btn outline" data-action="invite" id="btn-header-invite" title="Invite a user to this workspace" style="display: ${activeTab === 'direct' || activeTab === 'pools' ? 'none' : 'inline-flex'};">
             ${icon('people')}
             <span>+ Invite Member</span>
+          </button>
+          <button type="button" class="btn outline" data-action="create-team-pool" id="btn-header-pool" title="Create a Team Access Pool" style="display: ${activeTab === 'pools' || activeTab === 'all' ? 'inline-flex' : 'none'};">
+            ${icon('people')}
+            <span>+ Create Team Pool</span>
           </button>
           <a class="btn outline" href="/access" target="_blank" rel="noopener noreferrer" id="btn-header-portal" title="Open Recipient Direct Portal" style="display: ${activeTab === 'direct' ? 'inline-flex' : 'none'};">
             ${icon('mail')}
@@ -577,6 +670,11 @@ export function peoplePage({ state, me, demo }) {
           <span class="tab-title">Platform Accounts (Verified Sign-in)</span>
           <span class="tab-count-pill">${directMembersCount + pending.length} Members</span>
         </button>
+        <button type="button" class="people-tab-btn ${activeTab === 'pools' ? 'active' : ''}" data-people-tab="pools" role="tab" aria-selected="${activeTab === 'pools'}">
+          <span class="tab-icon-wrap">${icon('people')}</span>
+          <span class="tab-title">Team Access Pools</span>
+          <span class="tab-count-pill">${teamPools.length} Pools</span>
+        </button>
       </div>
 
       <!-- Dedicated Tab Explainer & Context Banner (No Duplicate Buttons) -->
@@ -591,10 +689,15 @@ export function peoplePage({ state, me, demo }) {
             <strong>🛡️ Platform Verified Accounts:</strong>
             Team members authenticated through verified sign-in. Subdomain filters and company rules are granted and audited per individual account.
           </div>
+        ` : activeTab === 'pools' ? `
+          <div class="banner-content">
+            <strong>👥 Team Access Pools:</strong>
+            Bundle company service rules and grant instant access to a group of team or family members, or share an instant zero-trust access key link.
+          </div>
         ` : `
           <div class="banner-content">
             <strong>🌐 Complete Access Distribution Hub:</strong>
-            Overview of both Direct Passwordless Keys (5-day auto-purge retention) and Verified Platform Members.
+            Overview of Direct Passwordless Keys (5-day auto-purge retention), Team Access Pools, and Verified Platform Members.
           </div>
         `}
       </div>
@@ -639,105 +742,138 @@ export function peoplePage({ state, me, demo }) {
 
       <!-- People Management Hub Section -->
       <section class="people-hub-section">
-        
-        <!-- Controls Bar: Search, Filters, and View Switcher -->
-        <div class="people-controls-bar">
-          <div class="people-search-wrapper">
-            <span class="search-icon-inside">${icon('search')}</span>
-            <input type="search" 
-                   id="people-search-input" 
-                   class="people-search-input" 
-                   placeholder="Search people by name, email, key prefix, company, or subdomain..." 
-                   autocomplete="off" 
-                   spellcheck="false" />
-          </div>
-
-          <!-- Quick Filter Segment Pills -->
-          <div class="people-filter-pills" id="people-filter-controls">
-            <button type="button" class="filter-pill active" data-filter-people="all">
-              ${icon('grid')} All Recipients (${totalPeople})
-            </button>
-            <button type="button" class="filter-pill" data-filter-people="keys">
-              ${icon('key')} Key Holders (${visibleKeys.length})
-            </button>
-            <button type="button" class="filter-pill" data-filter-people="members">
-              ${icon('people')} Team Members (${distributionMembers.length})
-            </button>
-            ${pending.length ? `
-              <button type="button" class="filter-pill" data-filter-people="invites">
-                ${icon('mail')} Pending Invites (${pending.length})
+        ${activeTab === 'pools' ? `
+          <!-- Dedicated Team Pools View -->
+          <div class="people-pools-view" id="people-pools-view">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div>
+                <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink);">Active Team Access Pools</h3>
+                <p style="margin:2px 0 0;font-size:13px;color:var(--muted);">Pooled zero-trust verification rules for shared logins across team and family members.</p>
+              </div>
+              <button type="button" class="btn primary pulse-glow" data-action="create-team-pool">
+                ${icon('plus')}
+                <span>+ Create Team Pool</span>
               </button>
-            ` : ''}
-          </div>
-
-          <!-- View Switcher (Table vs Cards) -->
-          <div class="people-view-switcher" role="group" aria-label="Layout view switcher">
-            <button type="button" class="view-btn ${isTable ? 'active' : ''}" data-set-view="table" title="High-Density Table View">
-              ${icon('menu')}
-              <span>Table</span>
-            </button>
-            <button type="button" class="view-btn ${!isTable ? 'active' : ''}" data-set-view="cards" title="Detailed Cards View">
-              ${icon('grid')}
-              <span>Cards</span>
-            </button>
-          </div>
-        </div>
-
-        ${peopleList.length > 0 ? `
-          <!-- 1. HIGH-DENSITY TABLE VIEW -->
-          <div class="people-table-container glass-neon-card" id="people-table-container" style="display: ${isTable ? 'block' : 'none'};">
-            <div class="people-table-scroller">
-              <table class="people-data-table">
-                <thead>
-                  <tr>
-                    <th class="th-identity">Person / Recipient</th>
-                    <th class="th-channel">Channel</th>
-                    <th class="th-scopes">Company Boundaries & Subdomains</th>
-                    <th class="th-restrictions">Restrictions & Limits</th>
-                    <th class="th-status">Status</th>
-                    <th class="th-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="people-table-body">
-                  ${peopleList.map(person => renderPersonRow(person, { state, me, demo, activeTab })).join('')}
-                </tbody>
-              </table>
             </div>
-          </div>
-
-          <!-- 2. SPACIOUS CARDS VIEW -->
-          <div class="people-cards-grid" id="people-grid-container" style="display: ${isTable ? 'none' : 'grid'};">
-            ${peopleList.map(person => renderPersonCard(person, { state, me, demo, activeTab })).join('')}
-          </div>
-
-          <!-- Empty search result alert -->
-          <div id="people-no-results" class="people-no-results" style="display: none;">
-            <div class="no-results-icon">${icon('search')}</div>
-            <h4>No matching recipients found</h4>
-            <p>Try searching for a different name, email, company, or subdomain pattern.</p>
+            ${renderTeamPools(teamPools, state)}
           </div>
         ` : `
-          <!-- Full Zero-State Hero -->
-          <div class="people-empty-hero">
-            <div class="empty-people-radar" aria-hidden="true">
-              <div class="empty-radar-beam"></div>
-              <div class="empty-radar-center">
-                ${icon('people')}
+          ${activeTab === 'all' && teamPools.length > 0 ? `
+            <!-- Overview of Team Pools in All Distribution -->
+            <div class="people-pools-overview-block" style="margin-bottom:28px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;">
+                  ${icon('people')}
+                  <span>Team Access Pools (${teamPools.length})</span>
+                </h3>
+                <button type="button" class="btn small outline" data-action="create-team-pool">
+                  ${icon('plus')}
+                  <span>New Pool</span>
+                </button>
               </div>
+              ${renderTeamPools(teamPools, state)}
             </div>
-            <h3>No Access Credentials Configured Yet</h3>
-            <p>Delegate zero-trust email access to contractors, family, or external partners with direct passwordless keys or any email provider.</p>
-            <div class="empty-actions">
-              <button type="button" class="btn primary-glow" data-action="key">
-                ${icon('key')}
-                <span>Issue Direct Access Key (No Login)</span>
+          ` : ''}
+
+          <!-- Controls Bar: Search, Filters, and View Switcher -->
+          <div class="people-controls-bar">
+            <div class="people-search-wrapper">
+              <span class="search-icon-inside">${icon('search')}</span>
+              <input type="search" 
+                     id="people-search-input" 
+                     class="people-search-input" 
+                     placeholder="Search people by name, email, key prefix, company, or subdomain..." 
+                     autocomplete="off" 
+                     spellcheck="false" />
+            </div>
+
+            <!-- Quick Filter Segment Pills -->
+            <div class="people-filter-pills" id="people-filter-controls">
+              <button type="button" class="filter-pill active" data-filter-people="all">
+                ${icon('grid')} All Recipients (${totalPeople})
               </button>
-              <button type="button" class="btn outline" data-action="invite">
-                ${icon('people')}
-                <span>Invite Team Member</span>
+              <button type="button" class="filter-pill" data-filter-people="keys">
+                ${icon('key')} Key Holders (${visibleKeys.length})
+              </button>
+              <button type="button" class="filter-pill" data-filter-people="members">
+                ${icon('people')} Team Members (${distributionMembers.length})
+              </button>
+              ${pending.length ? `
+                <button type="button" class="filter-pill" data-filter-people="invites">
+                  ${icon('mail')} Pending Invites (${pending.length})
+                </button>
+              ` : ''}
+            </div>
+
+            <!-- View Switcher (Table vs Cards) -->
+            <div class="people-view-switcher" role="group" aria-label="Layout view switcher">
+              <button type="button" class="view-btn ${isTable ? 'active' : ''}" data-set-view="table" title="High-Density Table View">
+                ${icon('menu')}
+                <span>Table</span>
+              </button>
+              <button type="button" class="view-btn ${!isTable ? 'active' : ''}" data-set-view="cards" title="Detailed Cards View">
+                ${icon('grid')}
+                <span>Cards</span>
               </button>
             </div>
           </div>
+
+          ${peopleList.length > 0 ? `
+            <!-- 1. HIGH-DENSITY TABLE VIEW -->
+            <div class="people-table-container glass-neon-card" id="people-table-container" style="display: ${isTable ? 'block' : 'none'};">
+              <div class="people-table-scroller">
+                <table class="people-data-table">
+                  <thead>
+                    <tr>
+                      <th class="th-identity">Person / Recipient</th>
+                      <th class="th-channel">Channel</th>
+                      <th class="th-scopes">Company Boundaries & Subdomains</th>
+                      <th class="th-restrictions">Restrictions & Limits</th>
+                      <th class="th-status">Status</th>
+                      <th class="th-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="people-table-body">
+                    ${peopleList.map(person => renderPersonRow(person, { state, me, demo, activeTab })).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 2. SPACIOUS CARDS VIEW -->
+            <div class="people-cards-grid" id="people-grid-container" style="display: ${isTable ? 'none' : 'grid'};">
+              ${peopleList.map(person => renderPersonCard(person, { state, me, demo, activeTab })).join('')}
+            </div>
+
+            <!-- Empty search result alert -->
+            <div id="people-no-results" class="people-no-results" style="display: none;">
+              <div class="no-results-icon">${icon('search')}</div>
+              <h4>No matching recipients found</h4>
+              <p>Try searching for a different name, email, company, or subdomain pattern.</p>
+            </div>
+          ` : `
+            <!-- Full Zero-State Hero -->
+            <div class="people-empty-hero">
+              <div class="empty-people-radar" aria-hidden="true">
+                <div class="empty-radar-beam"></div>
+                <div class="empty-radar-center">
+                  ${icon('people')}
+                </div>
+              </div>
+              <h3>No Access Credentials Configured Yet</h3>
+              <p>Delegate zero-trust email access to contractors, family, or external partners with direct passwordless keys or any email provider.</p>
+              <div class="empty-actions">
+                <button type="button" class="btn primary-glow" data-action="key">
+                  ${icon('key')}
+                  <span>Issue Direct Access Key (No Login)</span>
+                </button>
+                <button type="button" class="btn outline" data-action="invite">
+                  ${icon('people')}
+                  <span>Invite Team Member</span>
+                </button>
+              </div>
+            </div>
+          `}
         `}
       </section>
     </div>

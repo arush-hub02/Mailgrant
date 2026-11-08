@@ -205,11 +205,12 @@ export function computeSenderPattern({ prefix = '*', domain = '', wildcard = tru
 /**
  * Render a cyber-styled, modern Rule Card
  */
-export function ruleCard(r, i, owner = false) {
+export function ruleCard(r, i, owner = false, pools = []) {
   const isWildcard = r.sender.includes('*@*.') || r.sender.includes('@*.');
   const modeKey = r.mode || 'codes';
   const modeLabel = modes[modeKey] || 'Codes only';
   const modeClass = modeKey === 'codes' ? 'mode-codes' : modeKey === 'links' ? 'mode-links' : 'mode-read';
+  const inPools = (pools || []).filter(p => (p.rule_ids || []).includes(r.id) || (p.rules || []).some(pr => pr.id === r.id));
 
   return `
     <article class="rule-card modern-cyber-card glass-neon-card" data-rule-card-id="${esc(r.id)}">
@@ -251,6 +252,11 @@ export function ruleCard(r, i, owner = false) {
           <span class="rule-retention-pill">
             ${icon('time')} ${r.retention_minutes}m Purge
           </span>
+          ${inPools.map(p => `
+            <span class="badge blue" style="font-size:11px;" title="Included in Team Access Pool">
+              ${icon('people')} ${esc(p.name)}
+            </span>
+          `).join('')}
         </div>
 
         ${r.subject_contains ? `
@@ -431,7 +437,7 @@ export function rulesPage({ state }) {
 
         ${rules.length > 0 ? `
           <div class="rule-grid">
-            ${rules.map((r, i) => ruleCard(r, i, state.owner)).join('')}
+            ${rules.map((r, i) => ruleCard(r, i, state.owner, state.pools)).join('')}
           </div>
         ` : `
           <div class="rules-empty-hero">

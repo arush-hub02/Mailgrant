@@ -370,7 +370,7 @@ async function renderLogin(error=''){
           <div class="auth-recipient-box">
             <div class="recipient-box-text">
               <strong>Have a Team Pool key or Access key?</strong>
-              <p>Direct zero-trust portal for family Netflix OTP & team accounts. No login required.</p>
+              <p>Direct zero-trust portal for team pools & shared accounts. No login required.</p>
             </div>
             <a class="btn small primary" href="/access">
               <span>Open Team Portal →</span>
@@ -567,7 +567,7 @@ async function message(id){
       <p style="font-size:12px; color:var(--muted); margin:0;">Codes and links can grant access to the service’s account. Removing a member here does not end a session already created there.</p>
     `;
 
-    modal(m.name, contentHtml, { customIconHtml: getCompanyLogo(m.name, 48) });
+    modal(m.name, contentHtml, { customIconHtml: getCompanyLogo(m.name || m.sender, 48) });
   }catch(e){
     selectedMessage=null;
     modal('Message unavailable',`<p>${esc(e.message)}</p>${btn('Close','close')}`);
@@ -784,50 +784,49 @@ function openCreateTeamPoolModal() {
   modal('Create Team Access Pool', `
     <form id="team-pool-form" class="clean-form">
       <p style="margin-bottom:16px;color:var(--muted);font-size:13.5px;">
-        Team Pools bundle service rules (like Netflix OTP) and grant instant access to a group of team or family members.
+        Team Pools bundle access rules and grant instant verification code and sign-in access to a group of team or family members.
       </p>
 
       <div class="field">
         <label for="pool-name"><strong>Pool Name</strong></label>
-        <input id="pool-name" name="name" type="text" placeholder="e.g. Netflix & Family Logins" required maxlength="60" value="Netflix & Family Logins" autocomplete="off" />
+        <input id="pool-name" name="name" type="text" placeholder="e.g. Engineering Team, Family Services, Design Tools" required maxlength="60" value="" autocomplete="off" />
       </div>
 
       <div class="field">
         <label for="pool-desc"><strong>Description</strong></label>
-        <input id="pool-desc" name="description" type="text" placeholder="e.g. Shared OTP for Netflix sign-in" maxlength="140" value="Shared OTP codes for family & team login" />
-      </div>
-
-      <div class="field">
-        <label><strong>Color Accent</strong></label>
-        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="red" checked /> <span style="color:#ff4d5a;font-weight:700;">Red (Netflix)</span></label>
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="blue" /> <span style="color:#00f0ff;font-weight:700;">Blue</span></label>
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="purple" /> <span style="color:#b266ff;font-weight:700;">Purple</span></label>
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="green" /> <span style="color:#00ffb2;font-weight:700;">Green</span></label>
-        </div>
+        <input id="pool-desc" name="description" type="text" placeholder="e.g. Shared verification codes and sign-in access for team members" maxlength="140" value="" />
       </div>
 
       <div class="field">
         <label><strong>Select Included Rules</strong></label>
-        <div style="max-height:140px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-md);padding:10px;background:var(--bg-subtle);display:flex;flex-direction:column;gap:8px;">
+        <div class="pool-select-list">
           ${rules.length > 0 ? rules.map(r => `
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
-              <input type="checkbox" name="rule_ids" value="${esc(r.id)}" ${r.name.toLowerCase().includes('netflix') ? 'checked' : ''} />
-              <span><strong>${esc(r.name)}</strong> (${esc(r.sender)} · ${r.mode})</span>
+            <label class="pool-item-row">
+              <input type="checkbox" name="rule_ids" value="${esc(r.id)}" />
+              <div class="pool-item-info">
+                ${getCompanyLogo(r.name, 22)}
+                <span class="pool-item-title">${esc(r.name)}</span>
+                <span class="pool-item-sub">(${esc(r.sender)})</span>
+              </div>
+              <span class="badge ${r.mode === 'codes' ? 'blue' : r.mode === 'links' ? 'green' : 'purple'}">${r.mode === 'codes' ? 'Codes only' : r.mode === 'links' ? 'Sign-in links' : 'Full message'}</span>
             </label>
-          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:0;">No rules configured yet. A Netflix rule will be added automatically.</p>'}
+          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:4px 8px;">No rules configured yet. You can add rules in the Rules section.</p>'}
         </div>
       </div>
 
       <div class="field">
         <label><strong>Assign Team Members</strong></label>
-        <div style="max-height:140px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-md);padding:10px;background:var(--bg-subtle);display:flex;flex-direction:column;gap:8px;">
+        <div class="pool-select-list">
           ${members.length > 0 ? members.map(m => `
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <label class="pool-item-row">
               <input type="checkbox" name="member_ids" value="${esc(m.id)}" checked />
-              <span><strong>${esc(m.name || m.email.split('@')[0])}</strong> (${esc(m.email)})</span>
+              <div class="pool-item-info">
+                <span style="width:24px;height:24px;font-size:11px;display:grid;place-items:center;border-radius:50%;background:var(--accent-subtle);color:var(--accent-bright);font-weight:700;flex-shrink:0;">${initials(m.name || m.email)}</span>
+                <span class="pool-item-title">${esc(m.name || m.email.split('@')[0])}</span>
+                <span class="pool-item-sub">(${esc(m.email)})</span>
+              </div>
             </label>
-          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:0;">No team members added yet. You can invite members in People & Access or share the instant portal link.</p>'}
+          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:4px 8px;">No team members added yet. You can invite members in People & Access or share the instant portal link.</p>'}
         </div>
       </div>
 
@@ -843,7 +842,7 @@ function openCreateTeamPoolModal() {
 
       <div class="dialog-actions" style="margin-top:20px;">
         <button type="button" class="btn outline" onclick="closeModal()">Cancel</button>
-        <button type="submit" class="btn primary pulse-glow">Create Team Pool</button>
+        <button type="submit" class="btn primary pulse-glow">Create Team Access Pool</button>
       </div>
     </form>
   `);
@@ -871,26 +870,6 @@ document.addEventListener('click',async e=>{
         await navigate('inbox',true);
         await boot();
       }catch(err){modal('Invitation Error',`<p class="error-msg">${esc(err.message)}</p>`);}
-      return;
-    }
-    if(el.dataset.action==='quick-netflix-pool'){
-      modal('Setting up Netflix Team Pool…','<p>Creating rule for @netflix.com, building shared team pool, and generating portal key.</p>');
-      try{
-        let nRule=(state.rules||[]).find(r=>r.name.toLowerCase()==='netflix'||r.sender.includes('netflix.com'));
-        if(!nRule){
-          const ruleRes=await request(scoped('rules'),'POST',{name:'Netflix',sender:'@netflix.com',subject_contains:'',mode:'codes',retention_minutes:30});
-          nRule={id:ruleRes.id,name:'Netflix',mode:'codes'};
-        }
-        const memberIds=(state.members||[]).map(m=>m.id).filter(id=>id!==state.workspace?.owner_id);
-        const poolRes=await request(scoped('pools'),'POST',{name:'Netflix Family & Team',description:'Instant OTP verification codes for Netflix sign-in',color:'red',rule_ids:[nRule.id],member_ids:memberIds,create_access_key:true});
-        await loadWorkspace();
-        inboxView='receivers';
-        inboxPool=poolRes.id;
-        render();
-        const portalUrl=poolRes.access_key?`${location.origin}/access?key=${poolRes.access_key.key}`:`${location.origin}/access`;
-        modal('🎬 Netflix Team Pool Activated',`<p>Your team and family can now access Netflix OTP sign-in codes instantly.</p><div class="notice"><strong>Direct Team Portal Link:</strong> Share this link with family or team members so anyone who logs into Netflix can view the OTP code on their phone or TV without logging into the platform dashboard:</div><div class="copy-box"><code>${esc(portalUrl)}</code><button class="icon-btn" data-copy="${esc(portalUrl)}" aria-label="Copy portal link">${icon('copy')}</button></div>`);
-        toast('Netflix Team Pool created successfully!');
-      }catch(err){modal('Error',`<p class="error-msg">${esc(err.message)}</p>`);}
       return;
     }
     if(el.dataset.action==='create-team-pool'){
@@ -954,61 +933,7 @@ document.addEventListener('click',async e=>{
     if(el.dataset.peopleTab){
       const tabName=el.dataset.peopleTab;
       try{localStorage.setItem('mailgrant_people_tab',tabName);}catch{}
-      document.querySelectorAll('[data-people-tab]').forEach(b=>b.classList.toggle('active',b===el));
-      
-      const btnInvite=document.getElementById('btn-header-invite');
-      const btnKey=document.getElementById('btn-header-key');
-      const btnPortal=document.getElementById('btn-header-portal');
-      if(btnInvite)btnInvite.style.display=tabName==='direct'?'none':'inline-flex';
-      if(btnKey)btnKey.style.display=tabName==='platform'?'none':'inline-flex';
-      if(btnPortal)btnPortal.style.display=tabName==='direct'?'inline-flex':'none';
-
-      const banner=document.getElementById('dedicated-tab-banner');
-      if(banner){
-        if(tabName==='direct'){
-          banner.innerHTML=`
-            <div class="banner-content">
-              <strong>⚡ Direct Access (No Login Required):</strong>
-              Recipients open their sandboxed inbox at <code>/access</code> using a passwordless access key or 1-click magic link. Access is stored encrypted in device session cookies. Expired tokens automatically delete from the list and database 5 days post-expiration.
-            </div>
-          `;
-        }else if(tabName==='platform'){
-          banner.innerHTML=`
-            <div class="banner-content">
-              <strong>🛡️ Platform Verified Accounts:</strong>
-              Team members authenticated through Google Workspace / Gmail OAuth sign-in. Subdomain filters and company rules are granted and audited per individual account.
-            </div>
-          `;
-        }else{
-          banner.innerHTML=`
-            <div class="banner-content">
-              <strong>🌐 Complete Access Distribution Hub:</strong>
-              Overview of both Direct Passwordless Keys (5-day auto-purge retention) and Verified Google Platform Members.
-            </div>
-          `;
-        }
-      }
-
-      const q=(document.getElementById('people-search-input')?.value||'').toLowerCase().trim();
-      const activeFilter=document.querySelector('[data-filter-people].active')?.dataset.filterPeople||'all';
-      let visibleCount=0;
-      document.querySelectorAll('#people-table-body tr, #people-grid-container .unified-person-card').forEach(item=>{
-        const type=item.dataset.personFilterType;
-        const distType=item.dataset.personDistributionType;
-        const searchData=(item.dataset.personSearch||'').toLowerCase();
-        const matchTab=tabName==='all'||distType===tabName;
-        const matchFilter=activeFilter==='all'||type===activeFilter;
-        const matchSearch=!q||searchData.includes(q);
-        const isVisible=matchTab&&matchFilter&&matchSearch;
-        if(item.tagName==='TR'){
-          item.style.display=isVisible?'':'none';
-        }else{
-          item.style.display=isVisible?'flex':'none';
-        }
-        if(isVisible)visibleCount++;
-      });
-      const emptyNotice=document.getElementById('people-no-results');
-      if(emptyNotice)emptyNotice.style.display=visibleCount===0?'block':'none';
+      render();
       return;
     }
     if(el.dataset.filterPeople){
@@ -1266,29 +1191,12 @@ document.addEventListener('submit',async e=>{
     if(form.id==='team-pool-form'){
       const ruleIds = [...form.querySelectorAll('input[name="rule_ids"]:checked')].map(i => i.value);
       const memberIds = [...form.querySelectorAll('input[name="member_ids"]:checked')].map(i => i.value);
-      const color = form.querySelector('input[name="color"]:checked')?.value || 'blue';
       const createAccessKey = form.querySelector('input[name="create_access_key"]')?.checked;
-      
-      if (!ruleIds.length && b.name.toLowerCase().includes('netflix')) {
-        let nRule = (state.rules || []).find(r => r.name.toLowerCase() === 'netflix');
-        if (!nRule) {
-          const created = await request(scoped('rules'), 'POST', {
-            name: 'Netflix',
-            sender: '@netflix.com',
-            subject_contains: '',
-            mode: 'codes',
-            retention_minutes: 30
-          });
-          ruleIds.push(created.id);
-        } else {
-          ruleIds.push(nRule.id);
-        }
-      }
       
       const result = await request(scoped('pools'), 'POST', {
         name: b.name.trim(),
         description: b.description.trim(),
-        color,
+        color: 'blue',
         rule_ids: ruleIds,
         member_ids: memberIds,
         create_access_key: createAccessKey

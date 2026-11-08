@@ -600,7 +600,7 @@ async function showMessage(id, keyId) {
   openModal({
     title: m.name,
     subtitle: m.source ? `From ${m.source}` : 'Delegated message inspection',
-    customIconHtml: getCompanyLogo(m.name, 48),
+    customIconHtml: getCompanyLogo(m.name || m.sender, 48),
     dialogId: 'dialog',
     content: bodyContent,
     onClose: () => { openMessage = null; }
