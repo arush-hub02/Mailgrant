@@ -798,7 +798,10 @@ function openCreateTeamPoolModal() {
       </div>
 
       <div class="field">
-        <label><strong>Select Included Rules</strong></label>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <label style="margin:0;"><strong>Select Included Rules</strong></label>
+          <span style="font-size:11.5px; color:var(--muted);">${rules.length} active rule${rules.length === 1 ? '' : 's'}</span>
+        </div>
         <div class="pool-select-list">
           ${rules.length > 0 ? rules.map(r => `
             <label class="pool-item-row">
@@ -810,7 +813,23 @@ function openCreateTeamPoolModal() {
               </div>
               <span class="badge ${r.mode === 'codes' ? 'blue' : r.mode === 'links' ? 'green' : 'purple'}">${r.mode === 'codes' ? 'Codes only' : r.mode === 'links' ? 'Sign-in links' : 'Full message'}</span>
             </label>
-          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:4px 8px;">No rules configured yet. You can add rules in the Rules section.</p>'}
+          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:4px 8px;">No rules configured yet. You can add one below or in the Rules section.</p>'}
+        </div>
+        <div class="pool-template-shortcuts" style="margin-top:8px;">
+          <span style="font-size:11.5px; color:var(--muted); display:block; margin-bottom:6px;">Quick-add OTT streaming template into pool:</span>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            ${['netflix', 'disney', 'primevideo', 'chaupal', 'lionsgate', 'zee5', 'sonyliv', 'spotify', 'youtube'].map(id => {
+              const p = RULE_PRESETS.find(pr => pr.id === id);
+              if (!p) return '';
+              const alreadyHas = rules.some(r => r.name.toLowerCase() === p.name.toLowerCase() || r.sender.toLowerCase() === p.sender.toLowerCase());
+              return `
+                <button type="button" class="btn micro outline" data-pool-add-ott="${esc(p.id)}" style="font-size:11px; padding:3px 9px; border-radius:var(--radius-full); ${alreadyHas ? 'opacity:0.55;' : ''}" title="${alreadyHas ? 'Already active in rules' : `Click to activate ${p.name} rule`}">
+                  ${alreadyHas ? icon('check') : icon('plus')}
+                  <span>${esc(p.name)}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
         </div>
       </div>
 
@@ -896,6 +915,42 @@ document.addEventListener('click',async e=>{
     if(el.dataset.editRule){const rule=state.rules.find(r=>r.id===el.dataset.editRule);if(rule)openRuleModal(modal,state,rule);return;}
     if(el.dataset.applyPreset){const preset=RULE_PRESETS.find(p=>p.id===el.dataset.applyPreset);if(preset)openRuleModal(modal,state,null,preset);return;}
     if(el.dataset.syncPreset){const preset=RULE_PRESETS.find(p=>p.id===el.dataset.syncPreset);if(preset){await mutate('rules','POST',{name:preset.name,sender:preset.sender,subject_contains:preset.subject_contains||'',mode:preset.mode,link_host:preset.link_host||'',retention_minutes:preset.retention_minutes},`${preset.name} access rule activated.`);}return;}
+    if(el.dataset.poolAddOtt){
+      const pid=el.dataset.poolAddOtt;
+      const p=RULE_PRESETS.find(pr=>pr.id===pid);
+      if(p){
+        const existing=state.rules.find(r=>r.name.toLowerCase()===p.name.toLowerCase()||r.sender.toLowerCase()===p.sender.toLowerCase());
+        if(!existing){
+          await request(scoped('rules'),'POST',{name:p.name,sender:p.sender,subject_contains:p.subject_contains||'',mode:p.mode,link_host:p.link_host||'',retention_minutes:p.retention_minutes});
+          await loadWorkspace();
+          toast(`${p.name} access rule activated!`);
+          closeModal();
+          openCreateTeamPoolModal();
+        }else{
+          toast(`${p.name} rule is already active; check its checkbox above.`);
+        }
+      }
+      return;
+    }
+    if(el.dataset.presetCat){
+      const cat=el.dataset.presetCat;
+      document.querySelectorAll('[data-preset-cat]').forEach(b=>b.classList.toggle('active',b.dataset.presetCat===cat));
+      document.querySelectorAll('#rules-presets-grid .rule-preset-card').forEach(card=>{
+        card.style.display=(cat==='all'||card.dataset.category===cat)?'':'none';
+      });
+      return;
+    }
+    if(el.dataset.syncOttRules||el.closest('[data-sync-ott-rules]')){
+      const otts=RULE_PRESETS.filter(p=>p.category==='streaming');
+      const toAdd=otts.filter(p=>!state.rules.some(r=>r.name.toLowerCase()===p.name.toLowerCase()||r.sender.toLowerCase()===p.sender.toLowerCase()));
+      if(!toAdd.length){toast('All OTT streaming rules are already active in this workspace.');return;}
+      for(const preset of toAdd){
+        await request(scoped('rules'),'POST',{name:preset.name,sender:preset.sender,subject_contains:preset.subject_contains||'',mode:preset.mode,link_host:preset.link_host||'',retention_minutes:preset.retention_minutes});
+      }
+      await loadWorkspace();
+      toast(`Activated ${toAdd.length} OTT streaming access rules (Netflix, Disney+, Prime, Chaupal, Lionsgate, etc.).`);
+      return;
+    }
     if(el.dataset.syncStarterRules){
       const starter=RULE_PRESETS.filter(p=>['claude','google','github','notion'].includes(p.id));
       const toAdd=starter.filter(p=>!state.rules.some(r=>r.name.toLowerCase()===p.name.toLowerCase()||r.sender.toLowerCase()===p.sender.toLowerCase()));

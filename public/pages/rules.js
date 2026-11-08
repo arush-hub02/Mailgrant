@@ -7,6 +7,264 @@ import { esc, badge, modes, heading, field, formFooter } from './common.js';
  * High-precision, zero-trust templates for popular developer and business platforms.
  */
 export const RULE_PRESETS = [
+  // 🎬 OTT & Streaming Platforms
+  {
+    id: 'netflix',
+    name: 'Netflix',
+    company: 'Netflix Inc',
+    domain: 'netflix.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.netflix.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Netflix temporary sign-in codes, household verification, and one-time access links.'
+  },
+  {
+    id: 'disney',
+    name: 'Disney+',
+    company: 'The Walt Disney Company',
+    domain: 'disneyplus.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.disneyplus.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Disney+ temporary sign-in passcodes, device authorization pins, and one-time login links.'
+  },
+  {
+    id: 'primevideo',
+    name: 'Prime Video',
+    company: 'Amazon Prime Video',
+    domain: 'primevideo.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.primevideo.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Amazon Prime Video login verification codes, household access, and device registration.'
+  },
+  {
+    id: 'max',
+    name: 'Max (HBO)',
+    company: 'Warner Bros. Discovery',
+    domain: 'max.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.max.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Max & HBO streaming sign-in codes, household authentication, and temporary passes.'
+  },
+  {
+    id: 'appletv',
+    name: 'Apple TV+',
+    company: 'Apple Inc.',
+    domain: 'apple.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.apple.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Apple TV+ streaming and Apple ID two-factor verification codes.'
+  },
+  {
+    id: 'hulu',
+    name: 'Hulu',
+    company: 'Hulu LLC',
+    domain: 'hulu.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.hulu.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Hulu device activation codes, household sign-in verification, and login links.'
+  },
+  {
+    id: 'paramount',
+    name: 'Paramount+',
+    company: 'Paramount Global',
+    domain: 'paramountplus.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.paramountplus.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Paramount+ streaming verification pins, device activation, and login passcodes.'
+  },
+  {
+    id: 'peacock',
+    name: 'Peacock',
+    company: 'NBCUniversal',
+    domain: 'peacocktv.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.peacocktv.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Peacock TV sign-in codes, device authorization, and household streaming verification.'
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube Premium',
+    company: 'Google / YouTube',
+    domain: 'youtube.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.youtube.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'YouTube & YouTube Premium family sharing, login verification, and device codes.'
+  },
+  {
+    id: 'spotify',
+    name: 'Spotify',
+    company: 'Spotify AB',
+    domain: 'spotify.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.spotify.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Spotify Family plan invitations, sign-in codes, and temporary device verification.'
+  },
+  {
+    id: 'crunchyroll',
+    name: 'Crunchyroll',
+    company: 'Sony Pictures / Crunchyroll',
+    domain: 'crunchyroll.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.crunchyroll.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Crunchyroll anime streaming login passcodes and device activation codes.'
+  },
+  {
+    id: 'chaupal',
+    name: 'Chaupal',
+    company: 'Chaupal TV',
+    domain: 'chaupal.tv',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.chaupal.tv',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Chaupal OTT streaming verification passcodes, OTPs, and regional entertainment access.'
+  },
+  {
+    id: 'lionsgate',
+    name: 'Lionsgate Play',
+    company: 'Lionsgate Entertainment',
+    domain: 'lionsgateplay.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.lionsgateplay.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Lionsgate Play sign-in codes, device authorization, and streaming verification.'
+  },
+  {
+    id: 'zee5',
+    name: 'ZEE5',
+    company: 'Zee Entertainment',
+    domain: 'zee5.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.zee5.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'ZEE5 OTT login verification passcodes, OTPs, and subscription verification.'
+  },
+  {
+    id: 'sonyliv',
+    name: 'Sony LIV',
+    company: 'Sony Pictures Networks',
+    domain: 'sonyliv.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.sonyliv.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Sony LIV sign-in OTPs, device registration, and sports/entertainment verification.'
+  },
+  {
+    id: 'jiocinema',
+    name: 'JioCinema',
+    company: 'Viacom18 / Jio',
+    domain: 'jiocinema.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.jiocinema.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'JioCinema Premium sign-in verification OTPs and household streaming access.'
+  },
+  {
+    id: 'hotstar',
+    name: 'Disney+ Hotstar',
+    company: 'Disney+ Hotstar',
+    domain: 'hotstar.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.hotstar.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'streaming',
+    description: 'Hotstar sign-in verification OTPs, device authorization, and sports/movie access.'
+  },
+
+  // 💻 AI, Developer & Cloud Infrastructure
   {
     id: 'claude',
     name: 'Claude',
@@ -19,21 +277,23 @@ export const RULE_PRESETS = [
     mode: 'read',
     link_host: 'claude.ai',
     retention_minutes: 30,
+    category: 'developer',
     description: 'Anthropic Claude magic sign-in links, login codes, and ephemeral access.'
   },
   {
-    id: 'google',
-    name: 'Google',
-    company: 'Google Workspace',
-    domain: 'google.com',
+    id: 'openai',
+    name: 'OpenAI',
+    company: 'ChatGPT / OpenAI',
+    domain: 'openai.com',
     subdomain: '',
-    wildcard: false,
-    sender: '*@google.com',
+    wildcard: true,
+    sender: '*@*.openai.com',
     subject_contains: '',
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
-    description: 'Google account security alerts and verification passcodes.'
+    category: 'developer',
+    description: 'ChatGPT, Codex & OpenAI developer platform login codes.'
   },
   {
     id: 'github',
@@ -47,7 +307,130 @@ export const RULE_PRESETS = [
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
+    category: 'developer',
     description: 'Two-factor device authorization and sudo sign-in codes.'
+  },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    company: 'GitLab Inc',
+    domain: 'gitlab.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.gitlab.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'developer',
+    description: 'GitLab DevOps account security, CI/CD, and sign-in verification.'
+  },
+  {
+    id: 'aws',
+    name: 'Amazon AWS',
+    company: 'Amazon Web Services',
+    domain: 'amazon.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.amazon.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'developer',
+    description: 'AWS Root Account, IAM and Cloud security passcodes.'
+  },
+  {
+    id: 'cloudflare',
+    name: 'Cloudflare',
+    company: 'Cloudflare Inc',
+    domain: 'cloudflare.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.cloudflare.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'developer',
+    description: 'Cloudflare Zero Trust, Workers, and dashboard verification codes.'
+  },
+  {
+    id: 'vercel',
+    name: 'Vercel',
+    company: 'Vercel Inc',
+    domain: 'vercel.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.vercel.com',
+    subject_contains: '',
+    mode: 'links',
+    link_host: 'vercel.com',
+    retention_minutes: 30,
+    category: 'developer',
+    description: 'Vercel deployment platform magic sign-in links and deployment alerts.'
+  },
+  {
+    id: 'supabase',
+    name: 'Supabase',
+    company: 'Supabase Inc',
+    domain: 'supabase.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.supabase.com',
+    subject_contains: '',
+    mode: 'links',
+    link_host: 'supabase.com',
+    retention_minutes: 30,
+    category: 'developer',
+    description: 'Supabase open source Firebase alternative magic links & project alerts.'
+  },
+  {
+    id: 'docker',
+    name: 'Docker',
+    company: 'Docker Inc',
+    domain: 'docker.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.docker.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'developer',
+    description: 'Docker Hub container registry sign-in and security codes.'
+  },
+
+  // ⚡ Productivity, Design & Collaboration
+  {
+    id: 'google',
+    name: 'Google',
+    company: 'Google Workspace',
+    domain: 'google.com',
+    subdomain: '',
+    wildcard: false,
+    sender: '*@google.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Google account security alerts and verification passcodes.'
+  },
+  {
+    id: 'microsoft',
+    name: 'Microsoft',
+    company: 'Microsoft 365',
+    domain: 'microsoft.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.microsoft.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Microsoft Account security and Azure verification.'
   },
   {
     id: 'notion',
@@ -61,6 +444,7 @@ export const RULE_PRESETS = [
     mode: 'links',
     link_host: 'notion.so',
     retention_minutes: 30,
+    category: 'productivity',
     description: 'Notion workspace magic login links and email tokens.'
   },
   {
@@ -75,6 +459,7 @@ export const RULE_PRESETS = [
     mode: 'codes',
     link_host: '',
     retention_minutes: 30,
+    category: 'productivity',
     description: 'Figma design system invite and team authentication codes.'
   },
   {
@@ -89,22 +474,116 @@ export const RULE_PRESETS = [
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
+    category: 'productivity',
     description: 'Direct Slack workspace sign-in and confirmation codes.'
   },
   {
-    id: 'openai',
-    name: 'OpenAI',
-    company: 'ChatGPT / OpenAI',
-    domain: 'openai.com',
+    id: 'linear',
+    name: 'Linear',
+    company: 'Linear Orbit',
+    domain: 'linear.app',
     subdomain: '',
     wildcard: true,
-    sender: '*@*.openai.com',
+    sender: '*@*.linear.app',
+    subject_contains: '',
+    mode: 'links',
+    link_host: 'linear.app',
+    retention_minutes: 30,
+    category: 'productivity',
+    description: 'Linear issue tracker magic sign-in links and workspace invites.'
+  },
+  {
+    id: 'atlassian',
+    name: 'Atlassian',
+    company: 'Atlassian Jira / Confluence',
+    domain: 'atlassian.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.atlassian.com',
     subject_contains: '',
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
-    description: 'ChatGPT, Codex & OpenAI developer platform login codes.'
+    category: 'productivity',
+    description: 'Jira, Confluence and Trello account verification codes.'
   },
+  {
+    id: 'canva',
+    name: 'Canva',
+    company: 'Canva Design',
+    domain: 'canva.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.canva.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Canva team design collaboration and verification codes.'
+  },
+  {
+    id: 'adobe',
+    name: 'Adobe',
+    company: 'Adobe Creative Cloud',
+    domain: 'adobe.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.adobe.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Adobe ID and Creative Cloud verification codes.'
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    company: 'Dropbox Inc',
+    domain: 'dropbox.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.dropbox.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Dropbox cloud storage security pins and sign-in codes.'
+  },
+  {
+    id: 'zoom',
+    name: 'Zoom',
+    company: 'Zoom Video',
+    domain: 'zoom.us',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.zoom.us',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Zoom video meetings verification passcodes and invitations.'
+  },
+  {
+    id: 'discord',
+    name: 'Discord',
+    company: 'Discord Inc',
+    domain: 'discord.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.discord.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'productivity',
+    description: 'Discord community and bot developer authorization codes.'
+  },
+
+  // 💳 Fintech & E-Commerce
   {
     id: 'stripe',
     name: 'Stripe',
@@ -117,35 +596,83 @@ export const RULE_PRESETS = [
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
+    category: 'fintech',
     description: 'Financial dashboard and merchant identity verification.'
   },
   {
-    id: 'microsoft',
-    name: 'Microsoft',
-    company: 'Microsoft 365',
-    domain: 'microsoft.com',
+    id: 'paypal',
+    name: 'PayPal',
+    company: 'PayPal Holdings',
+    domain: 'paypal.com',
     subdomain: '',
     wildcard: true,
-    sender: '*@*.microsoft.com',
+    sender: '*@*.paypal.com',
     subject_contains: '',
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
-    description: 'Microsoft Account security and Azure verification.'
+    category: 'fintech',
+    description: 'PayPal account security codes, transaction authorization, and login OTPs.'
   },
   {
-    id: 'aws',
-    name: 'Amazon AWS',
-    company: 'Amazon Web Services',
-    domain: 'amazon.com',
+    id: 'shopify',
+    name: 'Shopify',
+    company: 'Shopify Inc',
+    domain: 'shopify.com',
     subdomain: '',
     wildcard: true,
-    sender: '*@*.amazon.com',
+    sender: '*@*.shopify.com',
     subject_contains: '',
     mode: 'codes',
     link_host: '',
     retention_minutes: 15,
-    description: 'AWS Root Account, IAM and Cloud security passcodes.'
+    category: 'fintech',
+    description: 'Shopify merchant store access codes, admin verification, and login links.'
+  },
+  {
+    id: 'uber',
+    name: 'Uber',
+    company: 'Uber Technologies',
+    domain: 'uber.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.uber.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'fintech',
+    description: 'Uber rides and Uber Eats sign-in codes and order verification.'
+  },
+  {
+    id: 'airbnb',
+    name: 'Airbnb',
+    company: 'Airbnb Inc',
+    domain: 'airbnb.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.airbnb.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'fintech',
+    description: 'Airbnb booking, host verification, and security codes.'
+  },
+  {
+    id: 'twitter',
+    name: 'X (Twitter)',
+    company: 'X Corp',
+    domain: 'x.com',
+    subdomain: '',
+    wildcard: true,
+    sender: '*@*.x.com',
+    subject_contains: '',
+    mode: 'codes',
+    link_host: '',
+    retention_minutes: 15,
+    category: 'fintech',
+    description: 'X (Twitter) two-factor authentication and sign-in verification codes.'
   }
 ];
 
@@ -371,19 +898,49 @@ export function rulesPage({ state }) {
         <div class="presets-section-header">
           <div>
             <h2 class="presets-title">Popular Service Templates</h2>
-            <p class="presets-subtitle">1-click accelerators for widely used platforms with preconfigured subdomains and ephemeral extraction.</p>
+            <p class="presets-subtitle">1-click accelerators for OTT streaming (Netflix, Disney+, Prime, Chaupal, Lionsgate, etc.), developer platforms & productivity suites.</p>
           </div>
-          <button type="button" class="btn small outline" data-sync-starter-rules title="Sync Claude, Google, GitHub and Notion to database">
-            ${icon('check')}
-            <span>Sync Top 4 Starter Rules</span>
+          <div class="presets-head-actions">
+            <button type="button" class="btn small primary-glow" data-sync-ott-rules title="Sync all OTT streaming rules (Netflix, Disney+, Prime, Chaupal, Lionsgate, etc.) into workspace database">
+              ${icon('plus')}
+              <span>+ Add All OTT Streaming Rules</span>
+            </button>
+            <button type="button" class="btn small outline" data-sync-starter-rules title="Sync Claude, Google, GitHub and Notion to database">
+              ${icon('check')}
+              <span>Sync Top 4 Starter Rules</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter category pills -->
+        <div class="presets-category-strip" role="tablist" aria-label="Template Categories">
+          <button type="button" class="preset-cat-btn active" data-preset-cat="all" role="tab" aria-selected="true">
+            <span>All Templates</span>
+            <span class="cat-count-pill">${RULE_PRESETS.length}</span>
+          </button>
+          <button type="button" class="preset-cat-btn" data-preset-cat="streaming" role="tab" aria-selected="false">
+            <span>🎬 OTT & Streaming</span>
+            <span class="cat-count-pill">${RULE_PRESETS.filter(p => p.category === 'streaming').length}</span>
+          </button>
+          <button type="button" class="preset-cat-btn" data-preset-cat="developer" role="tab" aria-selected="false">
+            <span>💻 AI & Cloud</span>
+            <span class="cat-count-pill">${RULE_PRESETS.filter(p => p.category === 'developer').length}</span>
+          </button>
+          <button type="button" class="preset-cat-btn" data-preset-cat="productivity" role="tab" aria-selected="false">
+            <span>⚡ Productivity & Team</span>
+            <span class="cat-count-pill">${RULE_PRESETS.filter(p => p.category === 'productivity').length}</span>
+          </button>
+          <button type="button" class="preset-cat-btn" data-preset-cat="fintech" role="tab" aria-selected="false">
+            <span>💳 Fintech & Commerce</span>
+            <span class="cat-count-pill">${RULE_PRESETS.filter(p => p.category === 'fintech').length}</span>
           </button>
         </div>
 
-        <div class="rules-presets-grid">
+        <div class="rules-presets-grid" id="rules-presets-grid">
           ${RULE_PRESETS.map((preset, idx) => {
             const alreadyAdded = rules.some(r => r.name.toLowerCase() === preset.name.toLowerCase() || r.sender.toLowerCase() === preset.sender.toLowerCase());
             return `
-              <div class="rule-preset-card ${alreadyAdded ? 'added' : ''}">
+              <div class="rule-preset-card ${alreadyAdded ? 'added' : ''}" data-category="${preset.category || 'other'}">
                 <div class="preset-card-top">
                   <div class="preset-logo-box">
                     ${getCompanyLogo(preset.name, 32, idx)}
@@ -397,6 +954,8 @@ export function rulesPage({ state }) {
                 <div class="preset-pattern-box">
                   <code>${esc(preset.sender)}</code>
                 </div>
+
+                <p class="preset-desc-text" style="font-size:11.5px; color:var(--muted); margin:2px 0 6px; line-height:1.4;">${esc(preset.description || '')}</p>
 
                 <div class="preset-meta-row">
                   <span class="preset-mode-badge ${preset.mode}">${modes[preset.mode]}</span>
@@ -497,10 +1056,19 @@ export function openRuleModal(modal, state = {}, ruleToEdit = null, presetToAppl
       ${!isEditing ? `
         <!-- Quick Preset Switcher Strip -->
         <div class="modal-preset-selector">
-          <span class="preset-selector-label">Load Template Preset:</span>
+          <div class="modal-preset-head">
+            <span class="preset-selector-label">Load Template Preset:</span>
+            <div class="modal-preset-cats">
+              <button type="button" class="modal-cat-chip active" data-modal-cat="all">All (${RULE_PRESETS.length})</button>
+              <button type="button" class="modal-cat-chip" data-modal-cat="streaming">🎬 OTTs</button>
+              <button type="button" class="modal-cat-chip" data-modal-cat="developer">💻 Dev</button>
+              <button type="button" class="modal-cat-chip" data-modal-cat="productivity">⚡ Work</button>
+              <button type="button" class="modal-cat-chip" data-modal-cat="fintech">💳 Fintech</button>
+            </div>
+          </div>
           <div class="preset-pill-strip">
             ${RULE_PRESETS.map(p => `
-              <button type="button" class="preset-quick-pill ${presetToApply?.id === p.id ? 'active' : ''}" data-fill-preset="${esc(p.id)}">
+              <button type="button" class="preset-quick-pill ${presetToApply?.id === p.id ? 'active' : ''}" data-fill-preset="${esc(p.id)}" data-cat="${p.category || 'other'}">
                 ${esc(p.name)}
               </button>
             `).join('')}
@@ -677,6 +1245,18 @@ export function openRuleModal(modal, state = {}, ruleToEdit = null, presetToAppl
       }
       btnToggleRaw.textContent = rawMode ? 'Use domain controls' : 'Manual override';
       updatePattern();
+    });
+
+    // Modal category filter chips
+    document.querySelectorAll('[data-modal-cat]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('[data-modal-cat]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const cat = chip.dataset.modalCat;
+        document.querySelectorAll('.preset-quick-pill').forEach(btn => {
+          btn.style.display = (cat === 'all' || btn.dataset.cat === cat) ? '' : 'none';
+        });
+      });
     });
 
     // Preset pills click handler

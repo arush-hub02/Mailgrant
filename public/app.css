@@ -6452,6 +6452,112 @@ html[data-theme="dark"] .tab-count-pill {
   margin: 0;
 }
 
+.presets-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.presets-category-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  scrollbar-width: none;
+}
+
+.presets-category-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.preset-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 650;
+  border: 1px solid var(--line);
+  background: var(--bg-subtle);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.preset-cat-btn:hover {
+  color: var(--ink);
+  background: var(--bg-card);
+  border-color: var(--line-strong);
+}
+
+.preset-cat-btn.active {
+  background: var(--accent-subtle);
+  color: var(--accent-bright);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.preset-cat-btn .cat-count-pill {
+  font-size: 11px;
+  font-weight: 750;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+
+html[data-theme="dark"] .preset-cat-btn .cat-count-pill {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.modal-preset-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.modal-preset-cats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+}
+
+.modal-cat-chip {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 650;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+  background: var(--bg-subtle);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  white-space: nowrap;
+}
+
+.modal-cat-chip:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.modal-cat-chip.active {
+  background: var(--accent-subtle);
+  color: var(--accent-bright);
+  border-color: var(--accent-border);
+}
+
 .rules-presets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

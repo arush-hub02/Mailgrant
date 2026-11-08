@@ -202,6 +202,145 @@ export const companyLogos = {
     </svg>
   `,
 
+  disney: (size = 36) => `
+    <svg class="company-logo logo-disney" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Disney+" role="img">
+      <rect width="32" height="32" rx="8" fill="#0D1941"/>
+      <path fill="#4AE2FF" d="M13.5 8c2.2 0 4.5.6 5.8 2.4.8 1.1 1.2 2.6 1 4-.3 2.1-1.8 3.8-3.6 4.7-1.4.7-3.1 1-4.7 1h-2v4h-2.5V8h6zm-2.5 2.2v7.7c1.3 0 2.8-.2 3.8-.9 1.1-.8 1.8-2 1.9-3.4.1-.9-.2-1.8-.7-2.4-.9-.8-2.2-1-3.4-1h-1.6z"/>
+      <path fill="#FFFFFF" d="M22.5 13.5h1.8v2.2h-1.8v1.8h-2.2v-1.8h-1.8v-2.2h1.8v-1.8h2.2v1.8z"/>
+    </svg>
+  `,
+
+  primevideo: (size = 36) => `
+    <svg class="company-logo logo-primevideo" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Prime Video" role="img">
+      <rect width="32" height="32" rx="8" fill="#00050D"/>
+      <path fill="#00A8E1" d="M8.5 20.8c3.8 2.2 9.5 2.2 13.5 0-.4.5-1 1-1.7 1.2-3.3 1.3-7.4 1.2-10.6-.3-.4-.2-1-.6-1.2-.9z"/>
+      <path fill="#00A8E1" d="M22 21.3c.4-.6.8-1.5.7-2.4-.7.6-1.7.9-2.6 1 .8.6 1.6 1.1 1.9 1.4z"/>
+      <path fill="#FFFFFF" d="M8 11.5h4.2c2.2 0 3.8 1.2 3.8 3.3 0 2.2-1.6 3.4-3.8 3.4H10v3H8v-9.7zm2 4.9h2c1.1 0 1.9-.5 1.9-1.6s-.8-1.6-1.9-1.6H10v3.2zm7.5-4.9h2v9.7h-2v-9.7z"/>
+    </svg>
+  `,
+
+  max: (size = 36) => `
+    <svg class="company-logo logo-max" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Max" role="img">
+      <rect width="32" height="32" rx="8" fill="#002BE7"/>
+      <path fill="#FFFFFF" d="M7 11.5h3.2l2.3 4.2 2.3-4.2H18v9h-2.4v-5.2l-2.1 3.8h-1.6l-2.1-3.8V20.5H7v-9zm12.5 0h2.6l3.4 9h-2.6l-.6-1.8h-2.7l-.6 1.8h-2.6l3.5-9zm2.7 5.4l-.8-2.6-.8 2.6h1.6zm4.8-5.4h2.7l1.8 3.5 1.8-3.5h2.7l-2.9 5 3.1 5.4h-2.8l-1.9-3.8-1.9 3.8H24l3.1-5.4-3.1-5z"/>
+    </svg>
+  `,
+
+  hulu: (size = 36) => `
+    <svg class="company-logo logo-hulu" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Hulu" role="img">
+      <rect width="32" height="32" rx="8" fill="#0B0C0D"/>
+      <path fill="#1CE783" d="M7 9h2.8v4.2c.7-.8 1.6-1.3 2.7-1.3 2 0 3.3 1.4 3.3 3.6v6.5H13v-6c0-1.2-.6-1.9-1.6-1.9-1 0-1.6.7-1.6 1.9v6H7V9zm10 4.1h2.8v5.8c0 1.2.6 1.9 1.6 1.9 1 0 1.6-.7 1.6-1.9v-5.8h2.8v6.5c0 2.2-1.3 3.6-3.3 3.6-1.1 0-2-.5-2.7-1.3v1.1H17V13.1z"/>
+    </svg>
+  `,
+
+  paramount: (size = 36) => `
+    <svg class="company-logo logo-paramount" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Paramount+" role="img">
+      <rect width="32" height="32" rx="8" fill="#0064FF"/>
+      <path fill="#FFFFFF" d="M16 8l-5.5 12h3.2l1.2-3h2.2l1.2 3h3.2L16 8zm0 4.5l1.4 3.2h-2.8l1.4-3.2z"/>
+      <path fill="#FFFFFF" d="M22.5 14h1.8v2.2h-1.8v1.8h-2.2v-1.8h-1.8V14h1.8v-1.8h2.2V14z"/>
+      <circle cx="11" cy="11" r="0.9" fill="#FFFFFF"/>
+      <circle cx="16" cy="9.5" r="0.9" fill="#FFFFFF"/>
+      <circle cx="21" cy="11" r="0.9" fill="#FFFFFF"/>
+    </svg>
+  `,
+
+  peacock: (size = 36) => `
+    <svg class="company-logo logo-peacock" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Peacock" role="img">
+      <rect width="32" height="32" rx="8" fill="#000000"/>
+      <circle cx="9.5" cy="14" r="2.2" fill="#F4C300"/>
+      <circle cx="12.5" cy="11" r="2.2" fill="#E62739"/>
+      <circle cx="16" cy="9.5" r="2.2" fill="#9B26B6"/>
+      <circle cx="19.5" cy="11" r="2.2" fill="#0072CE"/>
+      <circle cx="22.5" cy="14" r="2.2" fill="#00A358"/>
+      <circle cx="20.5" cy="18" r="2.2" fill="#00B7BD"/>
+      <path fill="#FFFFFF" d="M16 13c-1.1 0-2 .9-2 2v6.5h4V15c0-1.1-.9-2-2-2z"/>
+    </svg>
+  `,
+
+  youtube: (size = 36) => `
+    <svg class="company-logo logo-youtube" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="YouTube" role="img">
+      <rect width="32" height="32" rx="8" fill="#FF0000"/>
+      <path fill="#FFFFFF" d="M23.5 12.2a2.3 2.3 0 0 0-1.6-1.6C20.5 10.2 16 10.2 16 10.2s-4.5 0-5.9.4a2.3 2.3 0 0 0-1.6 1.6C8.1 13.6 8.1 16 8.1 16s0 2.4.4 3.8a2.3 2.3 0 0 0 1.6 1.6c1.4.4 5.9.4 5.9.4s4.5 0 5.9-.4a2.3 2.3 0 0 0 1.6-1.6c.4-1.4.4-3.8.4-3.8s0-2.4-.4-3.8zm-9.1 6.3v-5l4.4 2.5-4.4 2.5z"/>
+    </svg>
+  `,
+
+  crunchyroll: (size = 36) => `
+    <svg class="company-logo logo-crunchyroll" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Crunchyroll" role="img">
+      <rect width="32" height="32" rx="8" fill="#F47521"/>
+      <path fill="#FFFFFF" d="M16 7C11 7 7 11 7 16s4 9 9 9 9-4 9-9-4-9-9-9zm-1.5 13.5c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5c.8 0 1.5.2 2.1.6-.9.8-1.5 2-1.5 3.4 0 1.4.6 2.6 1.5 3.4-.6.4-1.3.6-2.1.6z"/>
+    </svg>
+  `,
+
+  jiocinema: (size = 36) => `
+    <svg class="company-logo logo-jiocinema" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="JioCinema" role="img">
+      <rect width="32" height="32" rx="8" fill="#980058"/>
+      <path fill="#FFFFFF" d="M16 7C11 7 7 11 7 16s4 9 9 9 9-4 9-9-4-9-9-9zm-.5 14.5c-2.2 0-4-1.8-4-4h2.2c0 1 .8 1.8 1.8 1.8s1.8-.8 1.8-1.8V11h2.4v6.5c0 2.2-1.8 4-4.2 4z"/>
+    </svg>
+  `,
+
+  hotstar: (size = 36) => `
+    <svg class="company-logo logo-hotstar" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Disney+ Hotstar" role="img">
+      <rect width="32" height="32" rx="8" fill="#031738"/>
+      <path fill="#FFCC00" d="M16 6.5l2.4 5.8 6.1.5-4.6 4.1 1.4 6.1-5.3-3.2-5.3 3.2 1.4-6.1-4.6-4.1 6.1-.5L16 6.5z"/>
+      <path fill="#4AE2FF" d="M22 19.5h1.5v1.8H22v1.5h-1.8v-1.5h-1.5v-1.8h1.5v-1.5h1.8v1.5z"/>
+    </svg>
+  `,
+
+  chaupal: (size = 36) => `
+    <svg class="company-logo logo-chaupal" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Chaupal" role="img">
+      <rect width="32" height="32" rx="8" fill="#FFB800"/>
+      <path fill="#000000" d="M16 8C11.6 8 8 11.6 8 16s3.6 8 8 8c3.2 0 6-1.9 7.2-4.6l-2.6-1.1c-.8 1.9-2.6 3.2-4.6 3.2-2.8 0-5-2.2-5-5s2.2-5 5-5c2 0 3.8 1.3 4.6 3.2l2.6-1.1C22 10 19.2 8 16 8z"/>
+      <circle cx="20.5" cy="16" r="2.2" fill="#E50914"/>
+    </svg>
+  `,
+
+  lionsgate: (size = 36) => `
+    <svg class="company-logo logo-lionsgate" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Lionsgate Play" role="img">
+      <rect width="32" height="32" rx="8" fill="#111111"/>
+      <path fill="#D4AF37" d="M8 10h3v9.5h5V22H8V10zm9 0h3v12h-3V10zm4 0h3v12h-3V10z"/>
+    </svg>
+  `,
+
+  zee5: (size = 36) => `
+    <svg class="company-logo logo-zee5" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="ZEE5" role="img">
+      <rect width="32" height="32" rx="8" fill="#5A158D"/>
+      <path fill="#FFFFFF" d="M9 11h7.5l-5.2 7.2H17v2.3H8.5l5.2-7.2H9V11zm10 0h4.5v2.3H21v2.1h2.5v2.2H21v2.9h-2V11z"/>
+    </svg>
+  `,
+
+  sonyliv: (size = 36) => `
+    <svg class="company-logo logo-sonyliv" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Sony LIV" role="img">
+      <rect width="32" height="32" rx="8" fill="#0A0A0A"/>
+      <g transform="translate(6, 7) scale(0.65)">
+        <rect x="0" y="0" width="30" height="7" fill="#00A3FF" rx="1.5"/>
+        <rect x="0" y="10" width="30" height="7" fill="#FF8A00" rx="1.5"/>
+        <rect x="0" y="20" width="30" height="7" fill="#E50914" rx="1.5"/>
+      </g>
+    </svg>
+  `,
+
+  paypal: (size = 36) => `
+    <svg class="company-logo logo-paypal" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="PayPal" role="img">
+      <rect width="32" height="32" rx="8" fill="#003087"/>
+      <path fill="#0079C1" d="M12.5 8h5.2c3 0 5 1.5 4.5 4.5-.5 3.2-2.7 4.5-5.5 4.5h-2l-1.5 8H9l3.5-17z"/>
+      <path fill="#00457C" d="M15 13h4.2c2.4 0 4 1.2 3.6 3.6-.4 2.6-2.2 3.6-4.4 3.6h-2.1l-1.3 6.8H12L15 13z"/>
+    </svg>
+  `,
+
+  shopify: (size = 36) => `
+    <svg class="company-logo logo-shopify" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Shopify" role="img">
+      <rect width="32" height="32" rx="8" fill="#95BF47"/>
+      <path fill="#FFFFFF" d="M18.5 7.5c-.1 0-.3.1-.4.2l-2 1.4c-.2.1-.3.4-.3.6v.1l1.5 9.8 4.2-1.2-3-10.9zm-3.8 2.2c-.3 0-.6.2-.7.5l-4.5 13.8 8.8 2.5 4.7-1.4-8.3-15.4z"/>
+    </svg>
+  `,
+
+  cloudflare: (size = 36) => `
+    <svg class="company-logo logo-cloudflare" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Cloudflare" role="img">
+      <rect width="32" height="32" rx="8" fill="#F38020"/>
+      <path fill="#FFFFFF" d="M22.8 17.5c0-.3 0-.5-.1-.7-.3-1.6-1.7-2.8-3.4-2.8-.7 0-1.4.2-1.9.6-.5-1.5-1.9-2.6-3.6-2.6-1.8 0-3.3 1.2-3.8 2.9-.4-.2-.8-.3-1.3-.3-1.8 0-3.2 1.4-3.2 3.2 0 .2 0 .4.1.6h17.2z"/>
+    </svg>
+  `,
+
   spotify: (size = 36) => `
     <svg class="company-logo logo-spotify" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Spotify" role="img">
       <rect width="32" height="32" rx="8" fill="#121212"/>
@@ -334,7 +473,9 @@ export function hasCompanyLogo(nameOrSender = '') {
     'outlook', 'microsoft', 'office', 'apple', 'icloud', 'slack', 'stripe', 'openai',
     'chatgpt', 'aws', 'amazon', 'linear', 'discord', 'netflix', 'spotify', 'vercel',
     'supabase', 'dropbox', 'zoom', 'linkedin', 'adobe', 'canva', 'atlassian', 'jira',
-    'docker', 'uber', 'airbnb', 'twitter'
+    'docker', 'uber', 'airbnb', 'twitter', 'disney', 'primevideo', 'prime', 'hbo',
+    'max', 'hulu', 'paramount', 'peacock', 'youtube', 'crunchyroll', 'jiocinema', 'hotstar',
+    'chaupal', 'choupal', 'lionsgate', 'zee5', 'sonyliv', 'paypal', 'shopify', 'cloudflare'
   ];
   return known.some(k => str.includes(k) || str === 'x');
 }
@@ -463,6 +604,57 @@ export function getCompanyLogo(nameOrSender = '', size = 36, fallbackIndex = 0) 
   }
   if (str.includes('netflix')) {
     return companyLogos.netflix(size);
+  }
+  if (str.includes('disney')) {
+    return companyLogos.disney(size);
+  }
+  if (str.includes('prime') || str.includes('primevideo')) {
+    return companyLogos.primevideo(size);
+  }
+  if (str.includes('max') || str.includes('hbo')) {
+    return companyLogos.max(size);
+  }
+  if (str.includes('hulu')) {
+    return companyLogos.hulu(size);
+  }
+  if (str.includes('paramount')) {
+    return companyLogos.paramount(size);
+  }
+  if (str.includes('peacock')) {
+    return companyLogos.peacock(size);
+  }
+  if (str.includes('youtube')) {
+    return companyLogos.youtube(size);
+  }
+  if (str.includes('crunchyroll')) {
+    return companyLogos.crunchyroll(size);
+  }
+  if (str.includes('jiocinema') || str.includes('jio')) {
+    return companyLogos.jiocinema(size);
+  }
+  if (str.includes('hotstar')) {
+    return companyLogos.hotstar(size);
+  }
+  if (str.includes('chaupal') || str.includes('choupal')) {
+    return companyLogos.chaupal(size);
+  }
+  if (str.includes('lionsgate')) {
+    return companyLogos.lionsgate(size);
+  }
+  if (str.includes('zee5') || str.includes('zee')) {
+    return companyLogos.zee5(size);
+  }
+  if (str.includes('sonyliv') || str.includes('sony')) {
+    return companyLogos.sonyliv(size);
+  }
+  if (str.includes('paypal')) {
+    return companyLogos.paypal(size);
+  }
+  if (str.includes('shopify')) {
+    return companyLogos.shopify(size);
+  }
+  if (str.includes('cloudflare')) {
+    return companyLogos.cloudflare(size);
   }
   if (str.includes('spotify')) {
     return companyLogos.spotify(size);
