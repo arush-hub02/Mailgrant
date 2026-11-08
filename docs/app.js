@@ -474,6 +474,8 @@ function render(){
   const owner=state.owner;
   if(!owner&&!['dashboard','overview','inbox','profile','404'].includes(page))page='dashboard';
   document.title = `${labels[page] || 'Dashboard'} · Mailgrant`;
+  const userName = me?.user?.name || me?.user?.email || 'User';
+  const userInitials = initials(userName);
   const sidebarHtml=renderSidebar({state,me,page,labels,wid,owner,demo});
   const isCollapsed=isSidebarCollapsed();
   $('#app').innerHTML=`
@@ -491,9 +493,19 @@ function render(){
             </span>
             <span class="brand-name">Mail<span class="brand-gradient-text">grant</span></span>
           </div>
-          <button class="icon-btn" data-theme-toggle aria-label="Toggle light or dark mode">
-            ${icon('contrast')}
-          </button>
+          <div class="mobile-topbar-actions">
+            <button class="icon-btn" data-theme-toggle aria-label="Toggle light or dark mode">
+              ${icon('contrast')}
+            </button>
+            <button type="button" class="mobile-profile-btn ${page === 'profile' ? 'active' : ''}" data-page="profile" aria-label="Profile and Settings">
+              <span class="user-avatar-mobile">
+                ${me?.user?.avatar
+                  ? `<img src="${esc(me.user.avatar)}" class="avatar-photo" alt="${esc(userName)}" />`
+                  : `<span class="user-avatar-initials">${userInitials}</span>`}
+              </span>
+              <span class="avatar-online-dot-mini" aria-hidden="true"></span>
+            </button>
+          </div>
         </header>
 
         <main id="main" class="main clean-main">

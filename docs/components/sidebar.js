@@ -234,7 +234,8 @@ export function renderSidebar({ state, me, page, labels, wid, owner, demo = fals
       { id: 'rules', icon: 'rules', label: labels.rules || 'Access rules' },
       { id: 'people', icon: 'people', label: labels.people || 'People & Access' },
       { id: 'activity', icon: 'activity', label: labels.activity || 'Activity log' }
-    ] : [])
+    ] : []),
+    { id: 'profile', icon: 'user', label: labels.profile || 'Profile & Settings', mobileOnly: true }
   ];
 
   return `
@@ -328,7 +329,7 @@ export function renderSidebar({ state, me, page, labels, wid, owner, demo = fals
             <button
               type="button"
               data-page="${item.id}"
-              class="nav-item ${isActive ? 'active' : ''}"
+              class="nav-item ${isActive ? 'active' : ''} ${item.mobileOnly ? 'mobile-only-nav-item' : ''}"
               ${isActive ? 'aria-current="page"' : ''}
               data-tooltip="${esc(tooltipText)}"
               aria-label="${esc(item.label)}"

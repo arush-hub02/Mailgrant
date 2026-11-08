@@ -74,6 +74,12 @@
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
+
+  /* Ultra-Sleek Dynamic Scrollbar - Light */
+  --scrollbar-track: rgba(15, 23, 42, 0.05);
+  --scrollbar-thumb: var(--accent-border, rgba(2, 132, 199, 0.35));
+  --scrollbar-thumb-hover: var(--accent, #0284c7);
+  --scrollbar-width: 6px;
 }
 
 html[data-theme="dark"] {
@@ -116,8 +122,8 @@ html[data-theme="dark"] {
 
   --green: #10b981;
   --green-hover: #34d399;
-  --green-light: rgba(16, 185, 129, 0.15);
-  --green-border: rgba(16, 185, 129, 0.3);
+  --green-light: rgba(168, 185, 129, 0.15);
+  --green-border: rgba(168, 185, 129, 0.3);
   
   --amber: #f59e0b;
   --amber-light: rgba(245, 158, 11, 0.15);
@@ -137,6 +143,12 @@ html[data-theme="dark"] {
   --shadow-xl: 0 24px 44px -5px rgba(0, 0, 0, 0.95), 0 0 34px -4px var(--accent-glow);
   --shadow-glow: 0 0 30px -2px var(--accent-glow);
   
+  /* Ultra-Sleek Dynamic Scrollbar - Dark */
+  --scrollbar-track: rgba(10, 14, 26, 0.6);
+  --scrollbar-thumb: var(--accent-border, rgba(0, 240, 255, 0.35));
+  --scrollbar-thumb-hover: var(--accent-bright, #38bdf8);
+  --scrollbar-width: 6px;
+
   color-scheme: dark;
 }
 
@@ -275,4 +287,41 @@ html:not([data-theme="dark"]) .brand-gradient-text {
   display: inline-flex;
   align-items: center;
 }
+
+/* ==========================================================================
+   Ultra-Sleek Dynamic Theme-Color Custom Scrollbars (Platform-Wide)
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit & Blink Browsers (Chrome, Edge, Safari, Brave, Opera) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background 200ms ease, box-shadow 200ms ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 
