@@ -4883,11 +4883,6 @@ html[data-theme="dark"] .inbox-pools-bar,
 html[data-theme="dark"] .auth-invitation-card {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 22px -3px var(--accent-glow);
 }
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.1);
-  width: fit-content;
-}
 
 .otp-banner-label {
   font-size: 11px;
