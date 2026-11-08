@@ -108,7 +108,7 @@ export const actionMeta = {
     icon: 'mail',
     color: 'amber',
     tag: 'INVITE_ISSUED',
-    desc: 'Google account private invitation link generated'
+    desc: 'Private invitation link generated for recipient'
   },
   'invitation.accepted': {
     category: 'members',

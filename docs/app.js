@@ -144,7 +144,7 @@ window.addEventListener('popstate',async()=>{
 });
 
 let demo=new URLSearchParams(location.search).get('demo')==='1'||location.hostname.endsWith('github.io'),api=demo?new DemoAPI():null;
-let me,state,wid=new URLSearchParams(location.search).get('workspace')||'',page=detectPageFromUrl(),filter='all',query='',liveReady=false,selectedMessage=null;
+let me,state,wid=new URLSearchParams(location.search).get('workspace')||'',page=detectPageFromUrl(),filter='all',query='',liveReady=false,selectedMessage=null,inboxView='own',inboxPool='all';
 const authMessages={denied:'Google access was cancelled. You can try connecting again.',expired:'Google sign-in expired. Start again.',state:'Google sign-in could not be verified. Start a fresh sign-in.',network:'Google could not be reached. Please retry.',exchange:'Google authorization failed. Check the OAuth client and redirect URL, then retry.',identity:'Google identity could not be verified. Please retry.',account:'Choose the Gmail already linked to this mailbox. Use Add Gmail for a different account.',consent:'Approve Gmail read-only access to connect this mailbox.',owner:'Your owner session expired. Sign in to the dashboard and retry.',workspace:'You no longer own this workspace.'};
 authMessages.server='The Gmail connection could not be saved. Check the deployment configuration and retry.';
 let authMessage=authMessages[new URLSearchParams(location.search).get('auth_error')]||'';
@@ -205,7 +205,23 @@ async function boot(){
     me=await request('/api/me');
     syncUserProfile(me?.user);
     if(!me.workspaces.some(w=>w.id===wid))wid=me.workspaces[0]?.id||'';
-    if(inviteToken&&!demo){const accepted=await request('/api/invitations/accept','POST',{token:inviteToken});inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');wid=accepted.id;me=await request('/api/me');syncUserProfile(me?.user);toast('Invitation accepted. The workspace administrator can now grant company access.');}
+    if(inviteToken&&!demo){
+      try {
+        const accepted=await request('/api/invitations/accept','POST',{token:inviteToken});
+        inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');
+        wid=accepted.id;me=await request('/api/me');syncUserProfile(me?.user);
+        toast('Invitation accepted! Connected to workspace.');
+      } catch (err) {
+        try {
+          const claimed=await request('/api/invitations/claim','POST',{token:inviteToken});
+          inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');
+          wid=claimed.workspace_id;me=await request('/api/me');syncUserProfile(me?.user);
+          toast('Invitation accepted! Connected to workspace.');
+        } catch {
+          // Keep inviteToken for manual claim on signin screen if needed
+        }
+      }
+    }
     if(wid){
       await loadWorkspace();
       if(page==='inbox')await lazyLoadForTab('inbox');
@@ -218,14 +234,22 @@ async function boot(){
         history.replaceState({page:'signin'},'','/signin'+(location.search||''));
       }
     }
-    renderLogin(authMessage||error.message);
+    await renderLogin(authMessage||error.message);
   }
 }
 
-function renderLogin(error=''){
+async function renderLogin(error=''){
   document.title='Sign In · Mailgrant';
   document.body.classList.add('is-auth-screen');
   document.documentElement.classList.add('is-auth-screen');
+
+  let inviteInfo = null;
+  if(inviteToken && !demo){
+    try {
+      inviteInfo = await request(`/api/invitations/info?token=${encodeURIComponent(inviteToken)}`);
+    } catch {}
+  }
+
   $('#app').innerHTML=`
     <div class="auth-page-wrap">
       <main class="auth-main">
@@ -259,8 +283,27 @@ function renderLogin(error=''){
           <!-- Title & Subtitle -->
           <h1 class="auth-title">Sign in to <span class="gradient-text">Workspace</span></h1>
           <p class="auth-subtitle">
-            Manage your private email whitelists, generate revocable sharing keys, or accept an invitation. Your Google password stays with Google.
+            Manage your private email whitelists, generate revocable sharing keys, or accept an invitation. Any email provider supported.
           </p>
+
+          <!-- Invitation Acceptance Card if active token present -->
+          ${inviteInfo?.valid ? `
+            <div class="auth-invitation-card">
+              <div class="invitation-badge">
+                <span class="pulse-dot" aria-hidden="true"></span>
+                <span>Workspace Invitation</span>
+              </div>
+              <h3>You're invited to join <strong>${esc(inviteInfo.workspace_name)}</strong></h3>
+              <div class="invitation-email-val">Invited as: <strong>${esc(inviteInfo.email)}</strong></div>
+              <p class="invitation-provider-note">Works with any email provider worldwide (Outlook, Yahoo, iCloud, Proton, Gmail, or your corporate domain).</p>
+              
+              <div class="invitation-action-row">
+                <button type="button" class="btn primary btn-lg pulse-glow" data-action="claim-invite" data-token="${esc(inviteToken)}">
+                  <span>Accept & Open Shared Inbox →</span>
+                </button>
+              </div>
+            </div>
+          ` : ''}
 
           <!-- Security Trust Signals -->
           <div class="auth-trust-matrix">
@@ -304,6 +347,17 @@ function renderLogin(error=''){
                 <span>Continue with Google</span>
                 <span class="auth-btn-arrow" aria-hidden="true">→</span>
               </a>
+
+              <a class="btn-microsoft-auth" href="/auth/microsoft/login">
+                <svg class="microsoft-icon" viewBox="0 0 21 21">
+                  <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                  <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                  <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                  <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                </svg>
+                <span>Continue with Microsoft (Outlook / 365)</span>
+                <span class="auth-btn-arrow" aria-hidden="true">→</span>
+              </a>
             ` : `
               <a class="btn-google-auth" href="/docs#build">
                 <span>View deployment setup guide</span>
@@ -315,11 +369,11 @@ function renderLogin(error=''){
           <!-- Recipient Direct Access Card -->
           <div class="auth-recipient-box">
             <div class="recipient-box-text">
-              <strong>Have an access key from someone?</strong>
-              <p>Direct zero-trust access. No Google account required.</p>
+              <strong>Have a Team Pool key or Access key?</strong>
+              <p>Direct zero-trust portal for family Netflix OTP & team accounts. No login required.</p>
             </div>
             <a class="btn small primary" href="/access">
-              <span>Open Portal →</span>
+              <span>Open Team Portal →</span>
             </a>
           </div>
 
@@ -444,7 +498,7 @@ function renderPage(){
   switch(page){
     case'dashboard':return dashboardPage({state,me});
     case'mailboxes':return mailboxesPage({state,me,demo});
-    case'inbox':return inboxPage({state,demo,filter,query});
+    case'inbox':return inboxPage({state,demo,filter,query,view:inboxView,pool:inboxPool});
     case'rules':return rulesPage({state});
     case'people':return peoplePage({state,me,demo});
     case'activity':return activityPage({state});
@@ -723,9 +777,135 @@ async function handleAction(action,el){
   }
 }
 
+function openCreateTeamPoolModal() {
+  const rules = state.rules || [];
+  const members = (state.members || []).filter(m => m.id !== state.workspace?.owner_id);
+
+  modal('Create Team Access Pool', `
+    <form id="team-pool-form" class="clean-form">
+      <p style="margin-bottom:16px;color:var(--muted);font-size:13.5px;">
+        Team Pools bundle service rules (like Netflix OTP) and grant instant access to a group of team or family members.
+      </p>
+
+      <div class="field">
+        <label for="pool-name"><strong>Pool Name</strong></label>
+        <input id="pool-name" name="name" type="text" placeholder="e.g. Netflix & Family Logins" required maxlength="60" value="Netflix & Family Logins" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="pool-desc"><strong>Description</strong></label>
+        <input id="pool-desc" name="description" type="text" placeholder="e.g. Shared OTP for Netflix sign-in" maxlength="140" value="Shared OTP codes for family & team login" />
+      </div>
+
+      <div class="field">
+        <label><strong>Color Accent</strong></label>
+        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="red" checked /> <span style="color:#ff4d5a;font-weight:700;">Red (Netflix)</span></label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="blue" /> <span style="color:#00f0ff;font-weight:700;">Blue</span></label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="purple" /> <span style="color:#b266ff;font-weight:700;">Purple</span></label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="color" value="green" /> <span style="color:#00ffb2;font-weight:700;">Green</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label><strong>Select Included Rules</strong></label>
+        <div style="max-height:140px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-md);padding:10px;background:var(--bg-subtle);display:flex;flex-direction:column;gap:8px;">
+          ${rules.length > 0 ? rules.map(r => `
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" name="rule_ids" value="${esc(r.id)}" ${r.name.toLowerCase().includes('netflix') ? 'checked' : ''} />
+              <span><strong>${esc(r.name)}</strong> (${esc(r.sender)} · ${r.mode})</span>
+            </label>
+          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:0;">No rules configured yet. A Netflix rule will be added automatically.</p>'}
+        </div>
+      </div>
+
+      <div class="field">
+        <label><strong>Assign Team Members</strong></label>
+        <div style="max-height:140px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-md);padding:10px;background:var(--bg-subtle);display:flex;flex-direction:column;gap:8px;">
+          ${members.length > 0 ? members.map(m => `
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" name="member_ids" value="${esc(m.id)}" checked />
+              <span><strong>${esc(m.name || m.email.split('@')[0])}</strong> (${esc(m.email)})</span>
+            </label>
+          `).join('') : '<p style="color:var(--muted);font-size:12.5px;margin:0;">No team members added yet. You can invite members in People & Access or share the instant portal link.</p>'}
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;background:rgba(0,240,255,0.06);padding:12px;border-radius:var(--radius-md);border:1px solid rgba(0,240,255,0.25);">
+          <input type="checkbox" name="create_access_key" value="1" checked style="margin-top:2px;" />
+          <div>
+            <strong style="color:var(--ink);">Generate Instant Team Portal Link (/access)</strong>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Allows family or team members to open the team inbox directly on their mobile phone or TV browser without creating an account.</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="dialog-actions" style="margin-top:20px;">
+        <button type="button" class="btn outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn primary pulse-glow">Create Team Pool</button>
+      </div>
+    </form>
+  `);
+}
+
 document.addEventListener('click',async e=>{
-  const el=e.target.closest('button,a,[data-page],[data-action],[data-message],[data-filter]');if(!el)return;
+  const el=e.target.closest('button,a,[data-page],[data-action],[data-message],[data-filter],[data-inbox-view],[data-pool-filter],[data-copy-otp]');if(!el)return;
   try{
+    if(el.dataset.inboxView){inboxView=el.dataset.inboxView;inboxPool='all';render();return;}
+    if(el.dataset.poolFilter){inboxPool=el.dataset.poolFilter;render();return;}
+    if(el.dataset.copyOtp){
+      const otp=el.dataset.copyOtp;
+      try{await navigator.clipboard.writeText(otp);toast(`OTP Code ${otp} copied to clipboard!`);}catch{toast(`OTP Code: ${otp}`);}
+      return;
+    }
+    if(el.dataset.action==='claim-invite'){
+      const token=el.dataset.token||inviteToken;
+      try{
+        modal('Joining Workspace…','<p>Accepting invitation and establishing session.</p>');
+        const res=await request('/api/invitations/claim','POST',{token});
+        inviteToken=null;sessionStorage.removeItem('mailgrant-pending-invite');
+        wid=res.workspace_id;me=await request('/api/me');syncUserProfile(me?.user);
+        closeModal();
+        toast('Invitation accepted! Welcome to the workspace.');
+        await navigate('inbox',true);
+        await boot();
+      }catch(err){modal('Invitation Error',`<p class="error-msg">${esc(err.message)}</p>`);}
+      return;
+    }
+    if(el.dataset.action==='quick-netflix-pool'){
+      modal('Setting up Netflix Team Pool…','<p>Creating rule for @netflix.com, building shared team pool, and generating portal key.</p>');
+      try{
+        let nRule=(state.rules||[]).find(r=>r.name.toLowerCase()==='netflix'||r.sender.includes('netflix.com'));
+        if(!nRule){
+          const ruleRes=await request(scoped('rules'),'POST',{name:'Netflix',sender:'@netflix.com',subject_contains:'',mode:'codes',retention_minutes:30});
+          nRule={id:ruleRes.id,name:'Netflix',mode:'codes'};
+        }
+        const memberIds=(state.members||[]).map(m=>m.id).filter(id=>id!==state.workspace?.owner_id);
+        const poolRes=await request(scoped('pools'),'POST',{name:'Netflix Family & Team',description:'Instant OTP verification codes for Netflix sign-in',color:'red',rule_ids:[nRule.id],member_ids:memberIds,create_access_key:true});
+        await loadWorkspace();
+        inboxView='receivers';
+        inboxPool=poolRes.id;
+        render();
+        const portalUrl=poolRes.access_key?`${location.origin}/access?key=${poolRes.access_key.key}`:`${location.origin}/access`;
+        modal('🎬 Netflix Team Pool Activated',`<p>Your team and family can now access Netflix OTP sign-in codes instantly.</p><div class="notice"><strong>Direct Team Portal Link:</strong> Share this link with family or team members so anyone who logs into Netflix can view the OTP code on their phone or TV without logging into the platform dashboard:</div><div class="copy-box"><code>${esc(portalUrl)}</code><button class="icon-btn" data-copy="${esc(portalUrl)}" aria-label="Copy portal link">${icon('copy')}</button></div>`);
+        toast('Netflix Team Pool created successfully!');
+      }catch(err){modal('Error',`<p class="error-msg">${esc(err.message)}</p>`);}
+      return;
+    }
+    if(el.dataset.action==='create-team-pool'){
+      openCreateTeamPoolModal();
+      return;
+    }
+    if(el.dataset.deletePool){
+      const pid=el.dataset.deletePool;
+      modal('Delete team pool?',`<p>Members will no longer see pooled messages together.</p><div class="dialog-actions">${btn('Cancel','close')}<button class="btn danger" data-confirm-delete-pool="${esc(pid)}">Delete pool</button></div>`);
+      return;
+    }
+    if(el.dataset.confirmDeletePool){
+      await mutate(`pools/${el.dataset.confirmDeletePool}`,'DELETE',undefined,'Team pool deleted.');
+      return;
+    }
     if(el.dataset.action==='logout'||el.closest('[data-action="logout"]')){await window.mailgrantLogout();return;}
     if(el.dataset.openMailbox){wid=el.dataset.openMailbox;toggleMobileSidebar(false);await navigate('profile');await loadWorkspace();return;}
     if(el.dataset.switchWorkspace){wid=el.dataset.switchWorkspace;resetLazyCache();toggleMobileSidebar(false);closeModal();await navigate('dashboard');await loadWorkspace();return;}
@@ -766,7 +946,7 @@ document.addEventListener('click',async e=>{
       try{if(oldId)await request(scoped(`invitations/${oldId}`),'DELETE');}catch{}
       const result=await request(scoped('invitations'),'POST',{email});
       await loadWorkspace();
-      modal('Your invitation is ready',`<p>A fresh invitation link was generated for <strong>${esc(email)}</strong>. It can be used once by that Google account and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'Share this fresh link privately with your invitee.'}</div>`);
+      modal('Your invitation is ready',`<p>A fresh invitation link was generated for <strong>${esc(email)}</strong>. It can be used once by that email address (any provider supported) and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'Share this fresh link privately with your invitee.'}</div>`);
       toast('Fresh invitation link generated.');
       return;
     }
@@ -1083,7 +1263,63 @@ document.addEventListener('submit',async e=>{
         await mutate('rules','POST',b,'Access rule created. Receive a new matching email and refresh.');
       }
     }
-    if(form.id==='invite-form'){const result=await request(scoped('invitations'),'POST',{email:b.email.toLowerCase()});await loadWorkspace();modal('Your invitation is ready',`<p>Share this link privately with <strong>${esc(b.email)}</strong>. It can be used once by that Google account and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'No email has been sent. Copy the link and share it with your invitee.'}</div>`);}
+    if(form.id==='team-pool-form'){
+      const ruleIds = [...form.querySelectorAll('input[name="rule_ids"]:checked')].map(i => i.value);
+      const memberIds = [...form.querySelectorAll('input[name="member_ids"]:checked')].map(i => i.value);
+      const color = form.querySelector('input[name="color"]:checked')?.value || 'blue';
+      const createAccessKey = form.querySelector('input[name="create_access_key"]')?.checked;
+      
+      if (!ruleIds.length && b.name.toLowerCase().includes('netflix')) {
+        let nRule = (state.rules || []).find(r => r.name.toLowerCase() === 'netflix');
+        if (!nRule) {
+          const created = await request(scoped('rules'), 'POST', {
+            name: 'Netflix',
+            sender: '@netflix.com',
+            subject_contains: '',
+            mode: 'codes',
+            retention_minutes: 30
+          });
+          ruleIds.push(created.id);
+        } else {
+          ruleIds.push(nRule.id);
+        }
+      }
+      
+      const result = await request(scoped('pools'), 'POST', {
+        name: b.name.trim(),
+        description: b.description.trim(),
+        color,
+        rule_ids: ruleIds,
+        member_ids: memberIds,
+        create_access_key: createAccessKey
+      });
+      await loadWorkspace();
+      inboxView = 'receivers';
+      inboxPool = result.id;
+      render();
+      if (result.access_key) {
+        const portalUrl = `${location.origin}/access?key=${result.access_key.key}`;
+        modal('Team Pool Ready & Link Generated', `
+          <p>The team pool <strong>${esc(b.name)}</strong> is active.</p>
+          <div class="notice">
+            <strong>Direct Team Portal Link:</strong> Share this link with team or family members so they can view OTPs without platform login:
+          </div>
+          <div class="copy-box">
+            <code>${esc(portalUrl)}</code>
+            <button class="icon-btn" data-copy="${esc(portalUrl)}" aria-label="Copy portal link">${icon('copy')}</button>
+          </div>
+        `);
+      } else {
+        closeModal();
+      }
+      toast('Team Pool created successfully.');
+      return;
+    }
+    if(form.id==='invite-form'){
+      const result=await request(scoped('invitations'),'POST',{email:b.email.toLowerCase()});
+      await loadWorkspace();
+      modal('Your invitation is ready',`<p>Share this link privately with <strong>${esc(b.email)}</strong>. It works with any email provider (Outlook, Yahoo, iCloud, Proton, Gmail, or corporate) and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'No email has been sent. Copy the link and share it with your invitee.'}</div>`);
+    }
     if(form.id==='key-form'){const scopes=[...form.querySelectorAll('[data-key-rule]')].filter(s=>s.value!=='blocked').map(s=>({rule_id:s.dataset.keyRule,mode:s.value,subdomain:form.querySelector(`[data-key-subdomain="${s.dataset.keyRule}"]`)?.value?.trim()||'*'}));if(!scopes.length)throw new Error('Choose at least one company permission.');const accent=(typeof document!=='undefined'&&document.documentElement?.dataset?.accent)||'cyan';const result=await request(scoped('keys'),'POST',{name:b.name,scopes,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null,max_views:b.max_views?Number(b.max_views):null,accent});delete tabLoaded['keys'];await loadWorkspace();showKeyModal({result,modal});}
     if(form.id==='grant-form'){await mutate('grants','PUT',{rule_id:form.dataset.rule,user_id:form.dataset.member,mode:b.mode,subdomain:b.subdomain||'*',expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null},'Permission updated for future messages.');}
     if(form.id==='delete-form'){if(b.name!==state.workspace.name)throw new Error('The workspace name does not match.');await request(scoped('workspace'),'DELETE',b);$('#dialog').close();wid='';await navigate('dashboard',true);await boot();toast('Workspace deleted.');}

@@ -3,7 +3,7 @@ const time=()=>Date.now();
 const uid=()=>crypto.randomUUID();
 export function seedDemo(){
   const t=time(),owner={id:'demo-owner',name:'Alex Morgan',email:'alex@example.com'},brother={id:'demo-brother',name:'Jamie Morgan',email:'jamie@example.com'};
-  return {created:t,viewer:owner.id,users:[owner,brother],workspaces:[{id:'personal',name:'Personal workspace',owner_id:owner.id},{id:'studio',name:'Studio workspace',owner_id:owner.id}],members:[{workspace_id:'personal',user_id:owner.id,joined_at:t-1000000},{workspace_id:'personal',user_id:brother.id,joined_at:t-900000},{workspace_id:'studio',user_id:owner.id,joined_at:t-1000000}],mailboxes:[{workspace_id:'personal',email:owner.email,alias:'mg-sample-address@inbound.example.com',verified_at:t-600000,forwarding_available:false,gmail:{connected_at:t-600000,last_sync_at:t-45000,needs_reconnect:0}},{workspace_id:'studio',email:owner.email,alias:'mg-studio-sample@inbound.example.com',verified_at:null,forwarding_available:false,gmail:null}],rules:[{id:'claude',workspace_id:'personal',name:'Claude',sender:'signin@example.anthropic.test',subject_contains:'sign in',mode:'codes',retention_minutes:15,enabled:1,link_host:'',created_at:t},{id:'notion',workspace_id:'personal',name:'Notion',sender:'notify@example.notion.test',subject_contains:'',mode:'links',retention_minutes:30,enabled:1,link_host:'example.com',created_at:t},{id:'figma',workspace_id:'personal',name:'Figma',sender:'updates@example.figma.test',subject_contains:'',mode:'read',retention_minutes:60,enabled:1,link_host:'',created_at:t}],grants:[{workspace_id:'personal',rule_id:'claude',user_id:brother.id,mode:'codes',starts_at:t-900000,expires_at:null}],messages:[{id:'m1',workspace_id:'personal',rule_id:'claude',received_at:t-45000,expires_at:t+855000,content:{code:'482917',link:'https://claude.ai/magic-link#demo-token',subject:'Your secure link to Claude is here | 2026-11-08',sender:'no-reply@mail.anthropic.com',text:'Click the button below to sign in to Claude.\n\nSign in to Claude (https://claude.ai/magic-link#demo-token)'}},{id:'m2',workspace_id:'personal',rule_id:'notion',received_at:t-180000,expires_at:t+1620000,content:{link:'https://notion.so/magic-link/demo',subject:'Log in to Notion',sender:'notify@notion.so',text:'Click the link below to sign in to Notion:\n\nhttps://notion.so/magic-link/demo'}},{id:'m3',workspace_id:'personal',rule_id:'figma',received_at:t-420000,expires_at:t+3180000,content:{subject:'Your weekly design update',sender:'updates@example.figma.test',text:'Hi Alex,\n\nYour team has shared a new design file with you. The latest project update is ready to review.\n\nThis is sample content, used to demonstrate read-only access. No real mailbox is connected.\n\nThe Figma team',code:null,link:null}},{id:'m4',workspace_id:'personal',rule_id:'claude',received_at:t-540000,expires_at:t+360000,content:{code:'713604',link:'https://claude.ai/magic-link#demo-token-2',subject:'Your secure link to Claude is here',sender:'no-reply@mail.anthropic.com',text:'Here is your Claude verification code: 713604.\n\nOr click: https://claude.ai/magic-link#demo-token-2'}}],invitations:[],events:[{id:uid(),workspace_id:'personal',action:'permission.changed',target:'Claude: codes only',actor:owner.email,created_at:t-700000},{id:uid(),workspace_id:'personal',action:'invitation.accepted',target:brother.email,actor:brother.email,created_at:t-800000},{id:uid(),workspace_id:'personal',action:'workspace.created',target:'Personal workspace',actor:owner.email,created_at:t-950000}],keys:[{id:'demo-key-1',workspace_id:'personal',name:'Contractor — Project Verification',token_hash:'7a2b9c',prefix:'mgk_sample_b',expires_at:t+86400000*7,max_views:5,views:0,revoked_at:null,last_used_at:null,created_at:t-3600000,accent:'cyan',scopes:[{rule_id:'claude',name:'Claude',mode:'codes',subdomain:'*'}]}]};
+  return {created:t,viewer:owner.id,users:[owner,brother],workspaces:[{id:'personal',name:'Personal workspace',owner_id:owner.id},{id:'studio',name:'Studio workspace',owner_id:owner.id}],members:[{workspace_id:'personal',user_id:owner.id,joined_at:t-1000000},{workspace_id:'personal',user_id:brother.id,joined_at:t-900000},{workspace_id:'studio',user_id:owner.id,joined_at:t-1000000}],mailboxes:[{workspace_id:'personal',email:owner.email,alias:'mg-sample-address@inbound.example.com',verified_at:t-600000,forwarding_available:false,gmail:{connected_at:t-600000,last_sync_at:t-45000,needs_reconnect:0}},{workspace_id:'studio',email:owner.email,alias:'mg-studio-sample@inbound.example.com',verified_at:null,forwarding_available:false,gmail:null}],rules:[{id:'netflix',workspace_id:'personal',name:'Netflix',sender:'info@account.netflix.com',subject_contains:'',mode:'codes',retention_minutes:30,enabled:1,link_host:'',created_at:t},{id:'claude',workspace_id:'personal',name:'Claude',sender:'signin@example.anthropic.test',subject_contains:'sign in',mode:'codes',retention_minutes:15,enabled:1,link_host:'',created_at:t},{id:'notion',workspace_id:'personal',name:'Notion',sender:'notify@example.notion.test',subject_contains:'',mode:'links',retention_minutes:30,enabled:1,link_host:'example.com',created_at:t},{id:'figma',workspace_id:'personal',name:'Figma',sender:'updates@example.figma.test',subject_contains:'',mode:'read',retention_minutes:60,enabled:1,link_host:'',created_at:t}],grants:[{workspace_id:'personal',rule_id:'netflix',user_id:brother.id,mode:'codes',starts_at:t-900000,expires_at:null},{workspace_id:'personal',rule_id:'claude',user_id:brother.id,mode:'codes',starts_at:t-900000,expires_at:null}],team_pools:[{id:'pool-netflix',workspace_id:'personal',name:'Netflix Family & Team',description:'Shared Netflix sign-in and temporary access OTP codes',color:'red',access_key_id:'demo-key-1',rules:[{id:'netflix',name:'Netflix',sender:'info@account.netflix.com',mode:'codes'}],members:[{id:brother.id,name:brother.name,email:brother.email}],created_at:t}],messages:[{id:'m_netflix',workspace_id:'personal',rule_id:'netflix',received_at:t-25000,expires_at:t+1775000,content:{code:'829415',subject:'Your Netflix temporary access code is 829415',sender:'info@account.netflix.com',text:'Here is your Netflix temporary access code:\n\n829415\n\nEnter this code on your device to sign in. The code will expire in 15 minutes.'}},{id:'m1',workspace_id:'personal',rule_id:'claude',received_at:t-45000,expires_at:t+855000,content:{code:'482917',link:'https://claude.ai/magic-link#demo-token',subject:'Your secure link to Claude is here | 2026-11-08',sender:'no-reply@mail.anthropic.com',text:'Click the button below to sign in to Claude.\n\nSign in to Claude (https://claude.ai/magic-link#demo-token)'}},{id:'m2',workspace_id:'personal',rule_id:'notion',received_at:t-180000,expires_at:t+1620000,content:{link:'https://notion.so/magic-link/demo',subject:'Log in to Notion',sender:'notify@notion.so',text:'Click the link below to sign in to Notion:\n\nhttps://notion.so/magic-link/demo'}},{id:'m3',workspace_id:'personal',rule_id:'figma',received_at:t-420000,expires_at:t+3180000,content:{subject:'Your weekly design update',sender:'updates@example.figma.test',text:'Hi Alex,\n\nYour team has shared a new design file with you. The latest project update is ready to review.\n\nThis is sample content, used to demonstrate read-only access. No real mailbox is connected.\n\nThe Figma team',code:null,link:null}},{id:'m4',workspace_id:'personal',rule_id:'claude',received_at:t-540000,expires_at:t+360000,content:{code:'713604',link:'https://claude.ai/magic-link#demo-token-2',subject:'Your secure link to Claude is here',sender:'no-reply@mail.anthropic.com',text:'Here is your Claude verification code: 713604.\n\nOr click: https://claude.ai/magic-link#demo-token-2'}}],invitations:[],events:[{id:uid(),workspace_id:'personal',action:'permission.changed',target:'Claude: codes only',actor:owner.email,created_at:t-700000},{id:uid(),workspace_id:'personal',action:'invitation.accepted',target:brother.email,actor:brother.email,created_at:t-800000},{id:uid(),workspace_id:'personal',action:'workspace.created',target:'Personal workspace',actor:owner.email,created_at:t-950000}],keys:[{id:'demo-key-1',workspace_id:'personal',name:'Contractor — Project Verification',token_hash:'7a2b9c',prefix:'mgk_sample_b',expires_at:t+86400000*7,max_views:5,views:0,revoked_at:null,last_used_at:null,created_at:t-3600000,accent:'cyan',scopes:[{rule_id:'claude',name:'Claude',mode:'codes',subdomain:'*'}]}]};
 }
 export class DemoAPI {
   constructor(){try{this.data=JSON.parse(localStorage.getItem(KEY));}catch{}if(!this.data||time()-this.data.created>3600000)this.data=seedDemo();this.save();}
@@ -20,7 +20,36 @@ export class DemoAPI {
     const match=path.match(/^\/api\/w\/([^/]+)\/(.*)$/);if(!match)throw new Error('This action requires live setup.');
     const [,wid,r]=match,w=d.workspaces.find(w=>w.id===wid),member=d.members.find(m=>m.workspace_id===wid&&m.user_id===u.id);if(!member)throw new Error('Workspace not found.');const owner=w.owner_id===u.id;
     const allowed=m=>{const rule=d.rules.find(r=>r.id===m.rule_id),g=d.grants.find(g=>g.user_id===u.id&&g.rule_id===m.rule_id);return rule?.enabled&&m.expires_at>t&&(owner||(g&&g.mode!=='blocked'&&(!g.expires_at||g.expires_at>t)&&m.received_at>=Math.max(member.joined_at,g.starts_at)));};
-    if(r==='state'){const mb=d.mailboxes.find(m=>m.workspace_id===wid);const isConn=!!mb?.gmail;return structuredClone({workspace:w,owner,gmail_connected:isConn,mailbox_connected:isConn,provider:mb?.provider||'google',mailbox:owner?mb:null,rules:d.rules.filter(r=>r.workspace_id===wid&&(owner||d.grants.some(g=>g.rule_id===r.id&&g.user_id===u.id&&g.mode!=='blocked'&&(!g.expires_at||g.expires_at>t)))).map(r=>({...r,mode:owner?r.mode:d.grants.find(g=>g.rule_id===r.id&&g.user_id===u.id).mode})),members:owner?d.members.filter(m=>m.workspace_id===wid).map(m=>({...d.users.find(u=>u.id===m.user_id),joined_at:m.joined_at})):[],grants:owner?d.grants.filter(g=>g.workspace_id===wid):[],invitations:owner?d.invitations.filter(i=>i.workspace_id===wid):[],events:owner?d.events.filter(e=>e.workspace_id===wid).sort((a,b)=>b.created_at-a.created_at):[],messages:d.messages.filter(m=>m.workspace_id===wid&&allowed(m)).sort((a,b)=>b.received_at-a.received_at).map(({content,...m})=>{const rule=d.rules.find(r=>r.id===m.rule_id);return {...m,name:rule.name,mode:owner?rule.mode:d.grants.find(g=>g.rule_id===rule.id&&g.user_id===u.id).mode};})});}
+    if(r==='state'){
+      const mb=d.mailboxes.find(m=>m.workspace_id===wid);
+      const isConn=!!mb?.gmail;
+      const pools=d.team_pools||[];
+      return structuredClone({
+        workspace:w,
+        owner,
+        gmail_connected:isConn,
+        mailbox_connected:isConn,
+        provider:mb?.provider||'google',
+        mailbox:owner?mb:null,
+        team_pools:pools,
+        rules:d.rules.filter(r=>r.workspace_id===wid&&(owner||d.grants.some(g=>g.rule_id===r.id&&g.user_id===u.id&&g.mode!=='blocked'&&(!g.expires_at||g.expires_at>t)))).map(r=>({...r,mode:owner?r.mode:d.grants.find(g=>g.rule_id===r.id&&g.user_id===u.id).mode})),
+        members:owner?d.members.filter(m=>m.workspace_id===wid).map(m=>({...d.users.find(u=>u.id===m.user_id),joined_at:m.joined_at})):[],
+        grants:owner?d.grants.filter(g=>g.workspace_id===wid):[],
+        invitations:owner?d.invitations.filter(i=>i.workspace_id===wid):[],
+        events:owner?d.events.filter(e=>e.workspace_id===wid).sort((a,b)=>b.created_at-a.created_at):[],
+        messages:d.messages.filter(m=>m.workspace_id===wid&&allowed(m)).sort((a,b)=>b.received_at-a.received_at).map(({content,...m})=>{
+          const rule=d.rules.find(r=>r.id===m.rule_id);
+          const msgPools=pools.filter(p=>(p.rules||[]).some(pr=>pr.id===m.rule_id||pr.rule_id===m.rule_id)).map(p=>({id:p.id,name:p.name,color:p.color}));
+          return {
+            ...m,
+            name:rule?.name||'Service',
+            mode:owner?rule.mode:d.grants.find(g=>g.rule_id===rule.id&&g.user_id===u.id).mode,
+            pools:msgPools,
+            code:content?.code||null
+          };
+        })
+      });
+    }
     if(r.startsWith('messages/')&&method==='GET'){const m=d.messages.find(m=>m.id===r.slice(9)&&m.workspace_id===wid);if(!m||!allowed(m))throw new Error('Message unavailable or permission expired.');const rule=d.rules.find(r=>r.id===m.rule_id),mode=owner?rule.mode:d.grants.find(g=>g.rule_id===rule.id&&g.user_id===u.id).mode;this.log(wid,'message.viewed',rule.name);return{id:m.id,name:rule.name,mode,expires_at:m.expires_at,...(mode==='read'?m.content:mode==='codes'?{code:m.content.code}:{link:m.content.link})};}
     if(!owner)throw new Error('Only the workspace owner can do this.');
     const purgeCutoff = t - 5 * 86400000;
@@ -33,6 +62,41 @@ export class DemoAPI {
       const accent=b.accent||(typeof document!=='undefined'&&document.documentElement?.dataset?.accent)||'cyan';
       const key={id:uid(),workspace_id:wid,name:b.name,token_hash,prefix:token.slice(0,12),expires_at:b.expires_at??null,max_views:b.max_views??null,views:0,revoked_at:null,last_used_at:null,created_at:t,accent,scopes:b.scopes.map(s=>({...s,subdomain:s.subdomain||'*',name:d.rules.find(r=>r.id===s.rule_id)?.name||'Company'}))};
       d.keys.unshift(key);this.log(wid,'access_key.created',b.name);this.save();return{id:key.id,key:token,url:`${location.origin}/access?accent=${accent}&demo=1`};
+    }
+    if(r==='pools'&&method==='GET')return {pools:structuredClone(d.team_pools||[])};
+    if(r==='pools'&&method==='POST'){
+      if(!b.name)throw new Error('Name this team pool.');
+      const pid=uid();
+      let accessKeyData=null;
+      if(b.create_access_key){
+        const token=`mgk_${btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','')}`;
+        const token_hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token)))).map(v=>v.toString(16).padStart(2,'0')).join('');
+        const key={id:uid(),workspace_id:wid,name:`Team Pool: ${b.name}`,token_hash,prefix:token.slice(0,12),expires_at:null,max_views:null,views:0,revoked_at:null,last_used_at:null,created_at:t,accent:b.color||'red',scopes:(b.rule_ids||[]).map(rid=>({rule_id:rid,mode:'codes',subdomain:'*',name:d.rules.find(r=>r.id===rid)?.name||'Service'}))};
+        d.keys.unshift(key);
+        accessKeyData={id:key.id,key:token,url:`${location.origin}/access?demo=1`};
+      }
+      const poolRules=(b.rule_ids||[]).map(rid=>d.rules.find(r=>r.id===rid)).filter(Boolean).map(r=>({id:r.id,name:r.name,sender:r.sender,mode:r.mode}));
+      const poolMembers=(b.member_ids||[]).map(mid=>d.users.find(u=>u.id===mid)).filter(Boolean).map(u=>({id:u.id,name:u.name,email:u.email}));
+      const pool={id:pid,workspace_id:wid,name:b.name,description:b.description||'',color:b.color||'red',access_key_id:accessKeyData?.id||null,rules:poolRules,members:poolMembers,created_at:t};
+      d.team_pools=d.team_pools||[];
+      d.team_pools.unshift(pool);
+      for(const mid of (b.member_ids||[])){
+        for(const rid of (b.rule_ids||[])){
+          const rule=d.rules.find(r=>r.id===rid);
+          if(rule&&!d.grants.some(g=>g.user_id===mid&&g.rule_id===rid)){
+            d.grants.push({workspace_id:wid,rule_id:rid,user_id:mid,mode:rule.mode,starts_at:t-1000,expires_at:null});
+          }
+        }
+      }
+      this.log(wid,'team_pool.created',b.name);
+      this.save();
+      return {ok:true,id:pid,access_key:accessKeyData};
+    }
+    if(r.startsWith('pools/')&&method==='DELETE'){
+      const pid=r.slice(6);
+      d.team_pools=(d.team_pools||[]).filter(p=>p.id!==pid);
+      this.save();
+      return {ok:true};
     }
     if(r.startsWith('keys/')&&method==='DELETE'){const key=d.keys.find(k=>k.id===r.slice(5)&&k.workspace_id===wid);if(!key)throw new Error('Key not found.');key.revoked_at=t;this.log(wid,'access_key.revoked',key.name);this.save();return{ok:true};}
     if(r==='rules'&&method==='POST'){if(d.rules.some(r=>r.workspace_id===wid&&r.sender===b.sender&&r.subject_contains===b.subject_contains))throw new Error('This sender and subject rule already exists.');d.rules.push({...b,id:uid(),workspace_id:wid,enabled:1,created_at:t});this.log(wid,'rule.created',b.name);}

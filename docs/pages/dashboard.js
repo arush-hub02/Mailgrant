@@ -216,7 +216,7 @@ export function dashboardPage({ state = {}, me = {} }) {
               <div class="action-icon-circle">${icon('people')}</div>
               <div class="action-card-details">
                 <div class="action-card-title">Invite Member</div>
-                <div class="action-card-desc">Grant selective workspace access to a Google account</div>
+                <div class="action-card-desc">Grant selective workspace access to a team member</div>
               </div>
               <span class="action-card-arrow" aria-hidden="true">→</span>
             </button>

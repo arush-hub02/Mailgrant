@@ -410,3 +410,125 @@ test('multi-provider mailbox connection connects Outlook, Yahoo, and Inbound str
   const stateData2 = await stateResp2.json();
   assert.equal(stateData2.provider, 'yahoo');
 });
+
+test('invitation claim works for any provider (Outlook, Yahoo, etc.) and establishes a valid session', async () => {
+  const f = await fixture();
+  // Owner creates an invitation for an Outlook user
+  const inviteResp = await f.call('/api/w/one/invitations', {
+    user: 'owner',
+    method: 'POST',
+    body: { email: 'team-member@outlook.com' }
+  });
+  assert.equal(inviteResp.status, 201);
+  const inviteData = await inviteResp.json();
+  const token = new URL(inviteData.url).hash.slice(8);
+  assert.ok(token);
+
+  // Check invitation info endpoint without auth
+  const infoReq = new Request(`${f.env.APP_ORIGIN}/api/invitations/info?token=${token}`, {
+    headers: { origin: f.env.APP_ORIGIN }
+  });
+  const infoResp = await worker.fetch(infoReq, f.env);
+  assert.equal(infoResp.status, 200);
+  const info = await infoResp.json();
+  assert.equal(info.valid, true);
+  assert.equal(info.email, 'team-member@outlook.com');
+
+  // Claim invitation directly without prior user session (any email provider flow)
+  const makeClaimReq = () => new Request(`${f.env.APP_ORIGIN}/api/invitations/claim`, {
+    method: 'POST',
+    headers: { origin: f.env.APP_ORIGIN, 'content-type': 'application/json' },
+    body: JSON.stringify({ token, name: 'Outlook Colleague' })
+  });
+  const claimResp = await worker.fetch(makeClaimReq(), f.env);
+  assert.equal(claimResp.status, 200);
+  const claimData = await claimResp.json();
+  assert.equal(claimData.ok, true);
+  assert.equal(claimData.user.email, 'team-member@outlook.com');
+  const sessionCookie = claimResp.headers.get('set-cookie');
+  assert.ok(sessionCookie && sessionCookie.includes('mg_session='));
+
+  // The claimed user is now a member of the workspace
+  const memberRecord = f.DB.db.prepare("SELECT * FROM members WHERE workspace_id='one' AND user_id=?").get(claimData.user.id);
+  assert.ok(memberRecord);
+
+  // Token cannot be claimed a second time
+  const reClaimResp = await worker.fetch(makeClaimReq(), f.env);
+  assert.equal(reClaimResp.status, 403);
+});
+
+test('team pools group rules (Netflix) and members, sync grants, and surface in workspace state', async () => {
+  const f = await fixture();
+
+  // Create a Netflix rule in workspace 'one'
+  const ruleResp = await f.call('/api/w/one/rules', {
+    user: 'owner',
+    method: 'POST',
+    body: {
+      name: 'Netflix',
+      sender: '@netflix.com',
+      subject_contains: 'code',
+      mode: 'codes',
+      retention_minutes: 30
+    }
+  });
+  assert.equal(ruleResp.status, 201);
+  const netflixRule = f.DB.db.prepare("SELECT id FROM rules WHERE workspace_id='one' AND name='Netflix'").get();
+  assert.ok(netflixRule);
+
+  // Create a Team Pool: "Netflix Family & Team Logins"
+  const poolResp = await f.call('/api/w/one/pools', {
+    user: 'owner',
+    method: 'POST',
+    body: {
+      name: 'Netflix Family & Team',
+      description: 'Shared OTP for Netflix logins',
+      color: 'red',
+      rule_ids: [netflixRule.id],
+      member_ids: ['brother'],
+      create_access_key: true
+    }
+  });
+  assert.equal(poolResp.status, 201);
+  const poolData = await poolResp.json();
+  assert.ok(poolData.id);
+  assert.ok(poolData.access_key);
+  assert.ok(poolData.access_key.key.startsWith('mgk_'));
+
+  // Verify pool created in DB
+  const poolDb = f.DB.db.prepare("SELECT * FROM team_pools WHERE id=?").get(poolData.id);
+  assert.equal(poolDb.name, 'Netflix Family & Team');
+
+  // Verify grants were automatically synced for pool member
+  const grant = f.DB.db.prepare("SELECT * FROM grants WHERE workspace_id='one' AND rule_id=? AND user_id='brother'").get(netflixRule.id);
+  assert.ok(grant);
+  assert.equal(grant.mode, 'codes');
+
+  // Insert a mock Netflix message received after pool creation
+  const msgReceived = Date.now() + 100;
+  const msgCipher = await encrypt({ code: '739281', subject: 'Your Netflix temporary access code' }, secret, `one:${netflixRule.id}`);
+  f.DB.db.prepare("INSERT INTO messages(id,workspace_id,rule_id,content,received_at,expires_at,dedupe) VALUES(?,?,?,?,?,?,?)")
+    .run('m_netflix', 'one', netflixRule.id, msgCipher, msgReceived, msgReceived + 1800000, 'netflix_msg_1');
+
+  // Verify state returns the pool and tags the message with pools
+  const stateResp = await f.call('/api/w/one/state', { user: 'owner' });
+  assert.equal(stateResp.status, 200);
+  const state = await stateResp.json();
+  assert.ok(Array.isArray(state.team_pools));
+  assert.equal(state.team_pools.length, 1);
+  assert.equal(state.team_pools[0].name, 'Netflix Family & Team');
+  assert.equal(state.team_pools[0].rules.length, 1);
+  assert.equal(state.team_pools[0].members.length, 1);
+
+  // Check that the netflix message has pool tags
+  const netflixMsg = state.messages.find(m => m.id === 'm_netflix');
+  assert.ok(netflixMsg);
+  assert.ok(netflixMsg.pools && netflixMsg.pools.length > 0);
+  assert.equal(netflixMsg.pools[0].name, 'Netflix Family & Team');
+
+  // Brother (member) can read the message through their pool grant
+  const readResp = await f.call('/api/w/one/messages/m_netflix', { user: 'brother' });
+  assert.equal(readResp.status, 200);
+  const readData = await readResp.json();
+  assert.equal(readData.code, '739281');
+});

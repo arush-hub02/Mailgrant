@@ -29,6 +29,21 @@ export function getMessageSharing(m, state) {
     };
   });
 
+  // Check if message belongs to a Team Pool (e.g. Netflix)
+  const pool = (m.pools || [])[0] || (state.team_pools || []).find(p => (p.rules || []).some(r => r.id === m.rule_id || r.rule_id === m.rule_id));
+  if (pool) {
+    const memberCount = pool.members?.length || recipientMembers.length || 1;
+    return {
+      isShared: true,
+      isPrivate: false,
+      isPool: true,
+      pool,
+      text: `Team Pool: ${pool.name} (${memberCount} member${memberCount === 1 ? '' : 's'})`,
+      recipients: recipientMembers,
+      count: memberCount + 1
+    };
+  }
+
   const isOwner = Boolean(state.owner);
 
   if (isOwner) {
@@ -65,7 +80,7 @@ export function getMessageSharing(m, state) {
 /**
  * Cyberpunk High-Tech Empty State with Guidance Cards & 1-Click Simulation.
  */
-export function inboxEmptyState(state = {}, demo = false, isSearch = false, query = '') {
+export function inboxEmptyState(state = {}, demo = false, isSearch = false, query = '', view = 'own') {
   if (isSearch) {
     return `
       <div class="inbox-empty-card glass-neon-card">
@@ -82,6 +97,8 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
     `;
   }
 
+  const isReceivers = view === 'receivers';
+
   return `
     <div class="inbox-empty-card glass-neon-card">
       <div class="inbox-empty-ambient" aria-hidden="true"></div>
@@ -90,20 +107,25 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
         <div class="radar-ping-ring" aria-hidden="true"></div>
         <div class="empty-icon-ring">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="empty-svg-icon" aria-hidden="true">
-            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
-            <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+            ${isReceivers 
+              ? '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+              : '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'
+            }
           </svg>
         </div>
       </div>
 
       <div class="inbox-status-pill">
         <span class="status-pulse-dot" aria-hidden="true"></span>
-        <span>ZERO-TRUST BOUNDARY ACTIVE · CLEAR</span>
+        <span>${isReceivers ? 'TEAM POOLS & RECEIVERS ACTIVE' : 'ZERO-TRUST BOUNDARY ACTIVE · CLEAR'}</span>
       </div>
 
-      <h3 class="empty-title">Your Shared Inbox is Secure & Clear</h3>
+      <h3 class="empty-title">${isReceivers ? 'No Active Team Pool Dispatches' : 'Your Mailbox Stream is Secure & Clear'}</h3>
       <p class="empty-desc">
-        No active ephemeral messages in this workspace. Inbound emails from approved senders will appear here automatically and auto-purge once their retention window expires.
+        ${isReceivers 
+          ? 'When family or team members trigger sign-ins for pooled services (like Netflix, AWS, or Claude), temporary OTP codes and links will appear here automatically.'
+          : 'No active ephemeral messages in this workspace. Inbound emails from approved senders will appear here automatically and auto-purge once their retention window expires.'
+        }
       </p>
 
       ${demo ? `
@@ -116,34 +138,43 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
         </div>
       ` : ''}
 
-      <div class="inbox-guidance-grid">
-        <div class="guidance-card" data-page="rules" role="button" tabindex="0">
-          <div class="guidance-card-icon">${icon('shield')}</div>
-          <div class="guidance-card-content">
-            <h4>1. Access Rules</h4>
-            <p>Approve which services (Google, Claude, Notion) can deliver sign-in codes to this inbox.</p>
-          </div>
-          <span class="guidance-link">Configure rules →</span>
+      ${isReceivers ? `
+        <div class="empty-quick-action" style="margin-top: 12px;">
+          <button type="button" class="btn primary netflix-quick-btn pulse-glow" data-action="quick-netflix-pool">
+            <span>🎬 Setup Netflix Family & Team Pool</span>
+          </button>
+          <span class="empty-action-hint">1-click setup: Netflix rule + Team pool + Instant OTP portal link</span>
         </div>
+      ` : `
+        <div class="inbox-guidance-grid">
+          <div class="guidance-card" data-page="rules" role="button" tabindex="0">
+            <div class="guidance-card-icon">${icon('shield')}</div>
+            <div class="guidance-card-content">
+              <h4>1. Access Rules</h4>
+              <p>Approve which services (Google, Claude, Notion) can deliver sign-in codes to this inbox.</p>
+            </div>
+            <span class="guidance-link">Configure rules →</span>
+          </div>
 
-        <div class="guidance-card" data-page="people" role="button" tabindex="0">
-          <div class="guidance-card-icon">${icon('people')}</div>
-          <div class="guidance-card-content">
-            <h4>2. Team Permissions</h4>
-            <p>Grant team members granular access to specific services without sharing your inbox.</p>
+          <div class="guidance-card" data-page="people" role="button" tabindex="0">
+            <div class="guidance-card-icon">${icon('people')}</div>
+            <div class="guidance-card-content">
+              <h4>2. Team Permissions</h4>
+              <p>Grant team members granular access to specific services without sharing your inbox.</p>
+            </div>
+            <span class="guidance-link">Manage access →</span>
           </div>
-          <span class="guidance-link">Manage access →</span>
-        </div>
 
-        <div class="guidance-card" data-page="mailboxes" role="button" tabindex="0">
-          <div class="guidance-card-icon">${icon('mail')}</div>
-          <div class="guidance-card-content">
-            <h4>3. Inbound Pipeline</h4>
-            <p>Link Outlook, Gmail, Yahoo, or copy your dedicated inbound forwarding address.</p>
+          <div class="guidance-card" data-page="mailboxes" role="button" tabindex="0">
+            <div class="guidance-card-icon">${icon('mail')}</div>
+            <div class="guidance-card-content">
+              <h4>3. Inbound Pipeline</h4>
+              <p>Link Outlook, Gmail, Yahoo, or copy your dedicated inbound forwarding address.</p>
+            </div>
+            <span class="guidance-link">Mailbox setup →</span>
           </div>
-          <span class="guidance-link">Mailbox setup →</span>
         </div>
-      </div>
+      `}
 
     </div>
   `;
@@ -152,9 +183,9 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
 /**
  * Renders the modern high-tech message feed cards with full sharing transparency.
  */
-export function messageList(messages, state, isSearch = false, query = '') {
+export function messageList(messages, state, isSearch = false, query = '', view = 'own') {
   if (!messages || !messages.length) {
-    return inboxEmptyState(state, Boolean(state?.demo), isSearch, query);
+    return inboxEmptyState(state, Boolean(state?.demo), isSearch, query, view);
   }
 
   const rules = state?.rules || [];
@@ -164,15 +195,20 @@ export function messageList(messages, state, isSearch = false, query = '') {
     const sharing = getMessageSharing(m, state);
     const modeBadgeColor = m.mode === 'codes' ? 'blue' : m.mode === 'links' ? 'green' : 'purple';
 
+    const pool = (m.pools || [])[0] || sharing.pool;
+    const isPool = Boolean(pool);
+
     const intentText = m.mode === 'codes'
-      ? 'Private sign-in verification code extracted & ready'
+      ? (isPool ? `Team pool sign-in OTP for ${pool.name}` : 'Private sign-in verification code extracted & ready')
       : m.mode === 'links'
         ? 'Approved single-use login link extracted'
         : 'Approved read-only message ready to view';
 
+    const otpCode = m.code || m.content?.code || (m.content?.text?.match(/\b(\d{6})\b/)?.[1]);
+
     return `
       <article 
-        class="inbox-feed-card glass-neon-card" 
+        class="inbox-feed-card glass-neon-card ${isPool ? 'is-team-pool' : ''}" 
         data-message="${esc(m.id)}" 
         role="button" 
         tabindex="0" 
@@ -185,6 +221,14 @@ export function messageList(messages, state, isSearch = false, query = '') {
         <div class="inbox-card-center">
           <div class="inbox-card-header-row">
             <h3 class="inbox-card-company">${esc(m.name)}</h3>
+            
+            ${isPool ? `
+              <span class="inbox-card-pool-tag ${pool.color || 'red'}" title="Pooled for team/family access">
+                <span class="pool-icon-symbol">${pool.name.toLowerCase().includes('netflix') ? '🎬' : '👥'}</span>
+                <span>${esc(pool.name)}</span>
+              </span>
+            ` : ''}
+
             <span class="inbox-card-rule-tag" title="Matched Rule">
               ${icon('shield')}
               <span>${esc(rule?.sender || 'Verified Sender')}</span>
@@ -192,6 +236,17 @@ export function messageList(messages, state, isSearch = false, query = '') {
           </div>
 
           <p class="inbox-card-intent">${intentText}</p>
+
+          ${otpCode ? `
+            <div class="inbox-card-otp-banner" onclick="event.stopPropagation()">
+              <span class="otp-banner-label">Sign-in Code:</span>
+              <span class="otp-banner-code">${esc(otpCode)}</span>
+              <button type="button" class="btn-copy-code" data-copy-otp="${esc(otpCode)}" title="Copy OTP to clipboard">
+                ${icon('copy')}
+                <span>Copy Code</span>
+              </button>
+            </div>
+          ` : ''}
 
           <div class="inbox-card-sharing-row">
             <div class="inbox-sharing-pill ${sharing.isPrivate ? 'private' : 'shared'}" title="${esc(sharing.text)}">
@@ -230,41 +285,149 @@ export function messageList(messages, state, isSearch = false, query = '') {
 }
 
 /**
- * Main Shared Inbox Page View.
+ * Main Shared Inbox Page View with Segmented Tabs:
+ * - Own Mailbox: Direct messages arriving to user's linked mailbox
+ * - Receivers & Team Inboxes: Shared streams & Team Pools (like Netflix OTP)
  */
-export function inboxPage({ state = {}, demo = false, filter = 'all', query = '' }) {
+export function inboxPage({ state = {}, demo = false, filter = 'all', query = '', view = 'own', pool = 'all' }) {
   const allMessages = state.messages || [];
   const rules = state.rules || [];
   const isOwner = Boolean(state.owner);
+  const teamPools = state.team_pools || [];
 
-  // Filter messages based on active tab and search query
-  const filtered = allMessages.filter(m => 
+  // Partition messages into Own Mailbox vs Receivers/Shared Pools
+  const ownMessages = allMessages.filter(m => {
+    const s = getMessageSharing(m, state);
+    return isOwner ? true : !s.isShared;
+  });
+
+  const receiverMessages = allMessages.filter(m => {
+    const s = getMessageSharing(m, state);
+    const hasPool = (m.pools && m.pools.length > 0) || Boolean(s.isPool);
+    return !isOwner || s.isShared || hasPool;
+  });
+
+  // Base messages for active view
+  const baseMessages = view === 'receivers' ? receiverMessages : ownMessages;
+
+  // Filter by selected Team Pool if in Receivers tab
+  const poolFiltered = (view === 'receivers' && pool !== 'all')
+    ? baseMessages.filter(m => (m.pools || []).some(p => p.id === pool) || m.rule_id === pool)
+    : baseMessages;
+
+  // Filter messages based on active mode tab and search query
+  const filtered = poolFiltered.filter(m => 
     (filter === 'all' || m.mode === filter) && 
     (m.name || '').toLowerCase().includes((query || '').toLowerCase())
   );
 
   // Tab counts
-  const countAll = allMessages.length;
-  const countCodes = allMessages.filter(m => m.mode === 'codes').length;
-  const countLinks = allMessages.filter(m => m.mode === 'links').length;
-  const countRead = allMessages.filter(m => m.mode === 'read').length;
+  const countAll = poolFiltered.length;
+  const countCodes = poolFiltered.filter(m => m.mode === 'codes').length;
+  const countLinks = poolFiltered.filter(m => m.mode === 'links').length;
+  const countRead = poolFiltered.filter(m => m.mode === 'read').length;
 
-  // Compute team members with active grants
   const activeGrants = (state.grants || []).filter(g => g.mode !== 'blocked' && (!g.expires_at || g.expires_at > Date.now()));
   const teamMemberIdsWithGrants = new Set(activeGrants.map(g => g.user_id));
   const teamGrantsCount = teamMemberIdsWithGrants.size;
-
   const activeRulesCount = rules.filter(r => r.enabled).length;
+
+  const hasNetflixPool = teamPools.some(p => p.name.toLowerCase().includes('netflix'));
 
   return heading(
     'Shared Inbox',
-    'Selective zero-trust inbound stream. Only approved sign-in codes, links, and messages pass through.',
+    'Selective zero-trust inbound stream. Manage personal mail dispatches or shared team pools.',
     `<div class="inbox-head-actions">
       ${demo || isOwner ? `<button type="button" class="btn small primary-glow" data-action="simulate">${icon('plus')}<span>Simulate Email</span></button>` : ''}
       <button type="button" class="btn small outline" data-action="refresh" title="Sync now">${icon('refresh')}<span>Sync</span></button>
     </div>`
   ) + `
-    <!-- Top Cyber Telemetry Overview Banner -->
+    <!-- Primary Top Segment Switcher: Own Mailbox vs Receivers & Team Inboxes -->
+    <div class="inbox-view-switcher" role="tablist" aria-label="Inbox Scope">
+      <button 
+        type="button" 
+        class="inbox-view-tab ${view === 'own' ? 'active' : ''}" 
+        data-inbox-view="own"
+        role="tab" 
+        aria-selected="${view === 'own'}"
+      >
+        <span class="view-tab-icon">${icon('mail')}</span>
+        <div class="view-tab-text">
+          <span class="view-tab-title">Own Mailbox</span>
+          <span class="view-tab-sub">Direct workspace dispatches</span>
+        </div>
+        <span class="view-tab-count">${ownMessages.length}</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="inbox-view-tab ${view === 'receivers' ? 'active' : ''}" 
+        data-inbox-view="receivers"
+        role="tab" 
+        aria-selected="${view === 'receivers'}"
+      >
+        <span class="view-tab-icon">${icon('people')}</span>
+        <div class="view-tab-text">
+          <span class="view-tab-title">Receivers & Team Inboxes</span>
+          <span class="view-tab-sub">Shared pools, Netflix & team recipients</span>
+        </div>
+        <span class="view-tab-count">${receiverMessages.length}</span>
+      </button>
+    </div>
+
+    <!-- When Receivers Tab is active: Display Multi-Pool Filter Bar -->
+    ${view === 'receivers' ? `
+      <div class="inbox-pools-bar glass-neon-card">
+        <div class="inbox-pools-scroll" role="tablist" aria-label="Team Pools">
+          <button 
+            type="button" 
+            class="pool-pill ${pool === 'all' ? 'active' : ''}" 
+            data-pool-filter="all"
+            role="tab"
+            aria-selected="${pool === 'all'}"
+          >
+            <span class="pool-dot"></span>
+            <span>All Receivers</span>
+            <span class="pool-pill-count">${receiverMessages.length}</span>
+          </button>
+
+          ${teamPools.map(p => {
+            const pCount = receiverMessages.filter(m => (m.pools || []).some(mp => mp.id === p.id)).length;
+            const isNetflix = p.name.toLowerCase().includes('netflix');
+            return `
+              <button 
+                type="button" 
+                class="pool-pill ${pool === p.id ? 'active' : ''} pool-${p.color || 'blue'}" 
+                data-pool-filter="${esc(p.id)}"
+                role="tab"
+                aria-selected="${pool === p.id}"
+                title="${esc(p.description || p.name)}"
+              >
+                <span class="pool-icon-symbol">${isNetflix ? '🎬' : '👥'}</span>
+                <span>${esc(p.name)}</span>
+                <span class="pool-pill-count">${pCount}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="inbox-pools-actions">
+          ${!hasNetflixPool ? `
+            <button type="button" class="btn small netflix-quick-btn pulse-glow" data-action="quick-netflix-pool" title="1-click setup: Netflix rule + Team Pool + Portal Link">
+              <span>🎬 Add Netflix Team Pool</span>
+            </button>
+          ` : ''}
+          ${isOwner ? `
+            <button type="button" class="btn small primary" data-action="create-team-pool">
+              ${icon('plus')}
+              <span>New Team Pool</span>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Cyber Telemetry Overview Banner -->
     <section class="inbox-telemetry-banner glass-neon-card" aria-label="Shared Inbox Metrics">
       <div class="inbox-telemetry-item">
         <span class="telemetry-label">Active Dispatches</span>
@@ -278,10 +441,10 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
       </div>
 
       <div class="inbox-telemetry-item">
-        <span class="telemetry-label">Boundary Policy</span>
+        <span class="telemetry-label">Current View</span>
         <div class="telemetry-value-row">
-          <strong class="telemetry-text">Strict Isolation</strong>
-          <span class="telemetry-pill positive">${activeRulesCount} Rule${activeRulesCount === 1 ? '' : 's'} Active</span>
+          <strong class="telemetry-text">${view === 'own' ? 'Own Mailbox' : 'Receivers & Pools'}</strong>
+          <span class="telemetry-pill positive">${view === 'own' ? 'Direct Mail' : `${teamPools.length} Team Pool${teamPools.length === 1 ? '' : 's'}`}</span>
         </div>
       </div>
 
@@ -297,7 +460,7 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
         <span class="telemetry-label">Shared Reach</span>
         <div class="telemetry-value-row">
           <strong class="telemetry-text">${isOwner ? `${teamGrantsCount} Team Member${teamGrantsCount === 1 ? '' : 's'}` : 'Team Recipient'}</strong>
-          <span class="telemetry-pill positive">${isOwner ? 'Granular Grants' : 'Active'}</span>
+          <span class="telemetry-pill positive">${isOwner ? 'Active Grants' : 'Active'}</span>
         </div>
       </div>
     </section>
@@ -343,7 +506,7 @@ export function inboxPage({ state = {}, demo = false, filter = 'all', query = ''
 
       <!-- Feed List Container -->
       <div id="message-list" class="inbox-feed-list">
-        ${messageList(filtered, state, Boolean(query), query)}
+        ${messageList(filtered, state, Boolean(query), query, view)}
       </div>
 
       <!-- Panel Footer -->

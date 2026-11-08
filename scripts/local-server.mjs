@@ -52,6 +52,13 @@ async function reconcileLocalMigrations(){
             db.prepare("INSERT INTO d1_migrations (name, applied_at) VALUES ('0007_multi_provider_mailboxes.sql', datetime('now'))").run();
           }
         }
+        const hasPools=db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='team_pools'").get();
+        if(hasPools){
+          const isMigrated8=db.prepare("SELECT 1 FROM d1_migrations WHERE name='0008_team_pools.sql'").get();
+          if(!isMigrated8){
+            db.prepare("INSERT INTO d1_migrations (name, applied_at) VALUES ('0008_team_pools.sql', datetime('now'))").run();
+          }
+        }
       }catch{}
     }
   }catch{}

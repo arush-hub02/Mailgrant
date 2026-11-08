@@ -511,7 +511,7 @@ export function peoplePage({ state, me, demo }) {
   const peopleList = [
     // Delegated access keys (Direct Access without login)
     ...visibleKeys.map(k => ({ ...k, type: 'key' })),
-    // Direct members (Google verified accounts)
+    // Direct members (Any provider: Outlook, Yahoo, Gmail, corporate)
     ...distributionMembers.map(m => ({ ...m, type: 'member' })),
     // Pending invitations
     ...pending.map(i => ({ ...i, type: 'invite', name: i.email.split('@')[0] }))
@@ -726,7 +726,7 @@ export function peoplePage({ state, me, demo }) {
               </div>
             </div>
             <h3>No Access Credentials Configured Yet</h3>
-            <p>Delegate zero-trust email access to contractors, developers, or external partners with direct passwordless keys or Google sign-in.</p>
+            <p>Delegate zero-trust email access to contractors, family, or external partners with direct passwordless keys or any email provider.</p>
             <div class="empty-actions">
               <button type="button" class="btn primary-glow" data-action="key">
                 ${icon('key')}
