@@ -525,6 +525,15 @@ export default {
   async fetch(req,env) {
     try {
       const path=new URL(req.url).pathname;let response;
+      if (path.startsWith('/google') && path.endsWith('.html')) {
+        return new Response(`google-site-verification: ${path.slice(1)}`, {
+          status: 200,
+          headers: {
+            'content-type': 'text/html; charset=utf-8',
+            'cache-control': 'public, max-age=3600'
+          }
+        });
+      }
       if(path.startsWith('/api/')) response=await api(req,env,path);
       else if(path.startsWith('/auth/')) {if(!configured(env))fail(503,'Live sign-in is not configured. Open /dashboard?demo=1 for the sample workspace.');if(req.method!=='GET')fail(405,'Method not allowed.');response=await auth(req,env,path);}
       else {
@@ -592,11 +601,6 @@ export default {
             response = await env.ASSETS.fetch(new Request(new URL('/privacy.html', req.url), req));
           } else if (path === '/terms') {
             response = await env.ASSETS.fetch(new Request(new URL('/terms.html', req.url), req));
-          } else if (path === '/google9fefa01a1ea7d6ad.html') {
-            response = new Response('google-site-verification: google9fefa01a1ea7d6ad.html', {
-              status: 200,
-              headers: { 'content-type': 'text/html; charset=utf-8' }
-            });
           } else {
             response = await env.ASSETS.fetch(req);
             if(response.status === 404 && ((req.headers.get('accept')||'').includes('text/html') || !path.includes('.'))) {
