@@ -223,3 +223,56 @@ html[data-accent="amber"] {
 html:not([data-theme="dark"]) {
   --heading-gradient: linear-gradient(135deg, var(--ink) 30%, var(--accent) 100%);
 }
+
+/* ==========================================================================
+   Mailgrant Official Brand Identity & Logo Styles
+   ========================================================================== */
+.brand-mark-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 10px rgba(0, 240, 255, 0.35));
+  transition: transform 200ms var(--ease), filter 200ms var(--ease);
+}
+
+.brand-wrapper:hover .brand-mark-img,
+.brand:hover .brand-mark-img,
+.landing-brand:hover .brand-mark-img,
+.mobile-brand:hover .brand-mark-img {
+  transform: scale(1.08);
+  filter: drop-shadow(0 4px 16px rgba(0, 240, 255, 0.6)) drop-shadow(0 0 10px rgba(255, 122, 89, 0.45));
+}
+
+.brand-logo-horizontal-img {
+  height: 38px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-gradient-text {
+  background: linear-gradient(90deg, #00f0ff 0%, #38bdf8 38%, #ff7a59 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+html:not([data-theme="dark"]) .brand-gradient-text {
+  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 40%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-name, .brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+

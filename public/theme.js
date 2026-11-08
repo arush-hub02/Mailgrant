@@ -51,7 +51,7 @@ export function setTheme(theme, persist = true) {
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.content = theme === 'dark' ? '#09090b' : '#f8fafc';
+    metaTheme.content = theme === 'dark' ? '#0a0e1a' : '#f8fafc';
   }
 
   if (persist) {

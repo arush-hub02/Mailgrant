@@ -242,8 +242,10 @@ export function renderSidebar({ state, me, page, labels, wid, owner, demo = fals
       <!-- Sidebar Header with Refresh & Minimal Sleek Chevron Toggle -->
       <div class="sidebar-header">
         <a class="brand-wrapper" href="/" aria-label="Mailgrant Home">
-          <span class="brand-mark">${icon('shield')}</span>
-          <span class="brand-name">mailgrant</span>
+          <span class="brand-mark">
+            <img src="/images/mailgrant-mark.png" alt="Mailgrant" class="brand-mark-img" width="34" height="34" />
+          </span>
+          <span class="brand-name">Mail<span class="brand-gradient-text">grant</span></span>
         </a>
         <div class="sidebar-header-actions">
           <button type="button" class="sidebar-refresh-btn has-tooltip" data-action="refresh" aria-label="Refresh workspace" data-tooltip="Refresh workspace">

@@ -56,19 +56,17 @@
 .access-brand-mark {
   display: grid;
   place-items: center;
-  background: var(--accent-gradient);
+  background: transparent;
   color: #ffffff;
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  box-shadow: 0 0 16px var(--accent-glow);
   flex-shrink: 0;
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  transition: transform var(--duration-fast);
 }
 
 .access-header .brand:hover .access-brand-mark {
-  transform: scale(1.05);
-  box-shadow: 0 0 24px var(--accent-glow);
+  transform: scale(1.06);
 }
 
 .recipient-tag {
@@ -266,8 +264,7 @@ body.is-unauthenticated-portal .card-hero {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--accent-gradient, linear-gradient(135deg, #ff2a5f 0%, #ff5277 100%));
-  color: #fff;
+  background: transparent;
   display: grid;
   place-items: center;
 }

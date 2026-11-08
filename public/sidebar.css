@@ -136,25 +136,24 @@ html[data-theme="dark"] .sidebar {
 .sidebar-header .brand-mark {
   display: grid;
   place-items: center;
-  background: var(--accent-gradient);
+  background: transparent;
   color: #ffffff;
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   font-weight: 800;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px var(--accent-glow);
-  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
+  transition: transform 200ms var(--ease);
 }
 
 html[data-theme="dark"] .sidebar-header .brand-mark {
-  background: var(--accent-gradient);
+  background: transparent;
   color: #ffffff;
-  box-shadow: 0 0 16px var(--accent-glow);
+  box-shadow: none;
 }
 
 .sidebar-header .brand-mark:hover {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .brand-name {

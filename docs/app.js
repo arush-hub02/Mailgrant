@@ -260,8 +260,10 @@ async function renderLogin(error=''){
           <!-- Embedded Header Row inside Card -->
           <div class="auth-card-top-bar">
             <a class="brand" href="/" aria-label="Mailgrant Home">
-              <span class="brand-mark">${icon('shield')}</span>
-              <span class="brand-title">mailgrant</span>
+              <span class="brand-mark">
+                <img src="/images/mailgrant-mark.png" alt="Mailgrant" class="brand-mark-img" width="28" height="28" />
+              </span>
+              <span class="brand-title">Mail<span class="brand-gradient-text">grant</span></span>
             </a>
             <button type="button" class="btn small theme-pill-btn" data-theme-toggle aria-label="Toggle theme">
               ${icon('contrast')}
@@ -402,8 +404,10 @@ function renderWelcome(){
           <!-- Embedded Header Row inside Card -->
           <div class="auth-card-top-bar">
             <a class="brand" href="/" aria-label="Mailgrant Home">
-              <span class="brand-mark">${icon('shield')}</span>
-              <span class="brand-title">mailgrant</span>
+              <span class="brand-mark">
+                <img src="/images/mailgrant-mark.png" alt="Mailgrant" class="brand-mark-img" width="28" height="28" />
+              </span>
+              <span class="brand-title">Mail<span class="brand-gradient-text">grant</span></span>
             </a>
             <button type="button" class="btn small theme-pill-btn" data-theme-toggle aria-label="Toggle theme">
               ${icon('contrast')}
@@ -458,13 +462,18 @@ function renderWelcome(){
 
 function render(){
   if(page==='signin'||!state){
-    if(page==='signin'||!me?.user) return renderLogin();
+    if(page==='signin'||!me?.user) {
+      document.title = 'Sign In · Mailgrant';
+      return renderLogin();
+    }
+    document.title = 'Welcome · Mailgrant';
     return renderWelcome();
   }
   document.body.classList.remove('is-auth-screen');
   document.documentElement.classList.remove('is-auth-screen');
   const owner=state.owner;
   if(!owner&&!['dashboard','overview','inbox','profile','404'].includes(page))page='dashboard';
+  document.title = `${labels[page] || 'Dashboard'} · Mailgrant`;
   const sidebarHtml=renderSidebar({state,me,page,labels,wid,owner,demo});
   const isCollapsed=isSidebarCollapsed();
   $('#app').innerHTML=`
@@ -477,8 +486,10 @@ function render(){
             ${icon('menu')}
           </button>
           <div class="mobile-brand">
-            <span class="brand-mark">${icon('shield')}</span>
-            <span class="brand-name">mailgrant</span>
+            <span class="brand-mark">
+              <img src="/images/mailgrant-mark.png" alt="Mailgrant" class="brand-mark-img" width="26" height="26" />
+            </span>
+            <span class="brand-name">Mail<span class="brand-gradient-text">grant</span></span>
           </div>
           <button class="icon-btn" data-theme-toggle aria-label="Toggle light or dark mode">
             ${icon('contrast')}

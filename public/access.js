@@ -86,8 +86,10 @@ function entry(error = '') {
       <!-- Card Embedded Header: Brand + Theme Toggle -->
       <div class="card-hero-head">
         <a class="card-hero-brand" href="/" aria-label="Mailgrant Home">
-          <span class="card-hero-brand-mark" aria-hidden="true">${icons.shield}</span>
-          <span class="card-hero-brand-title">mailgrant</span>
+          <span class="card-hero-brand-mark" aria-hidden="true">
+            <img src="/images/mailgrant-mark.png" alt="Mailgrant" class="brand-mark-img" width="28" height="28" />
+          </span>
+          <span class="card-hero-brand-title">Mail<span class="brand-gradient-text">grant</span></span>
           <span class="recipient-tag">RECIPIENT</span>
         </a>
         <button type="button" class="btn small theme-pill-btn" data-theme-toggle aria-label="Toggle theme">

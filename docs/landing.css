@@ -144,33 +144,27 @@ html[data-theme="light"] .landing-header::after {
 }
 
 .landing-brand-mark {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  background: transparent;
   display: grid;
   place-items: center;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(37, 99, 235, 0.4);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform 200ms ease;
   flex-shrink: 0;
 }
 
 .landing-brand:hover .landing-brand-mark {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
-}
-
-.landing-brand-mark svg {
-  width: 18px;
-  height: 18px;
+  transform: scale(1.08);
 }
 
 .landing-brand-text {
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--ink);
+  display: inline-flex;
+  align-items: center;
 }
 
 .landing-tag-status {
