@@ -592,6 +592,11 @@ export default {
             response = await env.ASSETS.fetch(new Request(new URL('/privacy.html', req.url), req));
           } else if (path === '/terms') {
             response = await env.ASSETS.fetch(new Request(new URL('/terms.html', req.url), req));
+          } else if (path === '/google9fefa01a1ea7d6ad.html') {
+            response = new Response('google-site-verification: google9fefa01a1ea7d6ad.html', {
+              status: 200,
+              headers: { 'content-type': 'text/html; charset=utf-8' }
+            });
           } else {
             response = await env.ASSETS.fetch(req);
             if(response.status === 404 && ((req.headers.get('accept')||'').includes('text/html') || !path.includes('.'))) {
