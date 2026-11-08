@@ -47,6 +47,16 @@ export const PERSON_PRESETS = [
     description: 'Vendor collaboration and shared business service notifications.'
   },
   {
+    id: 'full_access',
+    name: 'Full Message Review',
+    badge: 'Full Message',
+    defaultMode: 'read',
+    duration: '720', // 30 days
+    maxViews: '',
+    suggestedName: 'Audit Lead — Full Message Access',
+    description: 'Complete plain-text message review, sign-in links, and OTP codes.'
+  },
+  {
     id: 'single_use',
     name: 'Single-Use OTP',
     badge: 'Burn After Read',
@@ -236,8 +246,9 @@ export function openKeyModal({ state, modal, toast }) {
               <p class="matrix-subtitle">Select what this recipient may view for each approved company rule.</p>
             </div>
             <div class="matrix-quick-actions">
-              <button type="button" class="matrix-action-btn" id="btn-matrix-all-codes" title="Set all to Codes Only">🛡️ All Codes</button>
-              <button type="button" class="matrix-action-btn" id="btn-matrix-all-links" title="Set all to Magic Links">🔗 All Links</button>
+              <button type="button" class="matrix-action-btn" id="btn-matrix-all-codes" title="Set all to Codes Only">🛡️ Codes only</button>
+              <button type="button" class="matrix-action-btn" id="btn-matrix-all-links" title="Set all to Sign-in Links">🔗 Sign-in links</button>
+              <button type="button" class="matrix-action-btn" id="btn-matrix-all-read" title="Set all to Full Message">✉️ Full message</button>
               <button type="button" class="matrix-action-btn" id="btn-matrix-clear" title="Block all">🚫 Clear All</button>
             </div>
           </div>
@@ -261,12 +272,12 @@ export function openKeyModal({ state, modal, toast }) {
 
                   <div class="matrix-pills-group">
                     <button type="button" class="mode-pill ${defaultMode === 'blocked' ? 'selected' : ''}" data-set-mode="blocked">Blocked</button>
-                    <button type="button" class="mode-pill ${defaultMode === 'codes' ? 'selected' : ''}" data-set-mode="codes">Codes</button>
+                    <button type="button" class="mode-pill ${defaultMode === 'codes' ? 'selected' : ''}" data-set-mode="codes">Codes only</button>
                     ${allowedModes.includes('links') ? `
-                      <button type="button" class="mode-pill ${defaultMode === 'links' ? 'selected' : ''}" data-set-mode="links">Links</button>
+                      <button type="button" class="mode-pill ${defaultMode === 'links' ? 'selected' : ''}" data-set-mode="links">Sign-in links</button>
                     ` : ''}
                     ${allowedModes.includes('read') ? `
-                      <button type="button" class="mode-pill ${defaultMode === 'read' ? 'selected' : ''}" data-set-mode="read">Full Read</button>
+                      <button type="button" class="mode-pill ${defaultMode === 'read' ? 'selected' : ''}" data-set-mode="read">Full message</button>
                     ` : ''}
                   </div>
 
@@ -465,6 +476,18 @@ export function openKeyModal({ state, modal, toast }) {
     document.getElementById('btn-matrix-all-links')?.addEventListener('click', () => {
       document.querySelectorAll('.matrix-rule-row').forEach(row => {
         const btn = row.querySelector('[data-set-mode="links"]') || row.querySelector('[data-set-mode="codes"]');
+        const hidden = row.querySelector('[data-key-rule]');
+        if (btn && hidden) {
+          row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
+          btn.classList.add('selected');
+          hidden.value = btn.dataset.setMode;
+        }
+      });
+    });
+
+    document.getElementById('btn-matrix-all-read')?.addEventListener('click', () => {
+      document.querySelectorAll('.matrix-rule-row').forEach(row => {
+        const btn = row.querySelector('[data-set-mode="read"]') || row.querySelector('[data-set-mode="codes"]');
         const hidden = row.querySelector('[data-key-rule]');
         if (btn && hidden) {
           row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));

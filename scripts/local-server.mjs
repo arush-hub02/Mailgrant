@@ -22,6 +22,31 @@ function processInfo(pid){
 }
 async function saved(){try{return JSON.parse(await readFile(record,'utf8'));}catch{return null;}}
 async function forget(){try{await unlink(record);}catch(error){if(error.code!=='ENOENT')throw error;}}
+async function reconcileLocalMigrations(){
+  try{
+    const {DatabaseSync}=await import('node:sqlite');
+    const {readdirSync}=await import('node:fs');
+    const d1Dir=join(directory,'state','v3','d1','miniflare-D1DatabaseObject');
+    if(!existsSync(d1Dir))return;
+    for(const file of readdirSync(d1Dir)){
+      if(!file.endsWith('.sqlite')||file==='metadata.sqlite')continue;
+      try{
+        const db=new DatabaseSync(join(d1Dir,file));
+        const hasMigrations=db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='d1_migrations'").get();
+        if(!hasMigrations)continue;
+        const hasScopeTable=db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='access_key_scopes'").get();
+        if(hasScopeTable){
+          const columns=db.prepare("PRAGMA table_info(access_key_scopes)").all();
+          const hasSubdomain=columns.some(c=>c.name==='subdomain');
+          const isMigrated=db.prepare("SELECT 1 FROM d1_migrations WHERE name='0006_access_key_scopes_subdomain.sql'").get();
+          if(hasSubdomain&&!isMigrated){
+            db.prepare("INSERT INTO d1_migrations (name, applied_at) VALUES ('0006_access_key_scopes_subdomain.sql', datetime('now'))").run();
+          }
+        }
+      }catch{}
+    }
+  }catch{}
+}
 function runNode(args){const result=spawnSync(process.execPath,[wrangler,...args],{cwd:root,env,stdio:['ignore','inherit','inherit'],windowsHide:true});if(result.status!==0)throw new Error('Local preparation failed. See the command output above.');}
 async function probe(port){try{const response=await fetch(`http://127.0.0.1:${port}/api/config`,{signal:AbortSignal.timeout(1000),cache:'no-store'});const data=await response.json();return data.application==='mailgrant'?data:null;}catch{return null;}}
 function available(port){return new Promise(resolve=>{const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true)));});}
@@ -60,7 +85,7 @@ async function start(args){
   try{await access(wrangler);}catch{
     console.log('Installing project dependencies…');const install=spawnSync(process.env.ComSpec||'cmd.exe',['/d','/s','/c','npm ci'],{cwd:root,env,stdio:'inherit',windowsHide:true});if(install.status!==0)throw new Error('Dependency installation failed. Check Node.js and your internet connection.');
   }
-  console.log('Preparing the local database…');runNode(['d1','migrations','apply','mailgrant','--local']);
+  console.log('Preparing the local database…');await reconcileLocalMigrations();runNode(['d1','migrations','apply','mailgrant','--local']);
   const runId=randomUUID(),output=await open(log,'a');
   const child=spawn(process.execPath,[script,'run',runId,String(port)],{cwd:root,env,detached:true,windowsHide:true,stdio:['ignore',output.fd,output.fd]});
   await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();await output.close();
@@ -78,7 +103,10 @@ async function main(){
   if(action==='stop')return stop();
   if(action==='run'){
     const child=spawn(process.execPath,[wrangler,'dev','--port',args[1],'--ip','127.0.0.1','--log-level','warn'],{cwd:root,env,windowsHide:true,stdio:'inherit'});
-    child.once('error',()=>process.exit(1));child.once('exit',code=>process.exit(code??1));return;
+    return new Promise((resolve,reject)=>{
+      child.once('error',reject);
+      child.once('exit',code=>{if(code===0)resolve();else process.exit(code??1);});
+    });
   }
   throw new Error('Use start.bat or stop.bat.');
 }

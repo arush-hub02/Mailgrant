@@ -11,7 +11,7 @@ export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
 export const modes = {
   codes: 'Codes only',
   links: 'Sign-in links',
-  read: 'Read messages',
+  read: 'Full message',
   blocked: 'Blocked'
 };
 

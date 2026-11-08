@@ -2524,6 +2524,24 @@ html:not([data-theme="dark"]) .mg-modal-card {
   stroke-width: 2;
 }
 
+.mg-modal-logo-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+}
+
+.mg-modal-logo-badge svg,
+.mg-modal-logo-badge .company-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
 .mg-modal-title {
   font-size: 19px;
   font-weight: 800;

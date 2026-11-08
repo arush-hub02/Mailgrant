@@ -5,6 +5,7 @@
 
 import { icon } from './icons.js';
 import { initDropdowns } from './dropdown.js';
+import { hasCompanyLogo, getCompanyLogo } from './logos.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
   '&': '&amp;',
@@ -47,10 +48,20 @@ export function openModal(titleOrConfig, htmlContent = '', options = {}) {
     subtitle = '',
     content = '',
     iconName = inferModalIcon(title),
+    customIconHtml = '',
     dialogId = 'dialog',
     actions = '',
     onClose = null
   } = config;
+
+  let headerBadgeHtml = '';
+  if (customIconHtml) {
+    headerBadgeHtml = `<div class="mg-modal-logo-badge">${customIconHtml}</div>`;
+  } else if (title && hasCompanyLogo(title)) {
+    headerBadgeHtml = `<div class="mg-modal-logo-badge">${getCompanyLogo(title, 48)}</div>`;
+  } else if (iconName) {
+    headerBadgeHtml = `<div class="mg-modal-icon-badge">${icon(iconName)}</div>`;
+  }
 
   const dialogEl = document.getElementById(dialogId);
   if (!dialogEl) return;
@@ -67,7 +78,7 @@ export function openModal(titleOrConfig, htmlContent = '', options = {}) {
 
       <!-- Center-Aligned Header -->
       <div class="mg-modal-head">
-        ${iconName ? `<div class="mg-modal-icon-badge">${icon(iconName)}</div>` : ''}
+        ${headerBadgeHtml}
         <h2 id="dialog-title" class="mg-modal-title">${esc(title)}</h2>
         ${subtitle ? `<p class="mg-modal-subtitle">${esc(subtitle)}</p>` : ''}
       </div>

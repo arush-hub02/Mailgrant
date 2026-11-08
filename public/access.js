@@ -2,6 +2,7 @@ import { setAccent, getTheme } from './theme.js';
 import { DemoAPI } from './demo.js';
 import { renderDropdown, initDropdownSystem } from './components/dropdown.js';
 import { openModal, closeModal } from './components/modal.js';
+import { getCompanyLogo } from './components/logos.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -17,11 +18,13 @@ initDropdownSystem();
 
 const demo = new URLSearchParams(location.search).get('demo') === '1';
 const demoApi = demo ? new DemoAPI() : null;
-const modes = { codes: 'Codes only', links: 'Sign-in links', read: 'Read messages' };
+const modes = { codes: 'Codes only', links: 'Sign-in links', read: 'Full message' };
 let state = null;
 let openMessage = null;
 let selected = '';
 let syncIndex = 0;
+let activeFilter = 'all'; // 'all' | 'codes' | 'links' | 'read'
+let searchQuery = '';
 
 // Auto-adopt sender's theme accent from URL parameters (?accent=red or #...&accent=purple)
 const rawHash = location.hash || '';
@@ -45,7 +48,8 @@ const icons = {
   check: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
   close: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
   clock: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
-  mail: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`
+  mail: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
+  search: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`
 };
 
 async function api(path, method = 'GET', body) {
@@ -339,14 +343,15 @@ function render() {
       </div>
     </div>
 
-    <!-- Allowed Company Boundaries Matrix -->
+    <!-- Allowed Company Boundaries Matrix with Official Service Logos -->
     <div class="access-companies-section">
-      <span class="companies-label">Permitted Companies:</span>
+      <span class="companies-label">Permitted Company Boundaries (${state.rules.length}):</span>
       <div class="access-companies">
         ${state.rules.map(r => `
-          <span class="company-chip green">
-            <span class="dot"></span>
-            <span>${esc(r.source ? r.source + ' · ' : '')}${esc(r.name)} (${modes[r.mode] || r.mode})</span>
+          <span class="company-chip ${r.mode === 'codes' ? 'chip-codes' : r.mode === 'links' ? 'chip-links' : 'chip-read'}" title="${esc(r.name)} · ${modes[r.mode] || r.mode}">
+            <span class="company-chip-logo">${getCompanyLogo(r.name, 18)}</span>
+            <span class="company-chip-name">${esc(r.source ? r.source + ' · ' : '')}${esc(r.name)}</span>
+            <span class="company-chip-mode">(${modes[r.mode] || r.mode})</span>
           </span>
         `).join('')}
       </div>
@@ -364,47 +369,107 @@ function render() {
         </span>
       </div>
 
-      <div class="message-container">
-        ${state.messages.length ? state.messages.map((m, i) => `
-          <button class="message-row" data-open="${esc(m.id)}" data-source-key="${esc(m.key_id || '')}" aria-label="Open ${esc(m.name)} message">
-            <span class="vendor v${i % 4}" aria-hidden="true">${esc(m.name[0])}</span>
-            <div style="min-width:0;">
-              <h3 class="message-title">${esc(m.name)}</h3>
-              <p class="message-desc">
-                ${esc(m.source ? m.source + ' · ' : '')}
-                ${m.mode === 'codes' ? 'Verification code extracted and ready' : m.mode === 'links' ? 'Whitelisted sign-in link is ready' : 'Plain-text message is ready'}
-              </p>
-            </div>
-            <div class="message-right">
-              <span class="badge ${m.mode === 'codes' ? 'blue' : m.mode === 'links' ? 'green' : ''}">
-                ${modes[m.mode] || m.mode}
-              </span>
-              <span class="inspect-pill">
-                <span>Inspect</span>
-                <span aria-hidden="true">→</span>
-              </span>
-            </div>
+      <!-- Access Mode Filter Tabs & Live Search -->
+      <div class="access-inbox-toolbar">
+        <div class="access-filter-tabs" role="tablist">
+          <button type="button" class="access-tab-btn ${activeFilter === 'all' ? 'active' : ''}" data-shared-filter="all">
+            <span>All messages</span>
+            <span class="tab-count-pill">${state.messages.length}</span>
           </button>
-        `).join('') : `
-          <div class="empty-shared">
-            <div class="empty-shared-icon" aria-hidden="true">
-              ${icons.mail}
-            </div>
-            <h3>No messages available yet</h3>
-            <p>Trigger a new sign-in or verification email from an approved company, then tap <strong>Refresh</strong>.</p>
-            ${demo ? `
-              <button class="btn primary small" data-simulate-demo>Simulate sample email</button>
-            ` : ''}
-          </div>
-        `}
+          <button type="button" class="access-tab-btn ${activeFilter === 'codes' ? 'active' : ''}" data-shared-filter="codes">
+            <span>Codes only</span>
+            <span class="tab-count-pill">${state.messages.filter(m => m.mode === 'codes').length}</span>
+          </button>
+          <button type="button" class="access-tab-btn ${activeFilter === 'links' ? 'active' : ''}" data-shared-filter="links">
+            <span>Sign-in links</span>
+            <span class="tab-count-pill">${state.messages.filter(m => m.mode === 'links').length}</span>
+          </button>
+          <button type="button" class="access-tab-btn ${activeFilter === 'read' ? 'active' : ''}" data-shared-filter="read">
+            <span>Full message</span>
+            <span class="tab-count-pill">${state.messages.filter(m => m.mode === 'read').length}</span>
+          </button>
+        </div>
+
+        <div class="access-search-wrap">
+          ${icons.search}
+          <input 
+            id="shared-search-input" 
+            type="search" 
+            placeholder="Search companies…" 
+            value="${esc(searchQuery)}"
+            autocomplete="off"
+          >
+        </div>
+      </div>
+
+      <div id="shared-message-container" class="message-container">
+        ${renderMessagesList(state.messages.filter(m => {
+          const matchesFilter = activeFilter === 'all' || m.mode === activeFilter;
+          const q = searchQuery.toLowerCase().trim();
+          const matchesQuery = !q || (m.name || '').toLowerCase().includes(q) || (m.source || '').toLowerCase().includes(q);
+          return matchesFilter && matchesQuery;
+        }))}
       </div>
 
       <div class="panel-footer">
-        <span>${icons.shield} Cryptographic verification enforced on every open</span>
+        <span>${icons.shield} Cryptographic zero-trust verification enforced on every open</span>
         <span>Opening messages counts toward view quotas; list refreshes do not</span>
       </div>
     </section>
   `;
+}
+
+function renderMessagesList(messages) {
+  if (!messages || !messages.length) {
+    const isFiltered = activeFilter !== 'all' || Boolean(searchQuery);
+    return `
+      <div class="empty-shared">
+        <div class="empty-shared-icon" aria-hidden="true">${icons.mail}</div>
+        <h3>${isFiltered ? 'No matching messages' : 'No messages available yet'}</h3>
+        <p>${isFiltered ? 'Try clearing your search keyword or switching to another filter tab.' : 'Trigger a new sign-in or verification email from an approved company, then tap <strong>Refresh</strong>.'}</p>
+        ${demo && !isFiltered ? `<button class="btn primary small" data-simulate-demo>Simulate sample email</button>` : ''}
+      </div>
+    `;
+  }
+
+  return messages.map((m, i) => `
+    <button class="message-row" data-open="${esc(m.id)}" data-source-key="${esc(m.key_id || '')}" aria-label="Open ${esc(m.name)} message">
+      <div class="message-logo-wrap">
+        ${getCompanyLogo(m.name, 42, i)}
+      </div>
+      <div style="min-width:0;">
+        <h3 class="message-title">${esc(m.name)}</h3>
+        <p class="message-desc">
+          ${esc(m.source ? m.source + ' · ' : '')}
+          ${m.mode === 'codes' ? 'Verification code extracted & ready' : m.mode === 'links' ? 'Whitelisted sign-in link is ready' : 'Full plain-text message is ready'}
+        </p>
+      </div>
+      <div class="message-right">
+        <span class="badge ${m.mode === 'codes' ? 'blue' : m.mode === 'links' ? 'green' : 'purple'}">
+          ${modes[m.mode] || m.mode}
+        </span>
+        <span class="inspect-pill">
+          <span>Inspect</span>
+          <span aria-hidden="true">→</span>
+        </span>
+      </div>
+    </button>
+  `).join('');
+}
+
+function updateFilteredMessages() {
+  if (!state) return;
+  const allMessages = state.messages || [];
+  const filtered = allMessages.filter(m => {
+    const matchesFilter = activeFilter === 'all' || m.mode === activeFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesQuery = !q || (m.name || '').toLowerCase().includes(q) || (m.source || '').toLowerCase().includes(q);
+    return matchesFilter && matchesQuery;
+  });
+  const container = document.getElementById('shared-message-container');
+  if (container) {
+    container.innerHTML = renderMessagesList(filtered);
+  }
 }
 
 async function load() {
@@ -461,7 +526,18 @@ async function showMessage(id, keyId) {
     ? '<span class="badge blue">Codes only</span>' 
     : m.mode === 'links' 
       ? '<span class="badge green">Sign-in links</span>' 
-      : '<span class="badge">Read messages</span>';
+      : '<span class="badge purple">Full message</span>';
+
+  function formatBodyWithLinks(text) {
+    if (!text) return '<p style="color:var(--muted); font-style:italic;">No plain-text body content.</p>';
+    const safe = esc(text);
+    return safe.replace(/https:\/\/[^\s<>"')]+/g, url => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="body-url-link">${url}</a>`;
+    });
+  }
+
+  const hasCode = Boolean(m.code);
+  const hasLink = Boolean(m.link);
 
   const bodyContent = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -471,36 +547,51 @@ async function showMessage(id, keyId) {
       </span>
     </div>
 
-    ${m.mode === 'codes' ? (
-      m.code ? `
-        <div class="code-display">
-          <strong>${esc(m.code)}</strong>
-          <small>APPROVED VERIFICATION CODE</small>
+    <!-- Verification Code Block -->
+    ${hasCode ? `
+      <div class="code-display">
+        <strong>${esc(m.code)}</strong>
+        <small>APPROVED VERIFICATION CODE</small>
+      </div>
+      <button class="btn primary btn-full" data-copy="${esc(m.code)}" style="margin-bottom:14px;">
+        ${icons.copy}
+        <span>Copy verification code</span>
+      </button>
+    ` : m.mode === 'codes' ? `
+      <div class="notice amber">No single unambiguous code could be extracted. The raw email is protected under the zero-trust policy.</div>
+    ` : ''}
+
+    <!-- Sign-in Link Action Block -->
+    ${hasLink ? `
+      <div class="link-action-card" style="margin-bottom:16px;">
+        <div class="notice blue" style="margin-bottom:12px;">
+          This link matches the exact trusted hostname whitelisted by the workspace administrator.
         </div>
-        <button class="btn primary btn-full" data-copy="${esc(m.code)}">
-          ${icons.copy}
-          <span>Copy verification code</span>
-        </button>
-      ` : `
-        <div class="notice amber">No single unambiguous code could be extracted. The raw email is protected.</div>
-      `
-    ) : m.mode === 'links' ? (
-      m.link ? `
-        <div class="notice blue">This link matches the exact trusted hostname whitelisted by the workspace administrator.</div>
-        <a class="btn primary btn-full" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">
+        <a class="btn primary btn-full btn-magic-link" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">
           <span>Open approved sign-in link</span>
           <span aria-hidden="true">↗</span>
         </a>
-      ` : `
-        <div class="notice amber">No single approved sign-in link is available.</div>
-      `
-    ) : `
-      <h3 style="margin-top:16px; font-size:16px; color:var(--ink);">${esc(m.subject)}</h3>
-      <p style="font-size:12px; color:var(--muted); margin:4px 0 14px;">From: ${esc(m.sender)}</p>
-      <div class="message-text">${esc(m.text)}</div>
-    `}
+        <button type="button" class="btn small outline btn-full" data-copy="${esc(m.link)}" style="margin-top:8px;">
+          ${icons.copy}
+          <span>Copy sign-in link</span>
+        </button>
+      </div>
+    ` : m.mode === 'links' ? `
+      <div class="notice amber">No single approved sign-in link is available. The raw email is protected under the zero-trust policy.</div>
+    ` : ''}
 
-    <div class="privacy-note">
+    <!-- Full Message Body (when mode is read / text available) -->
+    ${m.mode === 'read' ? `
+      <div class="full-message-wrap" style="margin-top:${(hasCode || hasLink) ? '18px' : '0'}; border-top:${(hasCode || hasLink) ? '1px solid var(--line)' : 'none'}; padding-top:${(hasCode || hasLink) ? '16px' : '0'};">
+        <h3 style="margin:0 0 6px; font-size:16px; color:var(--ink); font-weight:750; line-height:1.35;">${esc(m.subject || 'No Subject')}</h3>
+        <p style="font-size:12px; color:var(--muted); margin:0 0 14px;">From: <strong>${esc(m.sender || 'Unknown')}</strong></p>
+        <div class="message-text" style="white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.6; max-height:340px; overflow-y:auto; background:var(--bg-subtle); padding:14px; border-radius:var(--radius-md); border:1px solid var(--line);">
+          ${formatBodyWithLinks(m.text)}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="privacy-note" style="margin-top:20px;">
       ${icons.shield}
       <span>Keep codes and magic links confidential. Revoking access here does not terminate an active session in the target service.</span>
     </div>
@@ -509,7 +600,7 @@ async function showMessage(id, keyId) {
   openModal({
     title: m.name,
     subtitle: m.source ? `From ${m.source}` : 'Delegated message inspection',
-    iconName: 'mail',
+    customIconHtml: getCompanyLogo(m.name, 48),
     dialogId: 'dialog',
     content: bodyContent,
     onClose: () => { openMessage = null; }
@@ -554,15 +645,22 @@ document.addEventListener('click', async e => {
       closeModal();
       openMessage = null;
     }
+    if (el.dataset.sharedFilter) {
+      activeFilter = el.dataset.sharedFilter;
+      document.querySelectorAll('[data-shared-filter]').forEach(b => b.classList.toggle('active', b.dataset.sharedFilter === activeFilter));
+      updateFilteredMessages();
+      return;
+    }
     if (el.dataset.copy) {
       await navigator.clipboard.writeText(el.dataset.copy);
-      toast('Verification code copied to clipboard!');
+      toast(el.dataset.copy.startsWith('http') ? 'Sign-in link copied to clipboard!' : 'Verification code copied to clipboard!');
       const span = el.querySelector('span');
       if (span) {
         const orig = span.textContent;
         span.textContent = 'Copied!';
         setTimeout(() => { if (span) span.textContent = orig; }, 2000);
       }
+      return;
     }
     if (el.hasAttribute('data-add-key')) addKey();
     if (el.hasAttribute('data-remove-key')) {
@@ -600,6 +698,14 @@ const dialogElement = document.getElementById('dialog') || document.getElementBy
 if (dialogElement) {
   dialogElement.addEventListener('close', () => { openMessage = null; });
 }
+
+// Live search filter input
+document.addEventListener('input', e => {
+  if (e.target.id === 'shared-search-input') {
+    searchQuery = e.target.value;
+    updateFilteredMessages();
+  }
+});
 
 // Listen for custom dropdown change event
 document.addEventListener('change', async e => {

@@ -3,6 +3,7 @@ import {getTheme, getThemeSetting, setThemeSetting} from './theme.js';
 import {icon, iconPaths} from './components/icons.js';
 import {openModal, closeModal} from './components/modal.js';
 import {initDropdownSystem, initDropdowns} from './components/dropdown.js';
+import {getCompanyLogo} from './components/logos.js';
 import {
   renderSidebar,
   isSidebarCollapsed,
@@ -459,13 +460,60 @@ async function message(id){
   try{
     const m=await request(scoped(`messages/${id}`));
     selectedMessage=m;
-    modal(m.name,`
-      ${badge(modes[m.mode],'blue')}
+
+    function formatBodyWithLinks(text) {
+      if (!text) return '<p style="color:var(--muted); font-style:italic;">No plain-text body content.</p>';
+      const safe = esc(text);
+      return safe.replace(/https:\/\/[^\s<>"')]+/g, url => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="body-url-link">${url}</a>`;
+      });
+    }
+
+    const hasCode = Boolean(m.code);
+    const hasLink = Boolean(m.link);
+
+    const modeBadge = m.mode === 'codes' 
+      ? badge(modes[m.mode] || 'Codes only', 'blue') 
+      : m.mode === 'links' 
+        ? badge(modes[m.mode] || 'Sign-in links', 'green') 
+        : badge(modes[m.mode] || 'Full message', 'purple');
+
+    const contentHtml = `
+      ${modeBadge}
       <div class="meta-line"><span>Approved message</span><span id="message-expiry">${remain(m.expires_at)}</span></div>
-      ${m.mode==='codes'?m.code?`<div class="code-display"><strong>${esc(m.code)}</strong><small>PRIVATE SIGN-IN CODE</small></div><button class="btn primary" data-copy="${esc(m.code)}">${icon('copy')}Copy code</button>`:'<div class="notice amber">No unambiguous code could be extracted. The original email is not exposed with this permission.</div>':m.mode==='links'?m.link?`<div class="notice">Only links to the exact hostname approved by the owner are available.</div><a class="btn primary" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${demo?'Open illustrative link':'Open sign-in link'} ${icon('arrow')}</a>`:'<div class="notice amber">No single approved sign-in link could be extracted.</div>':`<h3 style="margin-top:20px">${esc(m.subject)}</h3><p>${esc(m.sender)}</p><p class="message-text">${esc(m.text)}</p>`}
+
+      ${hasCode ? `
+        <div class="code-display"><strong>${esc(m.code)}</strong><small>PRIVATE SIGN-IN CODE</small></div>
+        <button class="btn primary btn-full" data-copy="${esc(m.code)}" style="margin-bottom:12px;">${icon('copy')}Copy code</button>
+      ` : m.mode === 'codes' ? `
+        <div class="notice amber">No unambiguous code could be extracted. The original email is not exposed with this permission.</div>
+      ` : ''}
+
+      ${hasLink ? `
+        <div class="notice blue" style="margin-top:14px; margin-bottom:10px;">Only links to the exact hostname approved by the owner are available.</div>
+        <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+          <a class="btn primary" href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${demo ? 'Open illustrative link' : 'Open sign-in link'} ${icon('arrow')}</a>
+          <button type="button" class="btn outline small" data-copy="${esc(m.link)}">${icon('copy')}Copy link</button>
+        </div>
+      ` : m.mode === 'links' ? `
+        <div class="notice amber" style="margin-top:14px;">No single approved sign-in link could be extracted.</div>
+      ` : ''}
+
+      ${m.mode === 'read' ? `
+        <div style="margin-top:${(hasCode || hasLink) ? '18px' : '10px'}; border-top:${(hasCode || hasLink) ? '1px solid var(--line)' : 'none'}; padding-top:${(hasCode || hasLink) ? '14px' : '0'};">
+          <h3 style="margin:0 0 6px; font-size:16px; color:var(--ink);">${esc(m.subject || 'No Subject')}</h3>
+          <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">From: <strong>${esc(m.sender || 'Unknown')}</strong></p>
+          <div class="message-text" style="white-space:pre-wrap; word-break:break-word; max-height:300px; overflow-y:auto; background:var(--bg-subtle); padding:12px; border-radius:var(--radius-md); border:1px solid var(--line);">
+            ${formatBodyWithLinks(m.text)}
+          </div>
+        </div>
+      ` : ''}
+
       <hr class="divider">
-      <p>Codes and links can grant access to the service’s account. Removing a member here does not end a session already created there.</p>
-    `);
+      <p style="font-size:12px; color:var(--muted); margin:0;">Codes and links can grant access to the service’s account. Removing a member here does not end a session already created there.</p>
+    `;
+
+    modal(m.name, contentHtml, { customIconHtml: getCompanyLogo(m.name, 48) });
   }catch(e){
     selectedMessage=null;
     modal('Message unavailable',`<p>${esc(e.message)}</p>${btn('Close','close')}`);

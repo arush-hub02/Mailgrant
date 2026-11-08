@@ -16,10 +16,10 @@ export const RULE_PRESETS = [
     wildcard: true,
     sender: '*@*.anthropic.com',
     subject_contains: '',
-    mode: 'codes',
-    link_host: '',
-    retention_minutes: 15,
-    description: 'Anthropic Claude login codes and ephemeral access.'
+    mode: 'read',
+    link_host: 'claude.ai',
+    retention_minutes: 30,
+    description: 'Anthropic Claude magic sign-in links, login codes, and ephemeral access.'
   },
   {
     id: 'google',

@@ -151,8 +151,193 @@ export const companyLogos = {
       <path fill="#FF9900" d="M10 18c3.5 2.2 8.5 2.2 12 0-.3.4-.9.9-1.5 1.1-2.9 1.2-6.5 1.1-9.3-.3-.4-.2-.9-.5-1.2-.8zm12.5.5c.3-.5.7-1.3.6-2.1-.6.5-1.5.8-2.3.9.7.5 1.4.9 1.7 1.2z"/>
       <path fill="#ffffff" d="M11 10.5l-2.5 6h1.6l.5-1.4h2.8l.5 1.4h1.6l-2.5-6h-2zm-.2 3.4l.9-2.5.9 2.5h-1.8z"/>
     </svg>
+  `,
+
+  apple: (size = 36) => `
+    <svg class="company-logo logo-apple" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Apple" role="img">
+      <rect width="32" height="32" rx="8" fill="#121212"/>
+      <path fill="#FFFFFF" d="M21.2 16.8c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-2-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.9-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-3 1.5-3.1-.1-.1-2.7-1-2.7-3.9zM18.8 9.3c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.1 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/>
+    </svg>
+  `,
+
+  microsoft: (size = 36) => `
+    <svg class="company-logo logo-microsoft" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Microsoft" role="img">
+      <rect width="32" height="32" rx="8" fill="#1f1f1f"/>
+      <g transform="translate(6, 6) scale(0.625)">
+        <rect x="2" y="2" width="13" height="13" fill="#F25022"/>
+        <rect x="17" y="2" width="13" height="13" fill="#7FBA00"/>
+        <rect x="2" y="17" width="13" height="13" fill="#00A4EF"/>
+        <rect x="17" y="17" width="13" height="13" fill="#FFB900"/>
+      </g>
+    </svg>
+  `,
+
+  linear: (size = 36) => `
+    <svg class="company-logo logo-linear" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Linear" role="img">
+      <rect width="32" height="32" rx="8" fill="#5E6AD2"/>
+      <g transform="translate(6, 6) scale(0.625)" fill="#FFFFFF">
+        <path d="M1.5 16C1.5 7.99 7.99 1.5 16 1.5c4.08 0 7.76 1.7 10.37 4.45L4.85 27.5C2.79 24.52 1.5 20.44 1.5 16zm26.65 9.05C25.8 28.52 21.2 30.5 16 30.5c-4.08 0-7.76-1.7-10.37-4.45L27.15 4.5c2.06 2.98 3.35 7.06 3.35 11.5 0 3.35-.91 6.48-2.35 9.05z"/>
+      </g>
+    </svg>
+  `,
+
+  twitter: (size = 36) => `
+    <svg class="company-logo logo-x" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="X" role="img">
+      <rect width="32" height="32" rx="8" fill="#000000"/>
+      <path fill="#FFFFFF" d="M18.8 14.3L25.3 6.8h-1.5l-5.6 6.5-4.5-6.5H8.6l6.8 9.9L8.6 24.8h1.5l5.9-6.9 4.8 6.9h5.1L18.8 14.3zm-2.1 2.5l-.7-1-5.5-7.8h2.3l4.5 6.4.7 1 5.8 8.2h-2.3l-4.8-6.8z"/>
+    </svg>
+  `,
+
+  discord: (size = 36) => `
+    <svg class="company-logo logo-discord" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Discord" role="img">
+      <rect width="32" height="32" rx="8" fill="#5865F2"/>
+      <path fill="#FFFFFF" d="M22.5 9.5a13.8 13.8 0 0 0-3.5-1.1c-.2.3-.4.7-.5 1-1.3-.2-2.7-.2-4 0-.1-.3-.3-.7-.5-1A13.8 13.8 0 0 0 10.5 9.5C7.7 13.7 7 17.8 7.3 21.8a13.9 13.9 0 0 0 4.2 2.1c.3-.5.7-.9 1-1.4-1.5-.5-2-1.5-2-1.5.1.1.3.2.4.3 1.4.8 3.2 1.3 5.1 1.3s3.7-.5 5.1-1.3c.2-.1.3-.2.4-.3 0 0-.6 1-2 1.5.3.5.7.9 1 1.4a13.9 13.9 0 0 0 4.2-2.1c.5-4.6-.9-8.7-3.7-12.8zm-8.8 9.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm5.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/>
+    </svg>
+  `,
+
+  netflix: (size = 36) => `
+    <svg class="company-logo logo-netflix" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Netflix" role="img">
+      <rect width="32" height="32" rx="8" fill="#000000"/>
+      <path fill="#E50914" d="M10 6v20h3.5V13.5l5 12.5H22V6h-3.5v12.5L13.5 6H10z"/>
+    </svg>
+  `,
+
+  spotify: (size = 36) => `
+    <svg class="company-logo logo-spotify" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Spotify" role="img">
+      <rect width="32" height="32" rx="8" fill="#121212"/>
+      <circle cx="16" cy="16" r="10" fill="#1ED760"/>
+      <path fill="#121212" d="M20.5 19.3a.6.6 0 0 1-.9.2c-2.4-1.5-5.5-1.8-9.1-1a.6.6 0 1 1-.3-1.2c4-.9 7.4-.5 10.1 1.1.3.3.4.6.2.9zm1.3-3c-.2.4-.6.5-1 .3-2.8-1.7-7-2.2-10.3-1.2a.8.8 0 1 1-.4-1.5c3.8-1.1 8.4-.6 11.4 1.4.4.3.5.7.3 1zm.1-3.1C18.6 11.2 13 11 9.8 12a1 1 0 0 1-.6-1.9c3.7-1.1 9.8-.9 13.7 1.4a1 1 0 0 1-.9 1.7z"/>
+    </svg>
+  `,
+
+  vercel: (size = 36) => `
+    <svg class="company-logo logo-vercel" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Vercel" role="img">
+      <rect width="32" height="32" rx="8" fill="#000000"/>
+      <path fill="#FFFFFF" d="M16 8l8.5 15H7.5L16 8z"/>
+    </svg>
+  `,
+
+  supabase: (size = 36) => `
+    <svg class="company-logo logo-supabase" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Supabase" role="img">
+      <rect width="32" height="32" rx="8" fill="#1C1C1C"/>
+      <path fill="#3ECF8E" d="M17.5 5.5l-9 12h8l-2 9 9-12h-8l2-9z"/>
+    </svg>
+  `,
+
+  gitlab: (size = 36) => `
+    <svg class="company-logo logo-gitlab" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="GitLab" role="img">
+      <rect width="32" height="32" rx="8" fill="#292961"/>
+      <g transform="translate(6, 6) scale(0.625)">
+        <path fill="#E24329" d="M16 26.5L20.8 12H11.2L16 26.5z"/>
+        <path fill="#FC6D26" d="M16 26.5L11.2 12H2.5L16 26.5z"/>
+        <path fill="#FCA326" d="M2.5 12L1 16.5c-.3.8 0 1.7.7 2.2L16 26.5 11.2 12H2.5z"/>
+        <path fill="#E24329" d="M2.5 12h8.7L7.5 2.5c-.3-.9-1.5-.9-1.8 0L2.5 12z"/>
+        <path fill="#FC6D26" d="M16 26.5L20.8 12h8.7L16 26.5z"/>
+        <path fill="#FCA326" d="M29.5 12L31 16.5c.3.8 0 1.7-.7 2.2L16 26.5 20.8 12h8.7z"/>
+        <path fill="#E24329" d="M29.5 12h-8.7l3.7-9.5c.3-.9 1.5-.9 1.8 0l3.2 9.5z"/>
+      </g>
+    </svg>
+  `,
+
+  dropbox: (size = 36) => `
+    <svg class="company-logo logo-dropbox" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Dropbox" role="img">
+      <rect width="32" height="32" rx="8" fill="#0061FF"/>
+      <g transform="translate(6, 6) scale(0.625)" fill="#FFFFFF">
+        <path d="M6 3.5L1 7.2l5 3.8 5-3.8L6 3.5zm14 0l-5 3.7 5 3.8 5-3.8-5-3.7zM1 14.8l5 3.8 5-3.8-5-3.7-5 3.7zm19 0l-5-3.7-5 3.7 5 3.8 5-3.8zM11 20.2l-5 3.8L11 28l5-4-5-3.8z"/>
+      </g>
+    </svg>
+  `,
+
+  zoom: (size = 36) => `
+    <svg class="company-logo logo-zoom" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Zoom" role="img">
+      <rect width="32" height="32" rx="8" fill="#2D8CFF"/>
+      <path fill="#FFFFFF" d="M7 11.5C7 10.7 7.7 10 8.5 10h10c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-10c-.8 0-1.5-.7-1.5-1.5v-9zm14 2.8l4-2.8v9l-4-2.8v-3.4z"/>
+    </svg>
+  `,
+
+  linkedin: (size = 36) => `
+    <svg class="company-logo logo-linkedin" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="LinkedIn" role="img">
+      <rect width="32" height="32" rx="8" fill="#0A66C2"/>
+      <path fill="#FFFFFF" d="M10 13h3v9h-3v-9zm1.5-4.5c1 0 1.7.8 1.7 1.7 0 1-.7 1.8-1.7 1.8s-1.8-.8-1.8-1.8c0-1 .8-1.7 1.8-1.7zM15 13h2.9v1.3h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V22h-3v-4.2c0-1 0-2.3-1.4-2.3s-1.6 1.1-1.6 2.2V22H15v-9z"/>
+    </svg>
+  `,
+
+  adobe: (size = 36) => `
+    <svg class="company-logo logo-adobe" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Adobe" role="img">
+      <rect width="32" height="32" rx="8" fill="#EB1000"/>
+      <path fill="#FFFFFF" d="M18.8 7H25v18l-6.2-18zm-5.6 0H7v18l6.2-18zm2.8 6.5l3.5 10.3h-2.8l-1.3-4.1h-3.3l3.9-6.2z"/>
+    </svg>
+  `,
+
+  canva: (size = 36) => `
+    <svg class="company-logo logo-canva" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Canva" role="img">
+      <rect width="32" height="32" rx="8" fill="#00C4CC"/>
+      <path fill="#FFFFFF" d="M19.5 13c-1.2-1.3-3.1-1.8-5-1.3-3.4.9-5.1 4.5-4 7.6.8 2.2 3.2 3.5 5.5 3 2.1-.4 3.7-2 4.2-3.8h-2.3c-.4.9-1.2 1.7-2.3 1.9-1.4.3-2.8-.5-3.3-1.8-.6-1.7.4-3.7 2.2-4.2 1.2-.3 2.3 0 3.1.8l1.8-2.2z"/>
+    </svg>
+  `,
+
+  atlassian: (size = 36) => `
+    <svg class="company-logo logo-atlassian" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Atlassian" role="img">
+      <rect width="32" height="32" rx="8" fill="#0052CC"/>
+      <g transform="translate(6, 6) scale(0.625)" fill="#FFFFFF">
+        <path d="M16 2.5C12.3 8.3 12 12.8 14.5 16.5c2.5 3.6 7.1 6.1 10.3 5.4 1-.2 1.8-.7 2.4-1.3-3.8-.5-7.3-3.7-8.4-7.4-1.2-4.1-.7-7.9-2.8-10.7z"/>
+        <path d="M10.2 13.5C8 16.7 6.4 20.3 7 24.3c.3 1.9 1.4 3.6 3 4.5-.4-1.4-.2-2.9.5-4.2 1.3-2.5 3.8-4.2 6.5-4.8-2.7-1.3-5-3.5-6.8-6.3z" opacity="0.8"/>
+      </g>
+    </svg>
+  `,
+
+  docker: (size = 36) => `
+    <svg class="company-logo logo-docker" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Docker" role="img">
+      <rect width="32" height="32" rx="8" fill="#1D63ED"/>
+      <g transform="translate(5, 7) scale(0.68)" fill="#FFFFFF">
+        <rect x="8" y="4" width="3" height="3" rx="0.5"/>
+        <rect x="12" y="4" width="3" height="3" rx="0.5"/>
+        <rect x="16" y="4" width="3" height="3" rx="0.5"/>
+        <rect x="4" y="8" width="3" height="3" rx="0.5"/>
+        <rect x="8" y="8" width="3" height="3" rx="0.5"/>
+        <rect x="12" y="8" width="3" height="3" rx="0.5"/>
+        <rect x="16" y="8" width="3" height="3" rx="0.5"/>
+        <rect x="20" y="8" width="3" height="3" rx="0.5"/>
+        <path d="M28.5 11c-.5-.4-1.5-.3-2.2.1-.3-.9-1-1.6-1.9-2-.4-.2-.8-.3-1.3-.3h-1.8v3.5H1c-.6 0-1 .4-1 1 0 4.5 3.2 8.7 8.5 8.7 7.2 0 12.3-3.8 14.8-8.8 2.2.1 4.2-1 5.2-2.2z"/>
+      </g>
+    </svg>
+  `,
+
+  uber: (size = 36) => `
+    <svg class="company-logo logo-uber" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Uber" role="img">
+      <rect width="32" height="32" rx="8" fill="#000000"/>
+      <g transform="translate(6, 6) scale(0.625)" fill="#FFFFFF">
+        <path d="M16 3C8.8 3 3 8.8 3 16s5.8 13 13 13 13-5.8 13-13S23.2 3 16 3zm0 21c-4.4 0-8-3.6-8-8s3.6-8 8-8c2.9 0 5.4 1.5 6.8 3.8H16v8.4h7.6c-1.6 2.3-4.2 3.8-7.6 3.8z"/>
+      </g>
+    </svg>
+  `,
+
+  airbnb: (size = 36) => `
+    <svg class="company-logo logo-airbnb" viewBox="0 0 32 32" width="${size}" height="${size}" aria-label="Airbnb" role="img">
+      <rect width="32" height="32" rx="8" fill="#FF5A5F"/>
+      <g transform="translate(6, 5) scale(0.65)" fill="#FFFFFF">
+        <path d="M16 1c-4.8 0-8 3.5-8 7.5 0 3.8 2.4 8.2 6.7 13.8.4.5.9 1 1.3 1.5.4-.5.9-1 1.3-1.5C21.6 16.7 24 12.3 24 8.5 24 4.5 20.8 1 16 1zm0 10.5c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/>
+      </g>
+    </svg>
   `
 };
+
+/**
+ * Check if an authentic vector company logo exists in the catalog.
+ * @param {string} nameOrSender
+ * @returns {boolean}
+ */
+export function hasCompanyLogo(nameOrSender = '') {
+  const str = String(nameOrSender).toLowerCase().trim();
+  const known = [
+    'claude', 'anthropic', 'notion', 'figma', 'github', 'gitlab', 'google', 'gmail',
+    'outlook', 'microsoft', 'office', 'apple', 'icloud', 'slack', 'stripe', 'openai',
+    'chatgpt', 'aws', 'amazon', 'linear', 'discord', 'netflix', 'spotify', 'vercel',
+    'supabase', 'dropbox', 'zoom', 'linkedin', 'adobe', 'canva', 'atlassian', 'jira',
+    'docker', 'uber', 'airbnb', 'twitter'
+  ];
+  return known.some(k => str.includes(k) || str === 'x');
+}
 
 /**
  * Determine and render the authentic email provider logo on the basis of the mailbox name or email address.
@@ -216,11 +401,17 @@ export function getCompanyLogo(nameOrSender = '', size = 36, fallbackIndex = 0) 
   if (str.includes('github')) {
     return companyLogos.github(size);
   }
+  if (str.includes('gitlab')) {
+    return companyLogos.gitlab(size);
+  }
   if (str.includes('google') || str.includes('gmail')) {
     return companyLogos.google(size);
   }
-  if (str.includes('outlook') || str.includes('microsoft')) {
-    return providerLogos.outlook(size);
+  if (str.includes('outlook') || str.includes('microsoft') || str.includes('office') || str.includes('hotmail') || str.includes('live.com') || str.includes('msn.com')) {
+    return companyLogos.microsoft(size);
+  }
+  if (str.includes('apple') || str.includes('icloud')) {
+    return companyLogos.apple(size);
   }
   if (str.includes('slack')) {
     return companyLogos.slack(size);
@@ -233,6 +424,54 @@ export function getCompanyLogo(nameOrSender = '', size = 36, fallbackIndex = 0) 
   }
   if (str.includes('aws') || str.includes('amazon')) {
     return companyLogos.aws(size);
+  }
+  if (str.includes('linear')) {
+    return companyLogos.linear(size);
+  }
+  if (str.includes('discord')) {
+    return companyLogos.discord(size);
+  }
+  if (str.includes('netflix')) {
+    return companyLogos.netflix(size);
+  }
+  if (str.includes('spotify')) {
+    return companyLogos.spotify(size);
+  }
+  if (str.includes('vercel')) {
+    return companyLogos.vercel(size);
+  }
+  if (str.includes('supabase')) {
+    return companyLogos.supabase(size);
+  }
+  if (str.includes('dropbox')) {
+    return companyLogos.dropbox(size);
+  }
+  if (str.includes('zoom')) {
+    return companyLogos.zoom(size);
+  }
+  if (str.includes('linkedin')) {
+    return companyLogos.linkedin(size);
+  }
+  if (str.includes('adobe')) {
+    return companyLogos.adobe(size);
+  }
+  if (str.includes('canva')) {
+    return companyLogos.canva(size);
+  }
+  if (str.includes('atlassian') || str.includes('jira')) {
+    return companyLogos.atlassian(size);
+  }
+  if (str.includes('docker')) {
+    return companyLogos.docker(size);
+  }
+  if (str.includes('uber')) {
+    return companyLogos.uber(size);
+  }
+  if (str.includes('airbnb')) {
+    return companyLogos.airbnb(size);
+  }
+  if (str.includes('twitter') || str === 'x' || str.includes('x.com')) {
+    return companyLogos.twitter(size);
   }
 
   // Fallback: initial badge with vibrant gradient

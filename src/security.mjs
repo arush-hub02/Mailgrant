@@ -74,20 +74,131 @@ export function authenticatedEmail(headers) {
   const first = (headers.get('authentication-results') || '').split(/,(?=\s*[^;]+;)/)[0];
   return /^mx\.cloudflare\.net\s*;/i.test(first) && /(?:^|;)\s*dmarc=pass(?:\s|;|$)/i.test(first);
 }
+export function htmlToText(html) {
+  if (!html || typeof html !== 'string') return '';
+  let str = html;
+  str = str.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ');
+  str = str.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ');
+  str = str.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, ' ');
+  str = str.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ');
+  str = str.replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, ' ');
+  str = str.replace(/<!--[\s\S]*?-->/g, ' ');
+  str = str.replace(/<a\b[^>]*href=["'](https?:\/\/[^"'\s<>]+)["'][^>]*>([\s\S]*?)<\/a>/gi, (match, href, inner) => {
+    const cleanInner = inner.replace(/<[^>]*>/g, '').trim();
+    if (!cleanInner) return href;
+    if (cleanInner.toLowerCase() === href.toLowerCase()) return href;
+    return `${cleanInner} (${href})`;
+  });
+  str = str.replace(/<\/(?:p|div|tr|h[1-6]|li|blockquote|table)>/gi, '\n');
+  str = str.replace(/<br\s*\/?>/gi, '\n');
+  str = str.replace(/<hr\s*\/?>/gi, '\n---\n');
+  str = str.replace(/<[^>]+>/g, ' ');
+  str = str
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#(\d+);/g, (_, dec) => {
+      try { return String.fromCharCode(Number(dec)); } catch { return ''; }
+    });
+  str = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  str = str.split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).join('\n');
+  return str.replace(/\n{3,}/g, '\n\n').trim();
+}
+
 export function extractContent(mail, rule) {
-  const text = (mail.text || (mail.html || '').replace(/<[^>]*>/g,' ')).slice(0,60000);
+  let text = '';
+  const rawText = typeof mail.text === 'string' ? mail.text.trim() : '';
+  const looksLikeCssOrHtml = /^(@import|@media|\.[\w-]+\s*\{|<style|<html|<!doctype)/i.test(rawText);
+  if (rawText && !looksLikeCssOrHtml) {
+    if (!rawText.includes('https://') && mail.html && mail.html.includes('https://')) {
+      const fromHtml = htmlToText(mail.html);
+      text = fromHtml || rawText;
+    } else {
+      text = rawText;
+    }
+  } else if (mail.html) {
+    text = htmlToText(mail.html);
+  }
+  text = text.slice(0, 60000);
+
   const source = `${mail.subject || ''}\n${text}`;
   // Ambiguous emails stay unavailable instead of guessing a number or exposing the original body.
   const contextual = [...source.matchAll(/(?:verification|security|sign[ -]?in|login|one[ -]?time|confirmation|your)?\s*code\s*(?:is|:|=|-)?\s*(\d{4,8})\b/gi)].map(m=>m[1]);
   const candidates = [...new Set(contextual.length ? contextual : [...source.matchAll(/^\s*(\d{6})\s*$/gm)].map(m=>m[1]))];
   const code = candidates.length === 1 ? candidates[0] : null;
-  const assetExt = /\.(png|gif|jpe?g|svg|webp|ico|css|otf|ttf|woff2?)$/i;
-  const urls = [...source.matchAll(/https:\/\/[^\s<>"')]+/g), ...(mail.html || '').matchAll(/https:\/\/[^\s<>"')]+/g)].map(m=>m[0].replaceAll('&amp;','&'));
-  const links = [...new Set(urls)].filter(raw=>{ try { const u=new URL(raw); return u.protocol==='https:' && !u.username && !u.password && (rule.link_host ? (u.hostname===rule.link_host || u.hostname.endsWith('.'+rule.link_host)) : true) && (!u.port || u.port==='443') && !assetExt.test(u.pathname); } catch { return false; } });
-  const link = links.length === 1 ? links[0] : (links.find(l => l.includes('magic-link') || l.includes('login') || l.includes('verify')) || null);
-  if(rule.mode==='codes') return {code};
-  if(rule.mode==='links') return {link};
-  return {code,link,subject:cleanText(mail.subject,240),sender:mail.from.address.toLowerCase(),text};
+
+  const assetExt = /\.(png|gif|jpe?g|svg|webp|ico|css|otf|ttf|woff2?|map)$/i;
+  const ignoredHosts = new Set(['fonts.googleapis.com', 'fonts.gstatic.com', 'schema.org', 'schemas.google.com', 'www.w3.org']);
+
+  const hrefMatches = [...(mail.html || '').matchAll(/href=["'](https:\/\/[^"'\s<>]+)["']/gi)].map(m => m[1]);
+  const rawUrls = [
+    ...hrefMatches,
+    ...[...(source || '').matchAll(/https:\/\/[^\s<>"')]+/g)].map(m => m[0]),
+    ...[...(mail.html || '').matchAll(/https:\/\/[^\s<>"')]+/g)].map(m => m[0])
+  ].map(u => u.replaceAll('&amp;', '&').replace(/[.,;>)]+$/, ''));
+
+  const links = [...new Set(rawUrls)].filter(raw => {
+    try {
+      const u = new URL(raw);
+      if (u.protocol !== 'https:' || u.username || u.password) return false;
+      if (u.port && u.port !== '443') return false;
+      if (ignoredHosts.has(u.hostname.toLowerCase())) return false;
+      if (rule.link_host && !(u.hostname === rule.link_host || u.hostname.endsWith('.' + rule.link_host))) return false;
+      const pathname = u.pathname.split('?')[0];
+      if (assetExt.test(pathname)) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  let link = null;
+  if (links.length === 1) {
+    link = links[0];
+  } else if (links.length > 1) {
+    const signinKw = /(?:sign[ -]?in|log[ -]?in|magic[ -]?link|verify|verification|auth|authenticate|confirm|session|token|access)/i;
+    const anchorMatches = [...(mail.html || '').matchAll(/<a\b[^>]*href=["'](https:\/\/[^"'\s<>]+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+    for (const [, href, inner] of anchorMatches) {
+      const cleanHref = href.replaceAll('&amp;', '&').replace(/[.,;>)]+$/, '');
+      if (links.includes(cleanHref) && (signinKw.test(inner) || signinKw.test(cleanHref))) {
+        link = cleanHref;
+        break;
+      }
+    }
+    if (!link) {
+      link = links.find(l => {
+        const lower = l.toLowerCase();
+        return (
+          lower.includes('magic-link') ||
+          lower.includes('login') ||
+          lower.includes('signin') ||
+          lower.includes('sign-in') ||
+          lower.includes('verify') ||
+          lower.includes('auth') ||
+          lower.includes('token') ||
+          lower.includes('code')
+        ) && !lower.includes('unsubscribe') && !lower.includes('privacy');
+      }) || null;
+    }
+    if (!link) {
+      const nonFooters = links.filter(l => !/(?:unsubscribe|privacy|terms|help|support|feedback|twitter|linkedin|facebook)/i.test(l));
+      link = nonFooters[0] || links[0] || null;
+    }
+  }
+
+  if (rule.mode === 'codes') return { code };
+  if (rule.mode === 'links') return { link };
+  return {
+    code,
+    link,
+    subject: cleanText(mail.subject, 240),
+    sender: mail.from?.address ? mail.from.address.toLowerCase() : '',
+    text
+  };
 }
 export function projectContent(content, mode) {
   if(mode==='codes') return {code:content.code || null};
