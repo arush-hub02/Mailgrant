@@ -98,6 +98,7 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
   }
 
   const isReceivers = view === 'receivers';
+  const isOwner = Boolean(state?.owner);
 
   return `
     <div class="inbox-empty-card glass-neon-card">
@@ -148,32 +149,61 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
         </div>
       ` : '') : `
         <div class="inbox-guidance-grid">
-          <div class="guidance-card" data-page="rules" role="button" tabindex="0">
-            <div class="guidance-card-icon">${icon('shield')}</div>
-            <div class="guidance-card-content">
-              <h4>1. Access Rules</h4>
-              <p>Approve which services (Google, Claude, Notion) can deliver sign-in codes to this inbox.</p>
+          ${isOwner ? `
+            <div class="guidance-card" data-page="rules" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('shield')}</div>
+              <div class="guidance-card-content">
+                <h4>1. Access Rules</h4>
+                <p>Approve which services (Google, Claude, Notion) can deliver sign-in codes to this inbox.</p>
+              </div>
+              <span class="guidance-link">Configure rules →</span>
             </div>
-            <span class="guidance-link">Configure rules →</span>
-          </div>
 
-          <div class="guidance-card" data-page="people" role="button" tabindex="0">
-            <div class="guidance-card-icon">${icon('people')}</div>
-            <div class="guidance-card-content">
-              <h4>2. Team Permissions</h4>
-              <p>Grant team members granular access to specific services without sharing your inbox.</p>
+            <div class="guidance-card" data-page="people" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('people')}</div>
+              <div class="guidance-card-content">
+                <h4>2. Team Permissions</h4>
+                <p>Grant team members granular access to specific services without sharing your inbox.</p>
+              </div>
+              <span class="guidance-link">Manage access →</span>
             </div>
-            <span class="guidance-link">Manage access →</span>
-          </div>
 
-          <div class="guidance-card" data-page="mailboxes" role="button" tabindex="0">
-            <div class="guidance-card-icon">${icon('mail')}</div>
-            <div class="guidance-card-content">
-              <h4>3. Inbound Pipeline</h4>
-              <p>Link Outlook, Gmail, Yahoo, or copy your dedicated inbound forwarding address.</p>
+            <div class="guidance-card" data-page="mailboxes" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('mail')}</div>
+              <div class="guidance-card-content">
+                <h4>3. Inbound Pipeline</h4>
+                <p>Link Outlook, Gmail, Yahoo, or copy your dedicated inbound forwarding address.</p>
+              </div>
+              <span class="guidance-link">Mailbox setup →</span>
             </div>
-            <span class="guidance-link">Mailbox setup →</span>
-          </div>
+          ` : `
+            <div class="guidance-card" data-page="dashboard" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('shield')}</div>
+              <div class="guidance-card-content">
+                <h4>1. Scoped Permissions</h4>
+                <p>You only receive dispatches and login codes for approved team services.</p>
+              </div>
+              <span class="guidance-link">Security overview →</span>
+            </div>
+
+            <div class="guidance-card" data-page="inbox" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('people')}</div>
+              <div class="guidance-card-content">
+                <h4>2. Team Access Pools</h4>
+                <p>Shared logins and team verification codes appear automatically in this tab.</p>
+              </div>
+              <span class="guidance-link">Active stream →</span>
+            </div>
+
+            <div class="guidance-card" data-page="profile" role="button" tabindex="0">
+              <div class="guidance-card-icon">${icon('settings')}</div>
+              <div class="guidance-card-content">
+                <h4>3. Auto Retention</h4>
+                <p>Dispatches auto-purge when expired. Messages are never stored in plaintext.</p>
+              </div>
+              <span class="guidance-link">Workspace settings →</span>
+            </div>
+          `}
         </div>
       `}
 

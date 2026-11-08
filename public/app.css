@@ -2623,6 +2623,42 @@ html:not([data-theme="dark"]) .mg-modal-card {
   justify-content: center;
 }
 
+@media (max-width: 600px) {
+  dialog,
+  #dialog,
+  #shared-dialog {
+    max-width: calc(100vw - 20px) !important;
+    width: calc(100vw - 20px) !important;
+    margin: 10px auto !important;
+  }
+  .mg-modal-card {
+    max-height: calc(100vh - 20px) !important;
+    border-radius: var(--radius-md) !important;
+  }
+  .mg-modal-head {
+    padding: 18px 16px 10px !important;
+  }
+  .mg-modal-title {
+    font-size: 17px !important;
+  }
+  .mg-modal-subtitle {
+    font-size: 12px !important;
+  }
+  .mg-modal-body {
+    padding: 10px 16px 20px !important;
+  }
+  .mg-modal-actions,
+  .mg-modal-body .dialog-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .mg-modal-actions .btn,
+  .mg-modal-body .dialog-actions .btn {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}
+
 /* Workspace Switcher Cards in Modal */
 .mg-workspace-list {
   display: flex;
@@ -5523,30 +5559,247 @@ html[data-theme="dark"] .tab-count-pill {
 }
 
 @media (max-width: 768px) {
-  .inbox-feed-card {
+  /* Inbox View Switcher (Own vs Receivers) */
+  .inbox-view-switcher {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .inbox-view-tab {
+    padding: 12px 16px;
     gap: 12px;
   }
-  .inbox-card-left {
-    display: none;
+  .view-tab-icon {
+    width: 38px;
+    height: 38px;
   }
-  .inbox-card-right {
-    align-items: flex-start;
-    flex-direction: row;
-    justify-content: space-between;
+  .view-tab-title {
+    font-size: 14.5px;
+  }
+  .view-tab-sub {
+    font-size: 12px;
+  }
+  .view-tab-count {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+
+  /* Inbox Multi-Pool Bar */
+  .inbox-pools-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .inbox-pools-scroll {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    gap: 8px;
+  }
+  .inbox-pools-scroll::-webkit-scrollbar {
+    height: 3px;
+  }
+  .pool-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .inbox-pools-actions {
     width: 100%;
-    margin-top: 6px;
   }
+  .inbox-pools-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Head actions on mobile */
+  .inbox-head-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .inbox-head-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Telemetry Banner */
   .inbox-telemetry-banner {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
     padding: 14px 16px;
+    margin-bottom: 16px;
   }
+  .inbox-telemetry-item {
+    gap: 4px;
+  }
+  .telemetry-value-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .telemetry-text {
+    font-size: 13.5px;
+  }
+  .telemetry-number {
+    font-size: 20px;
+  }
+
+  /* Toolbar & Filter Tabs */
   .inbox-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .inbox-filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .inbox-filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .inbox-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .inbox-search-container {
+    width: 100%;
   }
   .inbox-search-wrap {
     min-width: 100%;
+    width: 100%;
+  }
+
+  /* Message Feed Cards - Keep authentic logo visible & responsive layout */
+  .inbox-feed-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px 16px;
+    align-items: flex-start;
+  }
+  .inbox-card-left {
+    display: flex !important;
+    align-items: flex-start;
+    margin-top: 2px;
+  }
+  .inbox-card-left .vendor,
+  .inbox-card-left svg,
+  .inbox-card-left .company-logo {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .inbox-card-header-row {
+    gap: 6px;
+  }
+  .inbox-card-company {
+    font-size: 14.5px;
+  }
+  .inbox-card-intent {
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+  .inbox-card-otp-banner {
+    width: 100%;
+    justify-content: space-between;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  .inbox-card-sharing-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .inbox-sharing-pill {
+    max-width: 100%;
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  .sharing-pill-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+  }
+  .inbox-card-right {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    text-align: left;
+  }
+  .inbox-card-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .inbox-card-meta-bottom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .inbox-panel-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  /* Empty State */
+  .inbox-empty-card {
+    padding: 32px 16px 24px;
+  }
+  .inbox-empty-card .empty-title {
+    font-size: 18px;
+  }
+  .inbox-empty-card .empty-desc {
+    font-size: 13px;
+    padding: 0 4px;
+  }
+  .inbox-guidance-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .empty-quick-action .btn-lg {
+    width: 100%;
+    justify-content: center;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .inbox-telemetry-banner {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .inbox-card-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .inbox-card-meta-bottom {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .inbox-status-pill {
+    font-size: 10px;
+    padding: 3px 10px;
   }
 }
 
@@ -9752,6 +10005,29 @@ html[data-theme="dark"] .matrix-subdomain-row {
   }
   .people-cards-grid {
     grid-template-columns: 1fr;
+  }
+  .team-pools-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .team-pool-card {
+    padding: 16px;
+  }
+  .people-tabs-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .people-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .people-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 12.5px;
   }
 }
 
