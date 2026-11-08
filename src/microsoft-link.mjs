@@ -22,3 +22,4 @@ export async function completeMicrosoftLink(env, {workspaceId, userId, profile, 
 
   return { email, provider: 'microsoft' };
 }
+

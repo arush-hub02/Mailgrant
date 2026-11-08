@@ -95,3 +95,4 @@ export async function syncMicrosoft(env, wid, {fetcher = fetch} = {}) {
     await env.DB.prepare('UPDATE rate_limits SET expires_at=? WHERE bucket=?').bind(now() + 30000, `ms-sync:${wid}`).run();
   }
 }
+
