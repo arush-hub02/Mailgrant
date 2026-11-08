@@ -58,10 +58,10 @@ function computePersonData(person, state) {
   const channelBadge = isKey 
     ? `<span class="person-type-badge key">${icon('key')} Direct Key & URL (No Login)</span>`
     : isInvite 
-      ? `<span class="person-type-badge invite">${icon('mail')} Pending Google Invite</span>`
+      ? `<span class="person-type-badge invite">${icon('mail')} Pending Invite</span>`
       : isOwner 
         ? `<span class="person-type-badge owner">${icon('shield')} Workspace Admin</span>`
-        : `<span class="person-type-badge member">${icon('people')} Google Verified Account</span>`;
+        : `<span class="person-type-badge member">${icon('people')} Verified Member</span>`;
 
   // Initials
   let personInitials = 'P';
@@ -548,9 +548,9 @@ export function peoplePage({ state, me, demo }) {
             ${icon('key')}
             <span>+ Add Access Key</span>
           </button>
-          <button type="button" class="btn outline" data-action="invite" id="btn-header-invite" title="Invite a user with their Google Account" style="display: ${activeTab === 'direct' ? 'none' : 'inline-flex'};">
+          <button type="button" class="btn outline" data-action="invite" id="btn-header-invite" title="Invite a user to this workspace" style="display: ${activeTab === 'direct' ? 'none' : 'inline-flex'};">
             ${icon('people')}
-            <span>+ Invite Google Account</span>
+            <span>+ Invite Member</span>
           </button>
           <a class="btn outline" href="/access" target="_blank" rel="noopener noreferrer" id="btn-header-portal" title="Open Recipient Direct Portal" style="display: ${activeTab === 'direct' ? 'inline-flex' : 'none'};">
             ${icon('mail')}
@@ -589,12 +589,12 @@ export function peoplePage({ state, me, demo }) {
         ` : activeTab === 'platform' ? `
           <div class="banner-content">
             <strong>🛡️ Platform Verified Accounts:</strong>
-            Team members authenticated through Google Workspace / Gmail OAuth sign-in. Subdomain filters and company rules are granted and audited per individual account.
+            Team members authenticated through verified sign-in. Subdomain filters and company rules are granted and audited per individual account.
           </div>
         ` : `
           <div class="banner-content">
             <strong>🌐 Complete Access Distribution Hub:</strong>
-            Overview of both Direct Passwordless Keys (5-day auto-purge retention) and Verified Google Platform Members.
+            Overview of both Direct Passwordless Keys (5-day auto-purge retention) and Verified Platform Members.
           </div>
         `}
       </div>
@@ -615,7 +615,7 @@ export function peoplePage({ state, me, demo }) {
         <div class="inbox-telemetry-item">
           <span class="telemetry-label">Platform Accounts</span>
           <div class="telemetry-value-row">
-            <strong class="telemetry-text">${directMembersCount} Google Members</strong>
+            <strong class="telemetry-text">${directMembersCount} Team Members</strong>
             <span class="telemetry-pill neutral">${pending.length} Invites</span>
           </div>
         </div>
@@ -661,7 +661,7 @@ export function peoplePage({ state, me, demo }) {
               ${icon('key')} Key Holders (${visibleKeys.length})
             </button>
             <button type="button" class="filter-pill" data-filter-people="members">
-              ${icon('people')} Google Members (${distributionMembers.length})
+              ${icon('people')} Team Members (${distributionMembers.length})
             </button>
             ${pending.length ? `
               <button type="button" class="filter-pill" data-filter-people="invites">
@@ -734,7 +734,7 @@ export function peoplePage({ state, me, demo }) {
               </button>
               <button type="button" class="btn outline" data-action="invite">
                 ${icon('people')}
-                <span>Invite Google Member</span>
+                <span>Invite Team Member</span>
               </button>
             </div>
           </div>
@@ -750,13 +750,13 @@ export function peoplePage({ state, me, demo }) {
 export const keysPage = peoplePage;
 
 /**
- * Invite Someone Modal (Google Email Account)
+ * Invite Someone Modal (Team Email Account)
  */
 export function openInviteModal(modal) {
-  modal('Invite Someone via Google Account', `
-    <p>Create a private invitation for a specific Google account. Share the generated link yourself; the app does not send invitation emails.</p>
+  modal('Invite Someone to Workspace', `
+    <p>Create a private invitation for a team member's email address. Share the generated link yourself; the app does not send external invitation emails.</p>
     <form id="invite-form">
-      ${field('Their Google account email', 'email', 'colleague@gmail.com', 'type="email" required maxlength="254"')}
+      ${field('Their email address', 'email', 'colleague@example.com', 'type="email" required maxlength="254"')}
       <div class="notice">
         The invitation expires in 48 hours. After acceptance, this person starts with no company access. Set their permissions in People & Access.
       </div>

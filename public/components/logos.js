@@ -347,34 +347,64 @@ export function hasCompanyLogo(nameOrSender = '') {
  * @param {number} [size=28]
  * @returns {string} SVG HTML string
  */
-export function getMailboxLogo(emailOrName = '', size = 28, isGoogle = false) {
-  const str = String(emailOrName).toLowerCase();
+export function getMailboxLogo(emailOrName = '', size = 28, providerOrFlag = '') {
+  const str = String(emailOrName || '').toLowerCase();
+  const prov = String(providerOrFlag || '').toLowerCase();
 
-  if (isGoogle || str.includes('gmail') || str.includes('google') || str.endsWith('@googlemail.com')) {
-    return providerLogos.gmail(size);
-  }
-  if (str.includes('outlook') || str.includes('hotmail') || str.includes('live.com') || str.includes('microsoft') || str.includes('office') || str.includes('msn.com')) {
+  if (prov === 'microsoft' || prov === 'outlook' || prov === 'hotmail' || str.includes('outlook') || str.includes('hotmail') || str.includes('live.com') || str.includes('microsoft') || str.includes('office') || str.includes('msn.com')) {
     return providerLogos.outlook(size);
   }
-  if (str.includes('icloud') || str.includes('me.com') || str.includes('mac.com') || str.includes('apple')) {
-    return providerLogos.icloud(size);
-  }
-  if (str.includes('yahoo') || str.includes('ymail.com')) {
+  if (prov === 'yahoo' || str.includes('yahoo') || str.includes('ymail.com') || str.includes('rocketmail.com')) {
     return providerLogos.yahoo(size);
   }
-  if (str.includes('proton') || str.includes('pm.me')) {
+  if (prov === 'apple' || prov === 'icloud' || str.includes('icloud') || str.includes('me.com') || str.includes('mac.com') || str.includes('apple')) {
+    return providerLogos.icloud(size);
+  }
+  if (prov === 'proton' || str.includes('proton') || str.includes('pm.me')) {
     return providerLogos.proton(size);
   }
-  if (str.includes('fastmail')) {
+  if (prov === 'fastmail' || str.includes('fastmail')) {
     return providerLogos.fastmail(size);
   }
+  if (prov === 'zoho' || str.includes('zoho')) {
+    return providerLogos.zoho(size);
+  }
+  if (prov === 'google' || prov === 'gmail' || prov === 'true' || str.includes('gmail') || str.includes('google') || str.endsWith('@googlemail.com')) {
+    return providerLogos.gmail(size);
+  }
 
-  // Fallback: Default to Gmail if it's the standard Mailgrant default or sample workspace
-  if (str.includes('mailgrant') || str.includes('personal') || str.includes('sample') || str.includes('work')) {
+  // Fallback: Default to custom or sample
+  if (str.includes('mailgrant') || str.includes('sample')) {
     return providerLogos.gmail(size);
   }
 
   return providerLogos.custom(size);
+}
+
+export function getProviderDisplayName(provider = '') {
+  const p = String(provider || '').toLowerCase();
+  switch (p) {
+    case 'google':
+    case 'gmail':
+      return 'Google Gmail';
+    case 'microsoft':
+    case 'outlook':
+    case 'hotmail':
+      return 'Microsoft Outlook / Hotmail';
+    case 'yahoo':
+      return 'Yahoo Mail';
+    case 'apple':
+    case 'icloud':
+      return 'Apple iCloud';
+    case 'proton':
+      return 'ProtonMail';
+    case 'zoho':
+      return 'Zoho Mail';
+    case 'fastmail':
+      return 'Fastmail';
+    default:
+      return 'Inbound Mail Stream';
+  }
 }
 
 /**

@@ -38,9 +38,18 @@ async function reconcileLocalMigrations(){
         if(hasScopeTable){
           const columns=db.prepare("PRAGMA table_info(access_key_scopes)").all();
           const hasSubdomain=columns.some(c=>c.name==='subdomain');
-          const isMigrated=db.prepare("SELECT 1 FROM d1_migrations WHERE name='0006_access_key_scopes_subdomain.sql'").get();
-          if(hasSubdomain&&!isMigrated){
+          const isMigrated6=db.prepare("SELECT 1 FROM d1_migrations WHERE name='0006_access_key_scopes_subdomain.sql'").get();
+          if(hasSubdomain&&!isMigrated6){
             db.prepare("INSERT INTO d1_migrations (name, applied_at) VALUES ('0006_access_key_scopes_subdomain.sql', datetime('now'))").run();
+          }
+        }
+        const hasMailboxes=db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='mailboxes'").get();
+        if(hasMailboxes){
+          const mbCols=db.prepare("PRAGMA table_info(mailboxes)").all();
+          const hasProvider=mbCols.some(c=>c.name==='provider');
+          const isMigrated7=db.prepare("SELECT 1 FROM d1_migrations WHERE name='0007_multi_provider_mailboxes.sql'").get();
+          if(hasProvider&&!isMigrated7){
+            db.prepare("INSERT INTO d1_migrations (name, applied_at) VALUES ('0007_multi_provider_mailboxes.sql', datetime('now'))").run();
           }
         }
       }catch{}

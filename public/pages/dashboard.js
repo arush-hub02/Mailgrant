@@ -9,7 +9,7 @@
  */
 
 import { icon } from '../components/icons.js';
-import { getCompanyLogo, providerLogos } from '../components/logos.js';
+import { getCompanyLogo, getMailboxLogo, getProviderDisplayName, providerLogos } from '../components/logos.js';
 import { esc, initials, badge, btn, empty, ago, heading } from './common.js';
 import { actionNames } from './activity.js';
 
@@ -25,7 +25,9 @@ export function dashboardPage({ state = {}, me = {} }) {
   const hour = new Date().getHours();
   const timeGreeting = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const workspaceName = state.workspace?.name || 'Personal Workspace';
-  const gmailConnected = !!state.gmail_connected;
+  const isConnected = !!(state.mailbox_connected || state.gmail_connected);
+  const provider = state.provider || state.mailbox?.provider || 'google';
+  const providerName = getProviderDisplayName(provider);
   const mailboxEmail = state.mailbox?.email || state.workspace?.mailbox_email || '';
   const isOwner = !!state.owner;
 
@@ -63,8 +65,8 @@ export function dashboardPage({ state = {}, me = {} }) {
         <div class="inbox-telemetry-item">
           <span class="telemetry-label">Mailbox Pipeline</span>
           <div class="telemetry-value-row">
-            <strong class="telemetry-text">${gmailConnected ? 'Google OAuth Synced' : (mailboxEmail ? 'Inbound Active' : 'Setup Ready')}</strong>
-            <span class="telemetry-pill positive">${gmailConnected ? 'KMS Encrypted' : 'Ready'}</span>
+            <strong class="telemetry-text">${isConnected ? `${providerName} Synced` : (mailboxEmail ? 'Inbound Active' : 'Setup Ready')}</strong>
+            <span class="telemetry-pill positive">${isConnected ? 'AES-256 Encrypted' : 'Ready'}</span>
           </div>
         </div>
 
@@ -112,11 +114,11 @@ export function dashboardPage({ state = {}, me = {} }) {
             <span class="stat-icon-wrap accent-glow">${icon('mail')}</span>
           </div>
           <div class="stat-number-row">
-            <strong class="stat-number">${(gmailConnected ? 1 : (mailboxEmail ? 1 : 0)).toString().padStart(2, '0')}</strong>
-            <span class="stat-trend-pill ${gmailConnected ? 'positive' : 'neutral'}">${gmailConnected ? 'OAuth Linked' : 'Active'}</span>
+            <strong class="stat-number">${(isConnected ? 1 : (mailboxEmail ? 1 : 0)).toString().padStart(2, '0')}</strong>
+            <span class="stat-trend-pill ${isConnected ? 'positive' : 'neutral'}">${isConnected ? 'OAuth Linked' : 'Active'}</span>
           </div>
           <div class="stat-footer-text">
-            ${gmailConnected ? 'Real-time synchronization' : 'Inbound forwarding available'}
+            ${isConnected ? `${providerName} active` : 'Inbound forwarding available'}
           </div>
         </div>
 
@@ -201,10 +203,10 @@ export function dashboardPage({ state = {}, me = {} }) {
 
             <button type="button" class="quick-action-card" data-action="add-gmail">
               <div class="action-card-glow" aria-hidden="true"></div>
-              <div class="action-icon-circle action-icon-gmail">${providerLogos.gmail(22)}</div>
+              <div class="action-icon-circle action-icon-gmail">${getMailboxLogo(mailboxEmail, 22, provider)}</div>
               <div class="action-card-details">
                 <div class="action-card-title">Connect Mailbox</div>
-                <div class="action-card-desc">Link a Gmail address with protected OAuth read session</div>
+                <div class="action-card-desc">Link Outlook, Gmail, Yahoo, or any email stream</div>
               </div>
               <span class="action-card-arrow" aria-hidden="true">→</span>
             </button>

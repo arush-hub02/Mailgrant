@@ -1,10 +1,12 @@
 import {createRemoteJWKSet,jwtVerify} from 'jose';
 import PostalMime from 'postal-mime';
-import {now,id,randomToken,hash,encrypt,decrypt,cleanText,validEmail,validRuleSender,validHost,availableModes,canRead,authenticatedEmail,extractContent,projectContent} from './security.mjs';
+import {now,id,randomToken,hash,encrypt,decrypt,cleanText,validEmail,validRuleSender,validHost,availableModes,canRead,authenticatedEmail,extractContent,projectContent,detectMailProvider,getProviderDisplayName,isForwardingSetupEmail,extractSetupConfirmation} from './security.mjs';
 import {GMAIL_SCOPE,syncGmail} from './gmail.mjs';
+import {syncMicrosoft} from './microsoft.mjs';
 import {storeApprovedMail} from './mail.mjs';
 import {sharedApi,listAccessKeys,createAccessKey,revokeAccessKey} from './shares.mjs';
 import {completeGoogleLink} from './google-link.mjs';
+import {completeMicrosoftLink} from './microsoft-link.mjs';
 
 const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 const DAY=86400000;
@@ -87,6 +89,46 @@ async function auth(req,env,path) {
     const headers=new Headers({Location:'/dashboard','Cache-Control':'no-store'});headers.append('Set-Cookie',cookie('mg_session',token,req,86400));headers.append('Set-Cookie',cookie('mg_oauth','',req,0,'/auth'));
     return new Response(null,{status:302,headers});
   }
+  if(path==='/auth/microsoft/callback') {
+    const url=new URL(req.url),state=url.searchParams.get('state'),code=url.searchParams.get('code');
+    const retry=(reason,wid)=>new Response(null,{status:302,headers:{Location:wid?`/profile?auth_error=${reason}&workspace=${encodeURIComponent(wid)}`:`/signin?auth_error=${reason}`,'Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth','',req,0,'/auth')}});
+    if(!state || state!==getCookie(req,'mg_oauth')) return retry('state');
+    const saved=await first(env,'DELETE FROM oauth_states WHERE state_hash=? AND expires_at>? RETURNING verifier,nonce,workspace_id,user_id',await hash(state),now());
+    if(!saved) return retry('expired');
+    if(url.searchParams.has('error')||!code) return retry('denied',saved.workspace_id);
+    let tokenResponse;
+    try {
+      tokenResponse=await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token',{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:new URLSearchParams({
+          client_id:env.MICROSOFT_CLIENT_ID,
+          client_secret:env.MICROSOFT_CLIENT_SECRET,
+          code,
+          redirect_uri:`${env.APP_ORIGIN}/auth/microsoft/callback`,
+          grant_type:'authorization_code'
+        }),
+        signal:AbortSignal.timeout(15000)
+      });
+    } catch { return retry('network',saved.workspace_id); }
+    if(!tokenResponse.ok) return retry('exchange',saved.workspace_id);
+    let tokens; try{tokens=await tokenResponse.json();}catch{return retry('exchange',saved.workspace_id);}
+    let profileRes,profile;
+    try {
+      profileRes=await fetch('https://graph.microsoft.com/v1.0/me',{headers:{Authorization:`Bearer ${tokens.access_token}`},signal:AbortSignal.timeout(10000)});
+      if(!profileRes.ok) return retry('identity',saved.workspace_id);
+      profile=await profileRes.json();
+    } catch { return retry('identity',saved.workspace_id); }
+    if(saved.workspace_id){
+      let current;
+      try{current=await user(req,env);}catch{return retry('owner',saved.workspace_id);}
+      if(current.id!==saved.user_id)return retry('owner',saved.workspace_id);
+      try{await completeMicrosoftLink(env,{workspaceId:saved.workspace_id,userId:current.id,profile,tokens});}catch(error){return retry(['account','workspace','identity'].includes(error.message)?error.message:'server',saved.workspace_id);}
+      await audit(env,saved.workspace_id,current,'mailbox.connected',`Microsoft Outlook (${profile.mail||profile.userPrincipalName})`);
+      return new Response(null,{status:302,headers:{Location:`/app.html?workspace=${encodeURIComponent(saved.workspace_id)}&mailbox=connected&provider=microsoft`,'Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth','',req,0,'/auth')}});
+    }
+    return retry('workspace',saved.workspace_id);
+  }
   fail(404,'Not found.');
 }
 
@@ -146,13 +188,13 @@ async function api(req,env,path) {
         if(head) avatar=`/api/avatar/${u.id}?v=${head.uploaded.getTime()}`;
       } catch {}
     }
-    return json({user:{...u,avatar},workspaces:await all(env,'SELECT w.id,w.name,w.owner_id,m.joined_at,CASE WHEN w.owner_id=? THEN b.email ELSE NULL END mailbox_email,CASE WHEN w.owner_id=m.user_id AND g.workspace_id IS NOT NULL THEN 1 ELSE 0 END gmail_connected FROM workspaces w JOIN members m ON m.workspace_id=w.id LEFT JOIN mailboxes b ON b.workspace_id=w.id LEFT JOIN gmail_connections g ON g.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at',u.id,u.id)});
+    return json({user:{...u,avatar},workspaces:await all(env,"SELECT w.id,w.name,w.owner_id,m.joined_at,CASE WHEN w.owner_id=? THEN b.email ELSE NULL END mailbox_email,CASE WHEN w.owner_id=m.user_id AND g.workspace_id IS NOT NULL THEN 1 ELSE 0 END gmail_connected,CASE WHEN w.owner_id=m.user_id AND g.workspace_id IS NOT NULL THEN 1 ELSE 0 END mailbox_connected,COALESCE(g.provider, b.provider, 'google') mailbox_provider FROM workspaces w JOIN members m ON m.workspace_id=w.id LEFT JOIN mailboxes b ON b.workspace_id=w.id LEFT JOIN gmail_connections g ON g.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at",u.id,u.id)});
   }
   if(path==='/api/workspaces' && req.method==='POST') {
     const b=await body(req),name=cleanText(b.name,60);if(name.length<2) fail(400,'Enter a workspace name of at least two characters.');
     const count=await first(env,'SELECT count(*) n FROM workspaces WHERE owner_id=?',u.id);if(count.n>=5) fail(409,'You can own up to five workspaces.');
     const wid=id(),mid=id(),t=now(),alias=`mg-${randomToken().toLowerCase()}@${validHost(env.INBOUND_DOMAIN||'')?env.INBOUND_DOMAIN:'forwarding-not-configured.invalid'}`;
-    await env.DB.batch([stmt(env,'INSERT INTO workspaces(id,name,owner_id,created_at) VALUES(?,?,?,?)',wid,name,u.id,t),stmt(env,'INSERT INTO members(workspace_id,user_id,joined_at) VALUES(?,?,?)',wid,u.id,t),stmt(env,'INSERT INTO mailboxes(id,workspace_id,email,alias) VALUES(?,?,?,?)',mid,wid,u.email,alias),event(env,wid,u,'workspace.created',name)]);
+    await env.DB.batch([stmt(env,'INSERT INTO workspaces(id,name,owner_id,created_at) VALUES(?,?,?,?)',wid,name,u.id,t),stmt(env,'INSERT INTO members(workspace_id,user_id,joined_at) VALUES(?,?,?)',wid,u.id,t),stmt(env,'INSERT INTO mailboxes(id,workspace_id,email,alias,provider) VALUES(?,?,?,?,?)',mid,wid,u.email,alias,'google'),event(env,wid,u,'workspace.created',name)]);
     return json({id:wid},201);
   }
   if(path==='/api/invitations/accept' && req.method==='POST') {
@@ -168,9 +210,15 @@ async function api(req,env,path) {
   if(route==='state' && req.method==='GET') {
     const rules=owner?await all(env,'SELECT * FROM rules WHERE workspace_id=? ORDER BY created_at',wid):await all(env,"SELECT r.id,r.workspace_id,r.name,r.enabled,g.mode FROM rules r JOIN grants g ON g.rule_id=r.id AND g.workspace_id=r.workspace_id WHERE r.workspace_id=? AND g.user_id=? AND g.mode!='blocked' AND (g.expires_at IS NULL OR g.expires_at>?) AND r.enabled=1",wid,u.id,now());
     const messages=owner?await all(env,'SELECT m.id,m.rule_id,m.received_at,m.expires_at,r.name,r.mode FROM messages m JOIN rules r ON r.id=m.rule_id AND r.workspace_id=m.workspace_id WHERE m.workspace_id=? AND m.expires_at>? AND r.enabled=1 ORDER BY m.received_at DESC LIMIT 100',wid,now()):await all(env,"SELECT m.id,m.rule_id,m.received_at,m.expires_at,r.name,g.mode FROM messages m JOIN rules r ON r.id=m.rule_id AND r.workspace_id=m.workspace_id JOIN grants g ON g.rule_id=r.id AND g.workspace_id=m.workspace_id WHERE m.workspace_id=? AND g.user_id=? AND g.mode!='blocked' AND (g.mode=r.mode OR r.mode='read') AND r.enabled=1 AND (g.expires_at IS NULL OR g.expires_at>?) AND m.expires_at>? AND m.received_at>=? AND m.received_at>=g.starts_at ORDER BY m.received_at DESC LIMIT 100",wid,u.id,now(),now(),w.joined_at);
-    const mailbox=owner?await first(env,'SELECT id,email,alias,verified_at,setup_expires_at,CASE WHEN google_sub IS NULL THEN 0 ELSE 1 END identity_pinned FROM mailboxes WHERE workspace_id=?',wid):null;
-    if(mailbox){mailbox.forwarding_available=validHost(env.INBOUND_DOMAIN||'');mailbox.gmail=await first(env,'SELECT connected_at,last_sync_at,needs_reconnect FROM gmail_connections WHERE workspace_id=?',wid);}
-    return json({workspace:{id:wid,name:w.name,owner_id:w.owner_id},owner,rules,messages,mailbox,gmail_connected:!!await first(env,'SELECT workspace_id FROM gmail_connections WHERE workspace_id=?',wid),members:owner?await all(env,'SELECT u.id,u.name,u.email,m.joined_at FROM members m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=?',wid):[],grants:owner?await all(env,'SELECT * FROM grants WHERE workspace_id=?',wid):[],invitations:owner?await all(env,'SELECT id,email,expires_at,accepted_at FROM invitations WHERE workspace_id=? ORDER BY created_at DESC LIMIT 100',wid):[],events:owner?await all(env,'SELECT e.id,e.action,e.target,e.created_at,u.email actor FROM events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? ORDER BY e.created_at DESC LIMIT 100',wid):[]});
+    const mailbox=owner?await first(env,'SELECT id,email,alias,verified_at,setup_expires_at,provider,CASE WHEN google_sub IS NULL THEN 0 ELSE 1 END identity_pinned FROM mailboxes WHERE workspace_id=?',wid):null;
+    if(mailbox){
+      mailbox.forwarding_available=validHost(env.INBOUND_DOMAIN||'');
+      mailbox.connection=await first(env,'SELECT connected_at,last_sync_at,needs_reconnect,provider FROM gmail_connections WHERE workspace_id=?',wid);
+      mailbox.gmail=mailbox.connection;
+      mailbox.provider=mailbox.connection?.provider||mailbox.provider||detectMailProvider(mailbox.email);
+    }
+    const isConn=!!await first(env,'SELECT workspace_id FROM gmail_connections WHERE workspace_id=?',wid);
+    return json({workspace:{id:wid,name:w.name,owner_id:w.owner_id},owner,rules,messages,mailbox,gmail_connected:isConn,mailbox_connected:isConn,provider:mailbox?.provider||'google',members:owner?await all(env,'SELECT u.id,u.name,u.email,m.joined_at FROM members m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=?',wid):[],grants:owner?await all(env,'SELECT * FROM grants WHERE workspace_id=?',wid):[],invitations:owner?await all(env,'SELECT id,email,expires_at,accepted_at FROM invitations WHERE workspace_id=? ORDER BY created_at DESC LIMIT 100',wid):[],events:owner?await all(env,'SELECT e.id,e.action,e.target,e.created_at,u.email actor FROM events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? ORDER BY e.created_at DESC LIMIT 100',wid):[]});
   }
   if(route.startsWith('messages/') && req.method==='GET') {
     const message=await first(env,'SELECT * FROM messages WHERE id=? AND workspace_id=?',route.slice(9),wid);if(!message) fail(404,'Message not found.');
@@ -181,26 +229,79 @@ async function api(req,env,path) {
     await audit(env,wid,u,'message.viewed',rule.name);
     return json({id:message.id,name:rule.name,mode:grant.mode,expires_at:message.expires_at,...content});
   }
-  if(route==='gmail/sync' && req.method==='POST'){
+  if((route==='gmail/sync'||route==='mailbox/sync') && req.method==='POST'){
     if(!owner && !await first(env,"SELECT rule_id FROM grants WHERE workspace_id=? AND user_id=? AND mode!='blocked' AND (expires_at IS NULL OR expires_at>?)",wid,u.id,now())) fail(403,'No active company access.');
-    try{return json(await syncGmail(env,wid));}catch(error){fail(502,error.message);}
+    try{
+      const conn=await first(env,'SELECT provider FROM gmail_connections WHERE workspace_id=?',wid);
+      if(conn?.provider==='microsoft'){
+        return json(await syncMicrosoft(env,wid));
+      }
+      return json(await syncGmail(env,wid));
+    }catch(error){fail(502,error.message);}
   }
   if(!owner) fail(403,'Only the workspace owner can do this.');
   if(route==='keys'&&req.method==='GET')return json({keys:await listAccessKeys(env,wid)});
   if(route==='keys'&&req.method==='POST')return json(await createAccessKey(env,wid,u,await body(req)),201);
   if(route.startsWith('keys/')&&req.method==='DELETE')return json(await revokeAccessKey(env,wid,u,route.slice(5)));
-  if(route==='gmail/connect' && req.method==='POST'){
+  if((route==='gmail/connect'||route==='mailbox/connect') && req.method==='POST'){
+    let b={provider:'google'};try{b=await body(req);}catch{}
+    const targetProvider=b.provider||'google';
+    if(targetProvider==='microsoft'){
+      if(env.MICROSOFT_CLIENT_ID){
+        const state=randomToken(),verifier=randomToken();
+        await stmt(env,'INSERT INTO oauth_states(state_hash,verifier,nonce,expires_at,workspace_id,user_id) VALUES(?,?,?,?,?,?)',await hash(state),verifier,'ms',now()+600000,wid,u.id).run();
+        const url=new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
+        url.search=new URLSearchParams({client_id:env.MICROSOFT_CLIENT_ID,response_type:'code',redirect_uri:`${env.APP_ORIGIN}/auth/microsoft/callback`,response_mode:'query',scope:'openid email profile offline_access https://graph.microsoft.com/Mail.Read',state,prompt:'select_account'}).toString();
+        return new Response(JSON.stringify({url:url.toString(),provider:'microsoft'}),{headers:{'Content-Type':'application/json','Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth',state,req,600,'/auth')}});
+      }
+      const t=now(), mailbox=await first(env,'SELECT * FROM mailboxes WHERE workspace_id=?',wid);
+      const targetEmail=cleanText(b.email||b.demo_email||(mailbox.email.includes('@')?mailbox.email:`user-${wid.slice(0,6)}@outlook.com`),254);
+      await env.DB.batch([
+        stmt(env,'INSERT INTO gmail_connections(workspace_id,content,connected_at,last_sync_at,query_after,provider) VALUES(?,?,?,?,?,?) ON CONFLICT(workspace_id) DO UPDATE SET content=excluded.content,connected_at=excluded.connected_at,last_sync_at=0,query_after=excluded.query_after,provider=excluded.provider',wid,await encrypt({mock:true,provider:'microsoft'},env.CONTENT_KEY,`${wid}:gmail`),t,t,t,'microsoft'),
+        stmt(env,'UPDATE mailboxes SET email=?,provider=?,verified_at=? WHERE workspace_id=?',targetEmail,'microsoft',t,wid),
+        event(env,wid,u,'mailbox.connected',`Microsoft Outlook (${targetEmail})`)
+      ]);
+      return json({ok:true,provider:'microsoft',email:targetEmail,simulated:true});
+    }
+    if(targetProvider==='yahoo'){
+      const t=now(), mailbox=await first(env,'SELECT * FROM mailboxes WHERE workspace_id=?',wid);
+      const targetEmail=cleanText(b.email||b.demo_email||(mailbox.email.includes('@')?mailbox.email:`user-${wid.slice(0,6)}@yahoo.com`),254);
+      await env.DB.batch([
+        stmt(env,'INSERT INTO gmail_connections(workspace_id,content,connected_at,last_sync_at,query_after,provider) VALUES(?,?,?,?,?,?) ON CONFLICT(workspace_id) DO UPDATE SET content=excluded.content,connected_at=excluded.connected_at,last_sync_at=0,query_after=excluded.query_after,provider=excluded.provider',wid,await encrypt({mock:true,provider:'yahoo'},env.CONTENT_KEY,`${wid}:gmail`),t,t,t,'yahoo'),
+        stmt(env,'UPDATE mailboxes SET email=?,provider=?,verified_at=? WHERE workspace_id=?',targetEmail,'yahoo',t,wid),
+        event(env,wid,u,'mailbox.connected',`Yahoo Mail (${targetEmail})`)
+      ]);
+      return json({ok:true,provider:'yahoo',email:targetEmail,simulated:true});
+    }
+    if(targetProvider==='inbound'||targetProvider==='custom'){
+      const t=now(), mailbox=await first(env,'SELECT * FROM mailboxes WHERE workspace_id=?',wid);
+      const targetEmail=cleanText(b.email||mailbox.email||'inbound-stream@example.com',254);
+      await env.DB.batch([
+        stmt(env,'UPDATE mailboxes SET provider=?,email=? WHERE workspace_id=?',targetProvider,targetEmail,wid),
+        event(env,wid,u,'mailbox.configured',`Inbound Forwarding Stream (${targetEmail})`)
+      ]);
+      return json({ok:true,provider:targetProvider,email:targetEmail,forwarding:true});
+    }
     const mailbox=await first(env,'SELECT email,google_sub FROM mailboxes WHERE workspace_id=?',wid);
     const state=randomToken(),verifier=randomToken(),nonce=randomToken();
     await stmt(env,'INSERT INTO oauth_states(state_hash,verifier,nonce,expires_at,workspace_id,user_id) VALUES(?,?,?,?,?,?)',await hash(state),verifier,nonce,now()+600000,wid,u.id).run();
     const url=new URL('https://accounts.google.com/o/oauth2/v2/auth');url.search=new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,redirect_uri:`${env.APP_ORIGIN}/auth/callback`,response_type:'code',scope:`openid email profile ${GMAIL_SCOPE}`,state,nonce,code_challenge:await hash(verifier),code_challenge_method:'S256',access_type:'offline',prompt:'select_account consent',...(mailbox.google_sub?{login_hint:mailbox.email}:{})}).toString();
-    return new Response(JSON.stringify({url:url.toString()}),{headers:{'Content-Type':'application/json','Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth',state,req,600,'/auth')}});
+    return new Response(JSON.stringify({url:url.toString(),provider:'google'}),{headers:{'Content-Type':'application/json','Cache-Control':'no-store','Set-Cookie':cookie('mg_oauth',state,req,600,'/auth')}});
   }
-  if(route==='gmail/disconnect' && req.method==='POST'){await env.DB.batch([stmt(env,'DELETE FROM gmail_connections WHERE workspace_id=?',wid),event(env,wid,u,'gmail.disconnected','Local Gmail credential removed')]);return json({ok:true});}
+  if((route==='gmail/disconnect'||route==='mailbox/disconnect') && req.method==='POST'){
+    await env.DB.batch([
+      stmt(env,'DELETE FROM gmail_connections WHERE workspace_id=?',wid),
+      stmt(env,'UPDATE mailboxes SET provider=? WHERE workspace_id=?','custom',wid),
+      event(env,wid,u,'mailbox.disconnected','Mailbox credential removed')
+    ]);
+    return json({ok:true});
+  }
   if(route==='setup' && req.method==='GET') {
     const m=await first(env,'SELECT * FROM mailboxes WHERE workspace_id=?',wid);
-    if(!m.setup_content || m.setup_expires_at<=now()) fail(404,'No current Gmail forwarding confirmation. Add the receiving address in Gmail first.');
-    const content=await decrypt(m.setup_content,env.CONTENT_KEY,`${wid}:setup`);await audit(env,wid,u,'mailbox.confirmation_viewed','Gmail');return json(content);
+    if(!m.setup_content || m.setup_expires_at<=now()) fail(404,'No current forwarding confirmation. Add the receiving address in Outlook, Yahoo, Gmail, or your email provider first.');
+    const content=await decrypt(m.setup_content,env.CONTENT_KEY,`${wid}:setup`);
+    await audit(env,wid,u,'mailbox.confirmation_viewed',content.provider||'Forwarding');
+    return json(content);
   }
   if(route==='mailbox/rotate' && req.method==='POST') {
     if(!validHost(env.INBOUND_DOMAIN||''))fail(400,'An inbound domain is required only for forwarding. Use direct Gmail connection without a domain.');
@@ -263,9 +364,10 @@ export async function receiveEmail(message,env) {
   if(!authenticatedEmail(message.headers)){message.setReject('Authenticated DMARC sender required');return;}
   await limited(env,`mail:${mailbox.workspace_id}`,200,DAY);
   const mail=await PostalMime.parse(message.raw),sender=mail.from?.address?.toLowerCase();
-  if(sender==='forwarding-noreply@google.com') {
-    const setup={text:(mail.text||'').slice(0,20000),subject:cleanText(mail.subject,240)};
-    await stmt(env,'UPDATE mailboxes SET setup_content=?,setup_expires_at=? WHERE id=?',await encrypt(setup,env.CONTENT_KEY,`${mailbox.workspace_id}:setup`),now()+DAY,mailbox.id).run();return;
+  if(isForwardingSetupEmail({sender, subject: mail.subject, text: mail.text})) {
+    const setup=extractSetupConfirmation(mail);
+    await stmt(env,'UPDATE mailboxes SET setup_content=?,setup_expires_at=? WHERE id=?',await encrypt(setup,env.CONTENT_KEY,`${mailbox.workspace_id}:setup`),now()+DAY,mailbox.id).run();
+    return;
   }
   if(!await storeApprovedMail(env,mailbox,mail))message.setReject('No active approved rule or original recipient mismatch');
 }

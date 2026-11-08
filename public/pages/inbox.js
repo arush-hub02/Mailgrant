@@ -139,7 +139,7 @@ export function inboxEmptyState(state = {}, demo = false, isSearch = false, quer
           <div class="guidance-card-icon">${icon('mail')}</div>
           <div class="guidance-card-content">
             <h4>3. Inbound Pipeline</h4>
-            <p>Link your Gmail account or copy your dedicated inbound forwarding address.</p>
+            <p>Link Outlook, Gmail, Yahoo, or copy your dedicated inbound forwarding address.</p>
           </div>
           <span class="guidance-link">Mailbox setup →</span>
         </div>

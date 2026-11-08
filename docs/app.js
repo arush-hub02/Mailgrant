@@ -3,7 +3,7 @@ import {getTheme, getThemeSetting, setThemeSetting} from './theme.js';
 import {icon, iconPaths} from './components/icons.js';
 import {openModal, closeModal} from './components/modal.js';
 import {initDropdownSystem, initDropdowns} from './components/dropdown.js';
-import {getCompanyLogo} from './components/logos.js';
+import {getCompanyLogo, getMailboxLogo, getProviderDisplayName, providerLogos} from './components/logos.js';
 import {
   renderSidebar,
   isSidebarCollapsed,
@@ -556,7 +556,11 @@ async function handleAction(action,el){
     case'workspace-picker':
       modal('Choose workspace', `<div class="mg-workspace-list">${me.workspaces.map(w=>`<button type="button" class="mg-workspace-card-btn ${w.id===wid?'active':''}" data-switch-workspace="${esc(w.id)}"><span class="square-avatar">${esc((w.name&&w.name[0])?w.name[0].toUpperCase():'W')}</span><div><strong style="color:var(--ink);font-size:13px;display:block;">${esc(w.name)}</strong>${w.mailbox_email?`<small style="color:var(--muted);font-size:11px;">${esc(w.mailbox_email)}</small>`:''}</div>${w.id===wid?`<span class="active-badge">Active</span>`:''}</button>`).join('')}</div>`, { subtitle: 'Select an active workspace to manage its inboxes, rules, and settings.' });
       break;
-    case'refresh':if(!demo&&state.gmail_connected)await request(scoped('gmail/sync'),'POST',{});await loadWorkspace();toast('Workspace refreshed.');break;
+    case'refresh':
+      if(!demo&&(state.mailbox_connected||state.gmail_connected)) await request(scoped('mailbox/sync'),'POST',{});
+      await loadWorkspace();
+      toast('Workspace refreshed.');
+      break;
     case'invite':openInviteModal(modal);break;
     case'add-gmail':openMailboxModal({me,demo,modal});break;
     case'key':openKeyModal({state,modal,toast});break;
@@ -581,20 +585,126 @@ async function handleAction(action,el){
       await handleAction('logout');
       break;
     }
-    case'gmail-connect':if(demo){modal('Gmail connection in live mode','<p>In the live app, this opens Google’s read-only Gmail consent screen. No real account is connected in the sample workspace.</p><div class="notice amber">The app receives mailbox-wide read permission from Google. Your invitees still receive only the content allowed by your rules.</div><button class="btn primary" data-action="demo-gmail-connect">Simulate Gmail connection</button>');break;}else{const result=await request(scoped('gmail/connect'),'POST',{});location.assign(result.url);break;}
-    case'demo-gmail-connect':await mutate('gmail/connect','POST',{},'Sample Gmail connection enabled. No real account connected.');break;
-    case'gmail-disconnect':confirmAction('Disconnect Gmail?','This removes the stored Gmail credential from this workspace and stops syncing. Retained messages expire normally. You can also revoke the app in your Google Account connections.','confirm-gmail-disconnect');break;
-    case'confirm-gmail-disconnect':await mutate('gmail/disconnect','POST',{},'Gmail disconnected.');break;
+    case'mailbox-connect':
+    case'gmail-connect':
+      openMailboxModal({me,demo,modal});
+      break;
+    case'demo-gmail-connect':
+      await mutate('mailbox/connect','POST',{provider:'google',email:'sample-mailbox@example.com'},'Sample Google mailbox linked. No real account connected.');
+      break;
+    case'mailbox-disconnect':
+    case'gmail-disconnect':
+      confirmAction('Disconnect Mailbox?','This removes the stored mailbox credential from this workspace and stops syncing. Retained messages expire normally. Originals in your mail provider remain untouched.','confirm-mailbox-disconnect');
+      break;
+    case'confirm-mailbox-disconnect':
+    case'confirm-gmail-disconnect':
+      await mutate('mailbox/disconnect','POST',{},'Mailbox disconnected.');
+      break;
     case'workspace':modal('Create a private workspace',`<p>Each workspace has its own receiving address, rules, members, and message history.</p><form id="workspace-form">${field('Workspace name','name','e.g. Personal workspace','required minlength="2" maxlength="60"')}${formFooter('Create workspace')}</form>`);break;
     case'logout':await window.mailgrantLogout();break;
     case'reset':api.reset();wid='personal';await navigate('dashboard',true);await boot();toast('Sample workspace reset.');break;
     case'simulate':api.simulate(wid);await loadWorkspace();toast('New sample email received.');break;
-    case'setup':{const setup=await request(scoped('setup'));modal('Gmail forwarding confirmation',`<p>Administrator setup message. Enter the code or use the confirmation instructions in Gmail.</p><p class="message-text">${esc(setup.text)}</p><div class="notice">Do not enable global forwarding. Create a filter for each approved sender instead.</div>`);break;}
-    case'rotate':confirmAction('Rotate receiving address?','The old address will stop receiving mail. You must verify the new address and update your Gmail filters.','confirm-rotate');break;
-    case'confirm-rotate':await mutate('mailbox/rotate','POST',{},'Receiving address rotated. Update Gmail forwarding.');break;
-    case'purge':confirmAction('Delete retained messages?','This deletes the messages currently stored in this workspace. It does not delete originals in Gmail.','confirm-purge');break;
+    case'setup':{
+      try {
+        const setup=await request(scoped('setup'));
+        const pName = setup.provider_name || 'Mail Provider';
+        const codeHtml = setup.code ? `
+          <div class="mg-forwarding-code-strip" style="margin:16px 0; padding:16px; background:rgba(0,229,255,0.06); border:1px solid var(--accent); border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+            <div>
+              <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; display:block; margin-bottom:4px;">Forwarding Verification Code</span>
+              <code style="font-size:22px; font-weight:800; letter-spacing:0.12em; color:var(--accent);">${esc(setup.code)}</code>
+            </div>
+            <button type="button" class="btn small primary" data-copy="${esc(setup.code)}">
+              ${icon('copy')}
+              <span>Copy Code</span>
+            </button>
+          </div>
+        ` : '';
+        const linkHtml = setup.link ? `
+          <div style="margin:12px 0;">
+            <a href="${esc(setup.link)}" target="_blank" rel="noopener noreferrer" class="btn small primary-glow" style="display:inline-flex; align-items:center; gap:6px;">
+              <span>Open Confirmation Link ↗</span>
+            </a>
+          </div>
+        ` : '';
+        modal(`${pName} Forwarding Confirmation`, `
+          <p style="margin-bottom:12px;">${esc(setup.instructions || 'Copy the verification code or use the instructions below to enable forwarding.')}</p>
+          ${codeHtml}
+          ${linkHtml}
+          <details style="margin-top:16px; background:rgba(0,0,0,0.2); border-radius:8px; padding:10px 14px; border:1px solid rgba(255,255,255,0.08);">
+            <summary style="cursor:pointer; font-size:12px; opacity:0.8; font-weight:600;">View Raw Setup Email</summary>
+            <pre class="message-text" style="margin-top:10px; font-size:11px; max-height:220px; overflow:auto; white-space:pre-wrap;">${esc(setup.text)}</pre>
+          </details>
+          <div class="notice" style="margin-top:16px;">
+            <strong>Security Best Practice:</strong> Do not enable global forwarding. Create a rule in your mail provider to forward only emails from your approved senders (e.g. Anthropic, OpenAI, Notion).
+          </div>
+        `);
+      } catch(err) {
+        toast(err.message || 'No current forwarding confirmation found.');
+      }
+      break;
+    }
+    case'forwarding-guide':{
+      const alias = state.mailbox?.alias || 'your-inbound-alias@domain';
+      modal('Forwarding Setup Instructions', `
+        <p class="modal-intro">Follow these steps in your webmail provider to forward only approved service messages to Mailgrant:</p>
+        <div class="mg-guide-tabs" style="display:flex; flex-direction:column; gap:16px; margin:16px 0;">
+          <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              ${providerLogos.outlook(22)}
+              <strong style="font-size:14px;">Microsoft Outlook / Hotmail</strong>
+            </div>
+            <ol style="margin:0; padding-left:18px; font-size:12px; line-height:1.6; opacity:0.85;">
+              <li>Go to <strong>Settings (gear icon) > Mail > Rules</strong> (or Forwarding).</li>
+              <li>Add a new rule: <em>Condition: Sender contains "mail.anthropic.com" (or your service)</em>.</li>
+              <li><em>Action: Forward to</em> <code>${esc(alias)}</code>.</li>
+              <li>If Outlook asks to verify, click <strong>View Forwarding Confirmation</strong> in Mailgrant to copy the security code.</li>
+            </ol>
+          </div>
+
+          <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              ${providerLogos.yahoo(22)}
+              <strong style="font-size:14px;">Yahoo Mail</strong>
+            </div>
+            <ol style="margin:0; padding-left:18px; font-size:12px; line-height:1.6; opacity:0.85;">
+              <li>Go to <strong>Settings > More Settings > Filters</strong> (or Mailboxes > Forwarding).</li>
+              <li>Add rule or forwarding address <code>${esc(alias)}</code> and click Verify.</li>
+              <li>Click <strong>View Forwarding Confirmation</strong> in Mailgrant to copy the Yahoo confirmation code.</li>
+            </ol>
+          </div>
+
+          <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              ${providerLogos.gmail(22)}
+              <strong style="font-size:14px;">Google Gmail</strong>
+            </div>
+            <ol style="margin:0; padding-left:18px; font-size:12px; line-height:1.6; opacity:0.85;">
+              <li>Go to <strong>Settings > See all settings > Forwarding and POP/IMAP</strong>.</li>
+              <li>Click <strong>Add a forwarding address</strong> and enter <code>${esc(alias)}</code>.</li>
+              <li>Click <strong>View Forwarding Confirmation</strong> in Mailgrant to grab the confirmation code.</li>
+              <li>Create a filter for approved senders pointing to this forwarding address.</li>
+            </ol>
+          </div>
+
+          <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              ${providerLogos.custom(22)}
+              <strong style="font-size:14px;">iCloud, Proton, Zoho & Custom Domains</strong>
+            </div>
+            <p style="margin:0; font-size:12px; line-height:1.6; opacity:0.85;">
+              Create an inbound rule or filter in your email client that forwards messages from your approved services directly to <code>${esc(alias)}</code>.
+            </p>
+          </div>
+        </div>
+      `);
+      break;
+    }
+    case'rotate':confirmAction('Rotate receiving address?','The old address will stop receiving mail. You must verify the new address and update your forwarding filters.','confirm-rotate');break;
+    case'confirm-rotate':await mutate('mailbox/rotate','POST',{},'Receiving address rotated. Update forwarding filters.');break;
+    case'purge':confirmAction('Delete retained messages?','This deletes the messages currently stored in this workspace. It does not delete originals in your email account.','confirm-purge');break;
     case'confirm-purge':await mutate('messages','DELETE',undefined,'Retained messages deleted.');break;
-    case'delete-workspace':modal('Delete this workspace',`<p>Members, rules, retained messages, and workspace history will be deleted. Remove its forwarding filters in Gmail too.</p><form id="delete-form">${field(`Type “${esc(state.workspace.name)}” to confirm`,'name','','required')}${formFooter('Delete workspace')}</form>`);break;
+    case'delete-workspace':modal('Delete this workspace',`<p>Members, rules, retained messages, and workspace history will be deleted. Remove its forwarding filters too.</p><form id="delete-form">${field(`Type “${esc(state.workspace.name)}” to confirm`,'name','','required')}${formFooter('Delete workspace')}</form>`);break;
     case'export':{const data={workspace:state.workspace.name,exported_at:new Date().toISOString(),rules:state.rules.map(({name,sender,subject_contains,mode,retention_minutes,link_host,enabled})=>({name,sender,subject_contains,mode,retention_minutes,link_host,enabled})),permissions:state.grants.map(g=>({person:state.members.find(m=>m.id===g.user_id)?.email,rule:state.rules.find(r=>r.id===g.rule_id)?.name,mode:g.mode,expires_at:g.expires_at}))};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='mailgrant-configuration.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Configuration downloaded.');break;}
     case'export-audit':{
       const data={workspace:state.workspace?.name||'Workspace',exported_at:new Date().toISOString(),event_count:(state.events||[]).length,events:state.events||[]};
@@ -804,6 +914,19 @@ document.addEventListener('keydown',e=>{
 
 document.addEventListener('change',async e=>{
   try{
+    if(e.target.name==='provider'){
+      document.querySelectorAll('.mg-provider-radio-card').forEach(card=>{
+        const input=card.querySelector('input[type="radio"]');
+        if(input&&input.checked){
+          card.style.borderColor='var(--accent)';
+          card.style.background='rgba(0,229,255,0.06)';
+        }else{
+          card.style.borderColor='rgba(255,255,255,0.12)';
+          card.style.background='rgba(255,255,255,0.02)';
+        }
+      });
+      return;
+    }
     if(e.target.id==='avatar-file-input'){
       const file=e.target.files?.[0];
       if(!file)return;
@@ -920,11 +1043,26 @@ document.addEventListener('submit',async e=>{
       return;
     }
     if(form.id==='mailbox-form'){
+      const provider = form.querySelector('input[name="provider"]:checked')?.value || b.provider || 'google';
       const created=await request('/api/workspaces','POST',{name:b.name});
       wid=created.id;
-      await navigate('profile',true);
-      if(demo){await request(scoped('gmail/connect'),'POST',{email:b.demo_email||'sample-mailbox@example.com'});$('#dialog').close();await boot();toast('Sample mailbox linked.');}
-      else{const result=await request(scoped('gmail/connect'),'POST',{});location.assign(result.url);}
+      await navigate('mailboxes',true);
+      if(demo){
+        await request(scoped('mailbox/connect'),'POST',{provider, email:b.demo_email||`sample-${provider}@example.com`});
+        $('#dialog').close();
+        await boot();
+        toast(`${getProviderDisplayName(provider)} mailbox linked.`);
+      } else {
+        const result=await request(scoped('mailbox/connect'),'POST',{provider, email:b.demo_email});
+        if(result.url){
+          location.assign(result.url);
+        } else {
+          $('#dialog').close();
+          await boot();
+          toast(`${getProviderDisplayName(provider)} mailbox ready.`);
+        }
+      }
+      return;
     }
     if(form.id==='workspace-form'){
       const result=await request('/api/workspaces','POST',b);

@@ -490,8 +490,8 @@ function workspaceRetentionSection({ state = {}, isOwner = false, activeTab = 'w
         <section class="panel glass-neon-card" style="margin-top: 20px;">
           <div class="panel-head">
             <div>
-              <h2>Optional Gmail Inbound Forwarding</h2>
-              <p>Forwarding keeps unrelated messages out of Mailgrant entirely and does not require Google read access.</p>
+              <h2>Dedicated Inbound Mail Forwarding (Worldwide Compatibility)</h2>
+              <p>Forwarding keeps unrelated messages out of Mailgrant entirely and works with Outlook, Yahoo, Gmail, iCloud, Proton, or any corporate domain.</p>
             </div>
             ${badge(m.verified_at ? 'Pipeline Verified' : 'Awaiting Mail', m.verified_at ? 'green' : 'amber')}
           </div>
@@ -507,10 +507,10 @@ function workspaceRetentionSection({ state = {}, isOwner = false, activeTab = 'w
                   ${icon('mail')}
                   <span>View Forwarding Confirmation Code</span>
                 </button>
-                <a class="btn small" href="https://support.google.com/mail/answer/10957?hl=en" target="_blank" rel="noopener noreferrer">
-                  <span>Gmail setup instructions</span>
+                <button type="button" class="btn small" data-action="forwarding-guide">
+                  <span>Forwarding setup instructions</span>
                   ${icon('arrow')}
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -543,7 +543,7 @@ function ownerDangerZoneSection({ state = {}, activeTab = 'danger' }) {
             <div class="danger-action-tile">
               <div class="danger-action-meta">
                 <strong>Purge Retained Dispatches</strong>
-                <p>Immediately purges all cached emails and codes stored in this workspace. Originals in your Gmail account are untouched.</p>
+                <p>Immediately purges all cached emails and codes stored in this workspace. Originals in your mail account are untouched.</p>
               </div>
               <button type="button" class="btn small danger" data-action="purge">
                 ${icon('trash')}

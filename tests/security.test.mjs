@@ -341,3 +341,72 @@ test('individual access supports subdomain selection and expired keys auto-purge
   assert.equal(listData2.keys.some(k => k.id === 'old-key'), false);
   assert.equal(listData2.keys.some(k => k.id === 'recent-key'), true);
 });
+
+test('multi-provider email support detects Outlook, Yahoo, and iCloud forwarding verification', async () => {
+  const {detectMailProvider, isForwardingSetupEmail, extractSetupConfirmation} = await import('../src/security.mjs');
+  
+  assert.equal(detectMailProvider('user@outlook.com'), 'microsoft');
+  assert.equal(detectMailProvider('user@hotmail.com'), 'microsoft');
+  assert.equal(detectMailProvider('user@yahoo.com'), 'yahoo');
+  assert.equal(detectMailProvider('user@icloud.com'), 'apple');
+  assert.equal(detectMailProvider('user@proton.me'), 'proton');
+  assert.equal(detectMailProvider('user@gmail.com'), 'google');
+  assert.equal(detectMailProvider('user@corp.example'), 'custom');
+
+  // Microsoft Outlook forwarding verification email
+  const msMail = {
+    from: { address: 'account-security-noreply@accountprotection.microsoft.com' },
+    subject: 'Microsoft account security code',
+    text: 'Please use the security code 849201 to verify your email forwarding address for Outlook.'
+  };
+  assert.ok(isForwardingSetupEmail(msMail));
+  const msExtracted = extractSetupConfirmation(msMail);
+  assert.equal(msExtracted.provider, 'microsoft');
+  assert.equal(msExtracted.code, '849201');
+
+  // Yahoo forwarding verification email
+  const yahooMail = {
+    from: { address: 'no-reply@cc.yahoo-inc.com' },
+    subject: 'Yahoo Mail: Verify your forwarding address',
+    text: 'To verify your forwarding email address in Yahoo Mail, your confirmation code is 318492.'
+  };
+  assert.ok(isForwardingSetupEmail(yahooMail));
+  const yahooExtracted = extractSetupConfirmation(yahooMail);
+  assert.equal(yahooExtracted.provider, 'yahoo');
+  assert.equal(yahooExtracted.code, '318492');
+});
+
+test('multi-provider mailbox connection connects Outlook, Yahoo, and Inbound stream', async () => {
+  const f = await fixture();
+
+  // Connect Outlook
+  const msConnect = await f.call('/api/w/one/mailbox/connect', {
+    user: 'owner',
+    method: 'POST',
+    body: { provider: 'microsoft', email: 'owner@outlook.com' }
+  });
+  assert.equal(msConnect.status, 200);
+  const msData = await msConnect.json();
+  assert.equal(msData.provider, 'microsoft');
+
+  // Check state returns provider
+  const stateResp = await f.call('/api/w/one/state', { user: 'owner' });
+  const stateData = await stateResp.json();
+  assert.equal(stateData.provider, 'microsoft');
+  assert.equal(stateData.mailbox.provider, 'microsoft');
+
+  // Connect Yahoo
+  const yahooConnect = await f.call('/api/w/one/mailbox/connect', {
+    user: 'owner',
+    method: 'POST',
+    body: { provider: 'yahoo', email: 'owner@yahoo.com' }
+  });
+  assert.equal(yahooConnect.status, 200);
+  const yahooData = await yahooConnect.json();
+  assert.equal(yahooData.provider, 'yahoo');
+
+  // Check state returns yahoo provider
+  const stateResp2 = await f.call('/api/w/one/state', { user: 'owner' });
+  const stateData2 = await stateResp2.json();
+  assert.equal(stateData2.provider, 'yahoo');
+});

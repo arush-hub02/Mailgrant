@@ -206,3 +206,129 @@ export function projectContent(content, mode) {
   if(mode==='read') return content;
   return null;
 }
+
+export function detectMailProvider(emailOrSender = '') {
+  const s = String(emailOrSender || '').toLowerCase().trim();
+  if (s.includes('google') || s.includes('gmail') || s.endsWith('@googlemail.com')) return 'google';
+  if (s.includes('microsoft') || s.includes('outlook') || s.includes('hotmail') || s.includes('live.com') || s.includes('msn.com') || s.includes('office365') || s.includes('office.com') || s.includes('accountprotection')) return 'microsoft';
+  if (s.includes('yahoo') || s.includes('ymail.com') || s.includes('rocketmail.com')) return 'yahoo';
+  if (s.includes('apple') || s.includes('icloud') || s.includes('me.com') || s.includes('mac.com')) return 'apple';
+  if (s.includes('proton') || s.includes('pm.me')) return 'proton';
+  if (s.includes('zoho')) return 'zoho';
+  if (s.includes('fastmail')) return 'fastmail';
+  return 'custom';
+}
+
+export function getProviderDisplayName(provider = '') {
+  const p = String(provider).toLowerCase();
+  switch (p) {
+    case 'google':
+    case 'gmail':
+      return 'Google Gmail';
+    case 'microsoft':
+    case 'outlook':
+    case 'hotmail':
+      return 'Microsoft Outlook / Hotmail';
+    case 'yahoo':
+      return 'Yahoo Mail';
+    case 'apple':
+    case 'icloud':
+      return 'Apple iCloud';
+    case 'proton':
+      return 'ProtonMail';
+    case 'zoho':
+      return 'Zoho Mail';
+    case 'fastmail':
+      return 'Fastmail';
+    default:
+      return 'Inbound Mail Stream';
+  }
+}
+
+export function isForwardingSetupEmail({ sender = '', subject = '', text = '' } = {}) {
+  const s = String(sender || '').toLowerCase().trim();
+  const sub = String(subject || '').toLowerCase().trim();
+  const knownSenders = [
+    'forwarding-noreply@google.com',
+    'account-security-noreply@accountprotection.microsoft.com',
+    'no-reply@microsoft.com',
+    'member_services@live.com',
+    'mail-noreply@microsoft.com',
+    'msa@communication.microsoft.com',
+    'no-reply@cc.yahoo-inc.com',
+    'account-security-noreply@cc.yahoo-inc.com',
+    'confirmation-service@yahoo-inc.com',
+    'noreply@email.apple.com',
+    'appleid@id.apple.com',
+    'notify@proton.me',
+    'no-reply@proton.me',
+    'support@zohomail.com',
+    'noreply@zohomail.com'
+  ];
+  if (knownSenders.includes(s) || s.endsWith('@accountprotection.microsoft.com') || s.endsWith('@cc.yahoo-inc.com')) {
+    return true;
+  }
+  const patterns = [
+    /forward(?:ing)?\s+(?:confirmation|verification|request|code|address)/i,
+    /verify\s+(?:your\s+)?(?:email|forwarding|account)/i,
+    /confirm\s+(?:your\s+)?(?:email|forwarding|account)/i,
+    /verification\s+code/i,
+    /security\s+code/i
+  ];
+  return patterns.some(p => p.test(sub));
+}
+
+export function extractSetupConfirmation(mail) {
+  const subject = cleanText(mail.subject, 240);
+  let text = '';
+  if (mail.text) {
+    text = mail.text.slice(0, 20000);
+  } else if (mail.html) {
+    text = htmlToText(mail.html).slice(0, 20000);
+  }
+  const sender = mail.from?.address ? mail.from.address.toLowerCase() : '';
+  const provider = detectMailProvider(sender || mail.to?.[0]?.address || '');
+  const providerName = getProviderDisplayName(provider);
+
+  let code = null;
+  const codeMatch = text.match(/(?:confirmation|verification|security)\s+code(?:\s+is)?[:\s]+([0-9]{4,10})/i) ||
+                    text.match(/code[:\s]+([0-9]{4,10})/i) ||
+                    text.match(/\b([0-9]{6,9})\b/);
+  if (codeMatch) code = codeMatch[1];
+
+  let link = null;
+  const linkMatches = [
+    ...[...(mail.html || '').matchAll(/<a\b[^>]*href=["'](https:\/\/[^"'\s<>]+)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m => m[1]),
+    ...[...(text || '').matchAll(/https:\/\/[^\s<>"')]+/g)].map(m => m[0])
+  ].map(u => u.replaceAll('&amp;', '&').replace(/[.,;>)]+$/, ''));
+
+  for (const rawUrl of linkMatches) {
+    try {
+      const u = new URL(rawUrl);
+      if (['google.com', 'microsoft.com', 'live.com', 'yahoo.com', 'apple.com', 'proton.me', 'zoho.com'].some(d => u.hostname === d || u.hostname.endsWith('.' + d))) {
+        link = rawUrl;
+        break;
+      }
+    } catch {}
+  }
+
+  let instructions = 'Enter this confirmation code or click the confirmation link in your mail provider to enable forwarding.';
+  if (provider === 'microsoft') {
+    instructions = 'Copy the Microsoft security code and paste it into Outlook / Hotmail Settings > Mail > Forwarding to confirm.';
+  } else if (provider === 'yahoo') {
+    instructions = 'Copy the Yahoo verification code and paste it into Yahoo Mail Settings > More Settings > Mailboxes > Forwarding.';
+  } else if (provider === 'google') {
+    instructions = 'Copy the confirmation code into Gmail Settings > Forwarding and POP/IMAP, or click the verification link.';
+  }
+
+  return {
+    provider,
+    provider_name: providerName,
+    sender,
+    subject,
+    text,
+    code,
+    link,
+    instructions
+  };
+}
