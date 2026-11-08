@@ -10,7 +10,7 @@ for(const dir of ['src','public','scripts','tests']){
 for(const html of ['index.html','app.html','access.html','docs.html','privacy.html','signin.html']){
   const text=await readFile(new URL(`../public/${html}`,import.meta.url),'utf8');
   for(const match of text.matchAll(/(?:src|href)="\/(?!\/)([^"?#]+)"/g)){
-    if(match[1].startsWith('auth/') || ['dashboard','inbox','mailboxes','rules','people','activity','profile','app','access','docs','privacy','signin','login'].includes(match[1]))continue;
+    if(match[1].startsWith('auth/') || ['dashboard','inbox','mailboxes','rules','people','activity','profile','app','access','docs','privacy','terms','signin','login'].includes(match[1]))continue;
     await readFile(new URL(`../public/${match[1]}`,import.meta.url));
   }
 }

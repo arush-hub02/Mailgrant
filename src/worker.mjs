@@ -590,6 +590,8 @@ export default {
             response = await env.ASSETS.fetch(new Request(new URL('/docs.html', req.url), req));
           } else if (path === '/privacy') {
             response = await env.ASSETS.fetch(new Request(new URL('/privacy.html', req.url), req));
+          } else if (path === '/terms') {
+            response = await env.ASSETS.fetch(new Request(new URL('/terms.html', req.url), req));
           } else {
             response = await env.ASSETS.fetch(req);
             if(response.status === 404 && ((req.headers.get('accept')||'').includes('text/html') || !path.includes('.'))) {

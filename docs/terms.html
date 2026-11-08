@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Terms of Service · Mailgrant</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192x192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/access.css">
+  <script type="module" src="/theme.js"></script>
+</head>
+<body>
+  <div class="access-wrap" style="max-width:840px;">
+    <header class="access-header">
+      <a class="brand" href="/" aria-label="Mailgrant Home">
+        <span class="brand-mark" style="display:grid;place-items:center;background:transparent;width:34px;height:34px;">
+          <img src="/images/mailgrant-mark.png" alt="Mailgrant Logo" width="32" height="32" class="brand-mark-img" />
+        </span>
+        <span class="brand-title">Mail<span class="brand-gradient-text">grant</span></span>
+      </a>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn small" data-theme-toggle aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+          <span style="font-size:12px;">Theme</span>
+        </button>
+        <a class="btn small primary" href="/dashboard">Workspace →</a>
+      </div>
+    </header>
+
+    <main>
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h1 style="font-size:24px; margin:0 0 4px;">Terms of Service</h1>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Terms governing your use of Mailgrant zero-trust email sharing</p>
+          </div>
+          <span class="badge blue">Last updated: November 2026</span>
+        </div>
+
+        <div class="panel-body" style="line-height:1.7; font-size:14px; color:var(--ink-secondary);">
+          <p>Welcome to <strong>Mailgrant</strong> ("the Application"). By accessing, deploying, or using Mailgrant, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the application.</p>
+          
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">1. Description of Service</h2>
+          <p>Mailgrant provides selective, zero-trust email proxying and access control. It enables mailbox owners to connect authorized email accounts (such as Google Gmail or Microsoft Outlook) and issue revocable, time-bound, and scope-restricted access keys to recipients for specific verification codes, magic sign-in links, or approved messages without disclosing email passwords or full inbox contents.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">2. Google API Services User Data Policy Compliance</h2>
+          <p>Mailgrant's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" style="color:var(--accent-bright); text-decoration:underline;">Google API Services User Data Policy</a>, including the Limited Use requirements:</p>
+          <ul style="padding-left:20px; margin:8px 0;">
+            <li>We only access read-only email data explicitly matching the exact sender and subject rules configured by the workspace administrator.</li>
+            <li>We do not transfer or disclose Google user data to third parties, except as strictly necessary to provide the email-sharing functionality requested by the user or as required by applicable law.</li>
+            <li>We do not use or transfer Google user data for serving advertisements, retargeting, personalized advertising, or training artificial intelligence or machine learning models.</li>
+            <li>Humans do not read your email content unless you have given explicit consent for specific troubleshooting or as required by law.</li>
+          </ul>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">3. User Accounts and Authorization</h2>
+          <p>You must possess legal authority to access and connect any email account integrated with Mailgrant. You are responsible for configuring approved sender rules and managing the dissemination of access keys. You agree not to use the service for unauthorized interception, spam, malicious surveillance, or in violation of applicable privacy laws.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">4. Sharing Keys and Bearer Access</h2>
+          <p>Mailgrant access keys operate as scoped bearer credentials. Anyone possessing an active key can view emails matching that key's assigned permissions. You agree to distribute keys only to intended, trusted recipients and to promptly revoke keys upon task completion. Mailgrant is not liable for unauthorized access resulting from user negligence in key transmission.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">5. Ephemeral Retention & Deletion</h2>
+          <p>Email content processed by Mailgrant is stored ephemerally with AES-GCM encryption and is subject to automated purging based on the retention window configured by the workspace owner (defaulting to 15 minutes to 24 hours). Mailgrant is an access delegation tool, not a permanent email archiving or backup system.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">6. Disclaimer of Warranties & Limitation of Liability</h2>
+          <p>Mailgrant is provided "AS IS" and "AS AVAILABLE" without warranty of any kind, express or implied. Under no circumstances shall the operators, authors, or contributors of Mailgrant be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use the service, service interruptions, or third-party email provider outages.</p>
+
+          <h2 style="font-size:18px; margin:24px 0 8px; color:var(--ink);">7. Changes to Terms</h2>
+          <p>We reserve the right to modify these Terms of Service at any time. Material changes will be published on this page with an updated revision date.</p>
+
+          <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line); display:flex; gap:12px; align-items:center;">
+            <a class="btn primary small" href="/privacy">Read our Privacy Policy →</a>
+            <a class="btn outline small" href="/">Back to Home</a>
+          </div>
+        </div>
+      </article>
+    </main>
+
+    <footer class="access-footer">
+      <div>Mailgrant · Privacy by Design · Built on Cloudflare D1 and Google OAuth</div>
+      <div style="margin-top:6px;">
+        <a href="/">Home</a> · <a href="/dashboard">Owner Workspace</a> · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a> · <a href="/docs">Visual Guide</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
