@@ -255,30 +255,44 @@ export function openKeyModal({ state, modal, toast }) {
 
           <div class="matrix-rules-list">
             ${activeRules.map((r, i) => {
-              const allowedModes = r.mode === 'read' ? ['blocked', 'codes', 'links', 'read'] : ['blocked', r.mode];
-              const defaultMode = allowedModes.includes('codes') ? 'codes' : allowedModes[1] || 'blocked';
+              const currentSelected = r.mode && ['codes', 'links', 'read'].includes(r.mode) ? r.mode : 'codes';
 
               return `
-                <div class="matrix-rule-row" data-rule-id="${esc(r.id)}">
-                  <div class="matrix-rule-info">
-                    <div class="matrix-logo-wrap">
-                      ${getCompanyLogo(r.name || r.sender, 28, i)}
+                <div class="matrix-rule-row" data-rule-id="${esc(r.id)}" data-current-mode="${currentSelected}">
+                  <div class="matrix-rule-top">
+                    <div class="matrix-rule-info">
+                      <div class="matrix-logo-wrap">
+                        ${getCompanyLogo(r.name || r.sender, 32, i)}
+                      </div>
+                      <div class="matrix-rule-text">
+                        <div class="matrix-name-row">
+                          <strong class="matrix-rule-name">${esc(r.name)}</strong>
+                          <span class="matrix-mode-status-badge badge-${currentSelected}" data-status-badge="${esc(r.id)}">
+                            ${currentSelected === 'codes' ? '🛡️ Codes only' : currentSelected === 'links' ? '🔗 Sign-in links' : currentSelected === 'read' ? '✉️ Full message' : '🚫 Blocked'}
+                          </span>
+                        </div>
+                        <span class="matrix-rule-sender"><code>${esc(r.sender)}</code></span>
+                      </div>
                     </div>
-                    <div>
-                      <strong class="matrix-rule-name">${esc(r.name)}</strong>
-                      <span class="matrix-rule-sender"><code>${esc(r.sender)}</code></span>
-                    </div>
-                  </div>
 
-                  <div class="matrix-pills-group">
-                    <button type="button" class="mode-pill ${defaultMode === 'blocked' ? 'selected' : ''}" data-set-mode="blocked">Blocked</button>
-                    <button type="button" class="mode-pill ${defaultMode === 'codes' ? 'selected' : ''}" data-set-mode="codes">Codes only</button>
-                    ${allowedModes.includes('links') ? `
-                      <button type="button" class="mode-pill ${defaultMode === 'links' ? 'selected' : ''}" data-set-mode="links">Sign-in links</button>
-                    ` : ''}
-                    ${allowedModes.includes('read') ? `
-                      <button type="button" class="mode-pill ${defaultMode === 'read' ? 'selected' : ''}" data-set-mode="read">Full message</button>
-                    ` : ''}
+                    <div class="matrix-pills-group" role="radiogroup" aria-label="Permission level for ${esc(r.name)}">
+                      <button type="button" class="mode-pill mode-pill-blocked ${currentSelected === 'blocked' ? 'selected' : ''}" data-set-mode="blocked" title="Block access to this service">
+                        <span class="pill-icon">🚫</span>
+                        <span>Blocked</span>
+                      </button>
+                      <button type="button" class="mode-pill mode-pill-codes ${currentSelected === 'codes' ? 'selected' : ''}" data-set-mode="codes" title="Extract and view login verification codes only">
+                        <span class="pill-icon">🛡️</span>
+                        <span>Codes only</span>
+                      </button>
+                      <button type="button" class="mode-pill mode-pill-links ${currentSelected === 'links' ? 'selected' : ''}" data-set-mode="links" title="Extract and click direct magic sign-in links">
+                        <span class="pill-icon">🔗</span>
+                        <span>Sign-in links</span>
+                      </button>
+                      <button type="button" class="mode-pill mode-pill-read ${currentSelected === 'read' ? 'selected' : ''}" data-set-mode="read" title="View complete encrypted email message">
+                        <span class="pill-icon">✉️</span>
+                        <span>Full message</span>
+                      </button>
+                    </div>
                   </div>
 
                   <!-- Individual Subdomain Scope Selection per Access -->
@@ -295,7 +309,7 @@ export function openKeyModal({ state, modal, toast }) {
                   </div>
 
                   <!-- Hidden select/input used by form submission -->
-                  <input type="hidden" data-key-rule="${esc(r.id)}" value="${defaultMode}">
+                  <input type="hidden" data-key-rule="${esc(r.id)}" value="${currentSelected}">
                 </div>
               `;
             }).join('')}
@@ -390,41 +404,71 @@ export function openKeyModal({ state, modal, toast }) {
           chip.classList.toggle('active', chip.dataset.setViews === preset.maxViews);
         });
 
-        // Set default permissions matrix
-        document.querySelectorAll('.matrix-rule-row').forEach(row => {
-          const modePills = row.querySelectorAll('.mode-pill');
+        // Helper to update a row's mode and status badge
+        const updateRowMode = (row, mode) => {
           const hiddenInput = row.querySelector('[data-key-rule]');
-          const targetMode = preset.defaultMode;
+          const ruleId = row.dataset.ruleId;
+          const statusBadge = row.querySelector(`[data-status-badge="${ruleId}"]`);
+          const modePills = row.querySelectorAll('.mode-pill');
+          const targetPill = row.querySelector(`[data-set-mode="${mode}"]`);
 
-          let targetBtn = row.querySelector(`[data-set-mode="${targetMode}"]`);
-          if (!targetBtn && targetMode === 'links') {
-            targetBtn = row.querySelector(`[data-set-mode="codes"]`);
-          }
-          if (!targetBtn) {
-            targetBtn = row.querySelector(`[data-set-mode="codes"]`);
-          }
+          modePills.forEach(p => p.classList.remove('selected'));
+          if (targetPill) targetPill.classList.add('selected');
 
-          if (targetBtn && hiddenInput) {
-            modePills.forEach(p => p.classList.remove('selected'));
-            targetBtn.classList.add('selected');
-            hiddenInput.value = targetBtn.dataset.setMode;
+          if (hiddenInput) hiddenInput.value = mode;
+          row.dataset.currentMode = mode;
+
+          if (statusBadge) {
+            statusBadge.className = `matrix-mode-status-badge badge-${mode}`;
+            const labels = {
+              blocked: '🚫 Blocked',
+              codes: '🛡️ Codes only',
+              links: '🔗 Sign-in links',
+              read: '✉️ Full message'
+            };
+            statusBadge.textContent = labels[mode] || mode;
           }
+        };
+
+        // Set default permissions matrix for selected preset
+        const targetMode = preset.defaultMode || 'codes';
+        document.querySelectorAll('.matrix-rule-row').forEach(row => {
+          updateRowMode(row, targetMode);
         });
       });
     });
 
+    // Helper to update a single row's mode and status badge
+    const updateRowMode = (row, mode) => {
+      const hiddenInput = row.querySelector('[data-key-rule]');
+      const ruleId = row.dataset.ruleId;
+      const statusBadge = row.querySelector(`[data-status-badge="${ruleId}"]`);
+      const modePills = row.querySelectorAll('.mode-pill');
+      const targetPill = row.querySelector(`[data-set-mode="${mode}"]`);
+
+      modePills.forEach(p => p.classList.remove('selected'));
+      if (targetPill) targetPill.classList.add('selected');
+
+      if (hiddenInput) hiddenInput.value = mode;
+      row.dataset.currentMode = mode;
+
+      if (statusBadge) {
+        statusBadge.className = `matrix-mode-status-badge badge-${mode}`;
+        const labels = {
+          blocked: '🚫 Blocked',
+          codes: '🛡️ Codes only',
+          links: '🔗 Sign-in links',
+          read: '✉️ Full message'
+        };
+        statusBadge.textContent = labels[mode] || mode;
+      }
+    };
+
     // Handle Matrix Pill clicks per rule
     document.querySelectorAll('.matrix-rule-row').forEach(row => {
-      const modePills = row.querySelectorAll('.mode-pill');
-      const hiddenInput = row.querySelector('[data-key-rule]');
-
-      modePills.forEach(pill => {
+      row.querySelectorAll('.mode-pill').forEach(pill => {
         pill.addEventListener('click', () => {
-          modePills.forEach(p => p.classList.remove('selected'));
-          pill.classList.add('selected');
-          if (hiddenInput) {
-            hiddenInput.value = pill.dataset.setMode;
-          }
+          updateRowMode(row, pill.dataset.setMode);
         });
       });
     });
@@ -462,51 +506,19 @@ export function openKeyModal({ state, modal, toast }) {
 
     // Quick Matrix Batch Actions
     document.getElementById('btn-matrix-all-codes')?.addEventListener('click', () => {
-      document.querySelectorAll('.matrix-rule-row').forEach(row => {
-        const btn = row.querySelector('[data-set-mode="codes"]');
-        const hidden = row.querySelector('[data-key-rule]');
-        if (btn && hidden) {
-          row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
-          btn.classList.add('selected');
-          hidden.value = 'codes';
-        }
-      });
+      document.querySelectorAll('.matrix-rule-row').forEach(row => updateRowMode(row, 'codes'));
     });
 
     document.getElementById('btn-matrix-all-links')?.addEventListener('click', () => {
-      document.querySelectorAll('.matrix-rule-row').forEach(row => {
-        const btn = row.querySelector('[data-set-mode="links"]') || row.querySelector('[data-set-mode="codes"]');
-        const hidden = row.querySelector('[data-key-rule]');
-        if (btn && hidden) {
-          row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
-          btn.classList.add('selected');
-          hidden.value = btn.dataset.setMode;
-        }
-      });
+      document.querySelectorAll('.matrix-rule-row').forEach(row => updateRowMode(row, 'links'));
     });
 
     document.getElementById('btn-matrix-all-read')?.addEventListener('click', () => {
-      document.querySelectorAll('.matrix-rule-row').forEach(row => {
-        const btn = row.querySelector('[data-set-mode="read"]') || row.querySelector('[data-set-mode="codes"]');
-        const hidden = row.querySelector('[data-key-rule]');
-        if (btn && hidden) {
-          row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
-          btn.classList.add('selected');
-          hidden.value = btn.dataset.setMode;
-        }
-      });
+      document.querySelectorAll('.matrix-rule-row').forEach(row => updateRowMode(row, 'read'));
     });
 
     document.getElementById('btn-matrix-clear')?.addEventListener('click', () => {
-      document.querySelectorAll('.matrix-rule-row').forEach(row => {
-        const btn = row.querySelector('[data-set-mode="blocked"]');
-        const hidden = row.querySelector('[data-key-rule]');
-        if (btn && hidden) {
-          row.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
-          btn.classList.add('selected');
-          hidden.value = 'blocked';
-        }
-      });
+      document.querySelectorAll('.matrix-rule-row').forEach(row => updateRowMode(row, 'blocked'));
     });
 
     // Quick limits chips

@@ -1283,7 +1283,26 @@ document.addEventListener('submit',async e=>{
       await loadWorkspace();
       modal('Your invitation is ready',`<p>Share this link privately with <strong>${esc(b.email)}</strong>. It works with any email provider (Outlook, Yahoo, iCloud, Proton, Gmail, or corporate) and expires in 48 hours.</p><div class="copy-box"><code>${esc(result.url)}</code><button class="icon-btn" data-copy="${esc(result.url)}" aria-label="Copy invitation link">${icon('copy')}</button></div><div class="notice">${demo?'This is an illustrative invitation. Use “Accept in demo” in People to continue the demonstration.':'No email has been sent. Copy the link and share it with your invitee.'}</div>`);
     }
-    if(form.id==='key-form'){const scopes=[...form.querySelectorAll('[data-key-rule]')].filter(s=>s.value!=='blocked').map(s=>({rule_id:s.dataset.keyRule,mode:s.value,subdomain:form.querySelector(`[data-key-subdomain="${s.dataset.keyRule}"]`)?.value?.trim()||'*'}));if(!scopes.length)throw new Error('Choose at least one company permission.');const accent=(typeof document!=='undefined'&&document.documentElement?.dataset?.accent)||'cyan';const result=await request(scoped('keys'),'POST',{name:b.name,scopes,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null,max_views:b.max_views?Number(b.max_views):null,accent});delete tabLoaded['keys'];await loadWorkspace();showKeyModal({result,modal});}
+    if(form.id==='key-form'){
+      const scopes=[...form.querySelectorAll('[data-key-rule]')].filter(s=>s.value!=='blocked').map(s=>({rule_id:s.dataset.keyRule,mode:s.value,subdomain:form.querySelector(`[data-key-subdomain="${s.dataset.keyRule}"]`)?.value?.trim()||'*'}));
+      if(!scopes.length)throw new Error('Choose at least one company permission.');
+      for(const s of scopes){
+        const r=state.rules?.find(rule=>rule.id===s.rule_id);
+        if(r && r.mode!=='read'){
+          const needsUpgrade=(s.mode==='read')||(s.mode==='links'&&r.mode==='codes');
+          if(needsUpgrade){
+            const newMode=s.mode==='read'?'read':'links';
+            await request(scoped(`rules/${s.rule_id}`),'PATCH',{mode:newMode});
+            r.mode=newMode;
+          }
+        }
+      }
+      const accent=(typeof document!=='undefined'&&document.documentElement?.dataset?.accent)||'cyan';
+      const result=await request(scoped('keys'),'POST',{name:b.name,scopes,expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null,max_views:b.max_views?Number(b.max_views):null,accent});
+      delete tabLoaded['keys'];
+      await loadWorkspace();
+      showKeyModal({result,modal});
+    }
     if(form.id==='grant-form'){await mutate('grants','PUT',{rule_id:form.dataset.rule,user_id:form.dataset.member,mode:b.mode,subdomain:b.subdomain||'*',expires_at:Number(b.duration)?Date.now()+Number(b.duration)*3600000:null},'Permission updated for future messages.');}
     if(form.id==='delete-form'){if(b.name!==state.workspace.name)throw new Error('The workspace name does not match.');await request(scoped('workspace'),'DELETE',b);$('#dialog').close();wid='';await navigate('dashboard',true);await boot();toast('Workspace deleted.');}
   }catch(err){
